@@ -244,25 +244,11 @@ body{background:var(--bg);color:var(--white);font-family:'Noto Sans KR',sans-ser
         <div class="form-row">
           <div class="form-group">
             <label>할인명</label>
-            <input type="text" class="form-input" id="new-preset-name" placeholder="예: 시니어 할인">
+            <input type="text" class="form-input" id="new-preset-name" placeholder="예: 학생">
           </div>
           <div class="form-group">
-            <label>할인방식</label>
-            <select class="form-select" id="new-preset-type" onchange="updatePreview()">
-              <option value="정액">정액 (원)</option>
-              <option value="정률">정률 (%)</option>
-              <option value="없음">할인 없음</option>
-            </select>
-          </div>
-        </div>
-        <div class="form-row">
-          <div class="form-group">
-            <label>할인값</label>
-            <input type="number" class="form-input" id="new-preset-value" placeholder="0" oninput="updatePreview()">
-          </div>
-          <div class="form-group">
-            <label>최종 단가</label>
-            <input type="text" class="form-input" id="new-preset-preview" readonly style="color:var(--gold);background:#1e1c0f;">
+            <label>판매가격 (원)</label>
+            <input type="number" class="form-input" id="new-preset-price" placeholder="예: 24000" min="0">
           </div>
         </div>
         <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--gray);margin-bottom:14px;cursor:pointer;">
@@ -656,33 +642,22 @@ function onDragEnd() {
   dragSrcIndex = null;
 }
 
-function updatePreview() {
-  const type = document.getElementById('new-preset-type').value;
-  const val  = parseFloat(document.getElementById('new-preset-value').value) || 0;
-  let price  = BASE_PRICE;
-  if (type==='정액') price = Math.max(0, BASE_PRICE-val);
-  else if (type==='정률') price = Math.round(BASE_PRICE*(1-val/100));
-  document.getElementById('new-preset-preview').value = price===0?'무료':price.toLocaleString()+'원';
-}
+
 
 async function addPreset() {
   const name  = document.getElementById('new-preset-name').value.trim();
-  const type  = document.getElementById('new-preset-type').value;
-  const val   = parseFloat(document.getElementById('new-preset-value').value) || 0;
+  const price = parseInt(document.getElementById('new-preset-price').value);
   const proof = document.getElementById('new-preset-proof').checked;
   if (!name) { toast('할인명을 입력해 주세요.'); return; }
+  if (isNaN(price) || price < 0) { toast('판매가격을 입력해 주세요.'); return; }
   if (presets.find(p=>p.name===name)) { toast('이미 존재하는 할인명입니다.'); return; }
-  let price = BASE_PRICE;
-  if (type==='정액') price = Math.max(0, BASE_PRICE-val);
-  else if (type==='정률') price = Math.round(BASE_PRICE*(1-val/100));
   const preset = {name, price, needProof:proof, active:true};
   const r = await callAPI({action:'savePreset', preset});
   if (r.success) {
     presets.push(preset);
-    document.getElementById('new-preset-name').value = '';
-    document.getElementById('new-preset-value').value = '';
+    document.getElementById('new-preset-name').value  = '';
+    document.getElementById('new-preset-price').value = '';
     document.getElementById('new-preset-proof').checked = false;
-    document.getElementById('new-preset-preview').value = '';
     renderPresets(); toast('프리셋이 저장됐습니다.');
   }
 }
