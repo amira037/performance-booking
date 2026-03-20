@@ -32,7 +32,6 @@ body{background:var(--bg);color:var(--white);font-family:'Noto Sans KR',sans-ser
 .content{padding:16px;flex:1;}
 .tab-content{display:none;}
 .tab-content.active{display:block;}
-/* 통계 */
 .stat-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:16px;}
 .stat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;}
 .stat-label{font-size:10px;letter-spacing:.2em;color:var(--gray);text-transform:uppercase;margin-bottom:8px;}
@@ -52,7 +51,6 @@ body{background:var(--bg);color:var(--white);font-family:'Noto Sans KR',sans-ser
 .badge-open{background:#1a2e1e;color:#4caf7d;}
 .badge-sold{background:#2e1a1a;color:#e07b7b;}
 .badge-low{background:#2e2014;color:#e07b39;}
-/* 예약 */
 .filter-row{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;}
 .filter-btn{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);color:var(--gray);font-family:inherit;font-size:11px;padding:6px 12px;cursor:pointer;}
 .filter-btn.active{border-color:var(--gold);color:var(--gold);}
@@ -74,11 +72,13 @@ body{background:var(--bg);color:var(--white);font-family:'Noto Sans KR',sans-ser
 .res-detail-value{font-size:13px;}
 .res-detail-value.gold{color:var(--gold);font-weight:500;}
 .res-detail-value.proof{color:var(--orange);font-size:11px;}
-.res-actions{display:flex;gap:8px;margin-top:12px;}
-.action-btn{flex:1;background:none;border:1px solid var(--border);border-radius:var(--radius);color:var(--gray);font-family:inherit;font-size:11px;padding:9px;cursor:pointer;}
+.res-actions{display:flex;gap:6px;margin-top:12px;flex-wrap:wrap;}
+.action-btn{flex:1;min-width:60px;background:none;border:1px solid var(--border);border-radius:var(--radius);color:var(--gray);font-family:inherit;font-size:11px;padding:8px 6px;cursor:pointer;text-align:center;}
+.action-btn:hover{border-color:var(--white);color:var(--white);}
 .action-btn.confirm{border-color:#2d5a3d;color:#4caf7d;background:#111e15;}
 .action-btn.danger{border-color:#5a2d2d;color:#e07b7b;}
-/* 회차/공연/프리셋 폼 */
+.action-btn.info{border-color:#1a3a5a;color:#7aabee;background:#0f1a2e;}
+.action-btn.checked{border-color:#444;color:#666;cursor:default;}
 .section-box{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:12px;}
 .section-title{font-size:10px;letter-spacing:.2em;color:var(--gold);text-transform:uppercase;margin-bottom:14px;}
 .form-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;}
@@ -89,7 +89,6 @@ body{background:var(--bg);color:var(--white);font-family:'Noto Sans KR',sans-ser
 .full{grid-column:1/-1;}
 .hint{font-size:11px;color:var(--gray2);margin-top:5px;}
 .save-btn{width:100%;background:var(--gold);color:#0f0f0f;border:none;border-radius:var(--radius);font-family:inherit;font-size:13px;font-weight:700;letter-spacing:.15em;padding:12px;cursor:pointer;margin-top:4px;}
-/* 회차 아이템 */
 .session-item{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;gap:12px;cursor:pointer;transition:border-color .15s;}
 .session-item:hover{border-color:var(--gold);}
 .session-item.selected{border-color:var(--gold);background:#1e1c0f;}
@@ -99,7 +98,6 @@ body{background:var(--bg);color:var(--white);font-family:'Noto Sans KR',sans-ser
 .icon-btn{background:none;border:1px solid var(--border);border-radius:var(--radius);color:var(--gray);font-family:inherit;font-size:11px;padding:5px 10px;cursor:pointer;}
 .icon-btn:hover{border-color:var(--gold);color:var(--gold);}
 .icon-btn.danger:hover{border-color:var(--red);color:var(--red);}
-/* 프리셋 드래그 */
 .preset-item{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:12px 16px;margin-bottom:8px;display:flex;align-items:center;gap:10px;cursor:grab;}
 .preset-item.dragging{opacity:.4;border-color:var(--gold);}
 .preset-item.drag-over{border-color:var(--gold);border-style:dashed;}
@@ -112,13 +110,25 @@ body{background:var(--bg);color:var(--white);font-family:'Noto Sans KR',sans-ser
 .toggle-btn{background:none;border:1px solid var(--border);border-radius:var(--radius);font-family:inherit;font-size:11px;padding:5px 10px;cursor:pointer;}
 .toggle-btn.on{border-color:var(--gold);color:var(--gold);}
 .toggle-btn.off{border-color:var(--gray2);color:var(--gray2);}
-/* 프리셋 편집 패널 */
 .edit-panel{background:var(--surface2);border:1px solid var(--gold);border-radius:var(--radius);padding:14px;margin-bottom:8px;}
 .edit-panel-title{font-size:10px;letter-spacing:.15em;color:var(--gold);text-transform:uppercase;margin-bottom:12px;}
 .edit-row{display:flex;gap:8px;margin-top:10px;}
 .edit-save{flex:1;background:var(--gold);color:#0f0f0f;border:none;border-radius:var(--radius);font-family:inherit;font-size:12px;font-weight:700;padding:10px;cursor:pointer;}
 .edit-cancel{flex:1;background:none;border:1px solid var(--border);border-radius:var(--radius);color:var(--gray);font-family:inherit;font-size:12px;padding:10px;cursor:pointer;}
-/* 입장 */
+/* 회차 변경 모달 */
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:200;align-items:center;justify-content:center;padding:20px;}
+.modal-bg.show{display:flex;}
+.modal{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:24px;width:100%;max-width:400px;}
+.modal-title{font-size:13px;font-weight:500;color:var(--gold);letter-spacing:.1em;margin-bottom:16px;}
+.modal-sub{font-size:12px;color:var(--gray);margin-bottom:14px;line-height:1.8;}
+.modal-sess-list{margin-bottom:16px;}
+.modal-sess-item{background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);padding:12px 14px;margin-bottom:8px;cursor:pointer;transition:border-color .15s;}
+.modal-sess-item:hover{border-color:var(--gold);}
+.modal-sess-item.sel{border-color:var(--gold);background:#1e1c0f;}
+.modal-sess-item.disabled{opacity:.4;cursor:not-allowed;}
+.modal-btns{display:flex;gap:8px;}
+.modal-confirm{flex:1;background:var(--gold);color:#0f0f0f;border:none;border-radius:var(--radius);font-family:inherit;font-size:13px;font-weight:700;padding:12px;cursor:pointer;}
+.modal-close{flex:1;background:none;border:1px solid var(--border);border-radius:var(--radius);color:var(--gray);font-family:inherit;font-size:13px;padding:12px;cursor:pointer;}
 .qr-wrap{padding:20px 0;}
 .qr-input-row{display:flex;gap:8px;margin-bottom:16px;}
 .qr-input{flex:1;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);color:var(--white);font-family:inherit;font-size:16px;font-weight:500;padding:14px 16px;text-align:center;letter-spacing:.1em;}
@@ -148,6 +158,19 @@ body{background:var(--bg);color:var(--white);font-family:'Noto Sans KR',sans-ser
            onkeydown="if(event.key==='Enter')doLogin()">
     <button class="login-btn" onclick="doLogin()">로그인</button>
     <div class="login-error" id="login-error">비밀번호가 올바르지 않습니다.</div>
+  </div>
+</div>
+
+<!-- 회차 변경 모달 -->
+<div class="modal-bg" id="modal-bg">
+  <div class="modal">
+    <div class="modal-title">회차 변경</div>
+    <div class="modal-sub" id="modal-sub"></div>
+    <div class="modal-sess-list" id="modal-sess-list"></div>
+    <div class="modal-btns">
+      <button class="modal-confirm" onclick="confirmSessionChange()">변경 확인</button>
+      <button class="modal-close" onclick="closeModal()">취소</button>
+    </div>
   </div>
 </div>
 
@@ -202,22 +225,12 @@ body{background:var(--bg);color:var(--white);font-family:'Noto Sans KR',sans-ser
         <div class="mode-label" id="session-mode-label">— 수정 모드: 클릭한 회차를 수정합니다 —</div>
         <div class="section-title" id="session-form-title">회차 추가</div>
         <div class="form-row">
-          <div class="form-group">
-            <label>날짜</label>
-            <input type="date" class="form-input" id="sess-date">
-          </div>
-          <div class="form-group">
-            <label>시간</label>
-            <input type="time" class="form-input" id="sess-time">
-          </div>
+          <div class="form-group"><label>날짜</label><input type="date" class="form-input" id="sess-date"></div>
+          <div class="form-group"><label>시간</label><input type="time" class="form-input" id="sess-time"></div>
         </div>
         <div class="form-row">
-          <div class="form-group">
-            <label>좌석 수</label>
-            <input type="number" class="form-input" id="sess-seats" placeholder="10" min="1">
-          </div>
-          <div class="form-group">
-            <label>상태</label>
+          <div class="form-group"><label>좌석 수</label><input type="number" class="form-input" id="sess-seats" placeholder="10" min="1"></div>
+          <div class="form-group"><label>상태</label>
             <select class="form-select" id="sess-status">
               <option value="open">예매 중</option>
               <option value="closed">마감</option>
@@ -236,24 +249,15 @@ body{background:var(--bg);color:var(--white);font-family:'Noto Sans KR',sans-ser
     <!-- 할인 설정 -->
     <div class="tab-content" id="tab-presets">
       <div id="preset-list" style="margin-bottom:4px;"></div>
-      <div style="font-size:11px;color:var(--gray2);text-align:center;margin-bottom:16px;">
-        카드를 드래그해서 순서를 변경하세요
-      </div>
+      <div style="font-size:11px;color:var(--gray2);text-align:center;margin-bottom:16px;">카드를 드래그해서 순서를 변경하세요</div>
       <div class="section-box">
         <div class="section-title">새 할인 추가</div>
         <div class="form-row">
-          <div class="form-group">
-            <label>할인명</label>
-            <input type="text" class="form-input" id="new-preset-name" placeholder="예: 학생">
-          </div>
-          <div class="form-group">
-            <label>판매가격 (원)</label>
-            <input type="number" class="form-input" id="new-preset-price" placeholder="예: 24000" min="0">
-          </div>
+          <div class="form-group"><label>할인명</label><input type="text" class="form-input" id="new-preset-name" placeholder="예: 학생"></div>
+          <div class="form-group"><label>판매가격 (원)</label><input type="number" class="form-input" id="new-preset-price" placeholder="예: 24000" min="0"></div>
         </div>
         <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--gray);margin-bottom:14px;cursor:pointer;">
-          <input type="checkbox" id="new-preset-proof" style="width:14px;height:14px;accent-color:var(--gold);">
-          입장 시 증빙 서류 확인 필요
+          <input type="checkbox" id="new-preset-proof" style="width:14px;height:14px;accent-color:var(--gold);"> 입장 시 증빙 서류 확인 필요
         </label>
         <button class="save-btn" onclick="addPreset()">프리셋 저장</button>
       </div>
@@ -325,13 +329,10 @@ const API_BASE = '/api/admin';
 let ADMIN_PW = '';
 let reservations = [], sessions = [], presets = [], performance = {};
 let currentFilter = 'all', currentSearch = '';
-let editingSessionId = null;
-let editingPresetName = null;
-let dragSrcIndex = null;
-const BASE_PRICE = 30000;
+let editingSessionId = null, editingPresetName = null, dragSrcIndex = null;
+let modalResNum = null, modalNewSessionId = null;
 const DAYS = ['일','월','화','수','목','금','토'];
 
-// ── 유틸 ──
 function toast(msg) {
   const t = document.getElementById('toast');
   t.textContent = msg; t.classList.add('show');
@@ -342,11 +343,7 @@ function sessionLabel(s) {
   return (d.getMonth()+1) + '월 ' + d.getDate() + '일 (' + DAYS[d.getDay()] + ') ' + s.time;
 }
 function sortSessions(arr) {
-  return [...arr].sort((a, b) => {
-    const at = new Date(a.date + 'T' + a.time);
-    const bt = new Date(b.date + 'T' + b.time);
-    return at - bt;
-  });
+  return [...arr].sort((a,b) => new Date(a.date+'T'+a.time) - new Date(b.date+'T'+b.time));
 }
 
 // ── 로그인 ──
@@ -370,7 +367,7 @@ document.getElementById('pw-input').focus();
 async function loadData() {
   try {
     const res = await fetch(API_BASE, { headers: { 'x-admin-key': ADMIN_PW } });
-    if (res.status === 401) { document.getElementById('login-error').style.display = 'block'; doLogout(); return; }
+    if (res.status === 401) { document.getElementById('login-error').style.display='block'; doLogout(); return; }
     const data = await res.json();
     reservations = data.reservations || [];
     sessions     = sortSessions(data.sessions || []);
@@ -386,22 +383,22 @@ function renderAll() {
 
 // ── 현황 ──
 function renderDashboard() {
-  const confirmed = reservations.filter(r => r.payStatus === '입금확인');
-  const pending   = reservations.filter(r => r.payStatus === '미입금');
-  const revenue   = confirmed.reduce((s,r) => s + (r.total||0), 0);
-  const totalSeats = sessions.reduce((s,s2) => s + (s2.seats||0), 0);
-  document.getElementById('stat-total').textContent        = reservations.length + '건';
-  document.getElementById('stat-total-sub').textContent    = '총 ' + totalSeats + '석 기준';
-  document.getElementById('stat-confirmed').textContent    = confirmed.length + '건';
+  const confirmed  = reservations.filter(r => r.payStatus === '입금확인');
+  const pending    = reservations.filter(r => r.payStatus === '미입금');
+  const revenue    = confirmed.reduce((s,r) => s+(r.total||0), 0);
+  const totalSeats = sessions.reduce((s,s2) => s+(s2.seats||0), 0);
+  document.getElementById('stat-total').textContent         = reservations.length + '건';
+  document.getElementById('stat-total-sub').textContent     = '총 ' + totalSeats + '석 기준';
+  document.getElementById('stat-confirmed').textContent     = confirmed.length + '건';
   document.getElementById('stat-confirmed-sub').textContent = confirmed.reduce((s,r)=>s+(r.quantity||0),0) + '석 확정';
-  document.getElementById('stat-pending').textContent      = pending.length + '건';
-  document.getElementById('stat-revenue').textContent      = revenue.toLocaleString() + '원';
-  document.getElementById('session-status-list').innerHTML = sessions.map(s => {
+  document.getElementById('stat-pending').textContent       = pending.length + '건';
+  document.getElementById('stat-revenue').textContent       = revenue.toLocaleString() + '원';
+  document.getElementById('session-status-list').innerHTML  = sessions.map(s => {
     const booked = reservations.filter(r=>r.sessionId===s.id&&r.payStatus==='입금확인').reduce((sum,r)=>sum+(r.quantity||0),0);
     const pct    = s.seats>0 ? Math.round(booked/s.seats*100) : 0;
     const remain = s.seats - booked;
-    const isFull = remain<=0 || s.status==='closed';
-    const isLow  = !isFull && remain<=3;
+    const isFull = remain<=0||s.status==='closed';
+    const isLow  = !isFull&&remain<=3;
     const bc = isFull?'badge-sold':isLow?'badge-low':'badge-open';
     const bt = isFull?'마감':isLow?'마감임박':'예매중';
     return '<div class="session-row"><div class="session-bar-wrap"><div class="session-bar-label"><span>' + sessionLabel(s) + '</span><span style="color:var(--gray)">' + booked + '/' + s.seats + '석</span></div><div class="session-bar-bg"><div class="session-bar-fill' + (isFull?' full':'') + '" style="width:' + pct + '%"></div></div></div><span class="badge ' + bc + '">' + bt + '</span></div>';
@@ -415,51 +412,154 @@ function renderReservations() {
   if (currentSearch) { const q=currentSearch.toLowerCase(); list=list.filter(r=>r.name.includes(q)||(r.resNum||'').toLowerCase().includes(q)); }
   const el = document.getElementById('res-list');
   if (!list.length) { el.innerHTML = '<div class="empty-state">해당하는 예약이 없습니다.</div>'; return; }
-  el.innerHTML = list.map(r => {
-    const bc = r.payStatus==='입금확인'?'pay-confirmed':r.payStatus==='미입금'?'pay-pending':'pay-cancelled';
-    const actions = r.payStatus==='미입금'
-      ? '<div class="res-actions"><button class="action-btn confirm" onclick="confirmPay(\''+r.resNum+'\')">입금 확인</button><button class="action-btn danger" onclick="cancelRes(\''+r.resNum+'\')">취소</button></div>'
-      : r.payStatus==='입금확인'
-      ? '<div class="res-actions"><button class="action-btn" onclick="resendTicket(&quot;'+r.resNum+'&quot;)">티켓 재발송</button><button class="action-btn" onclick="doCheckInById(&quot;'+r.resNum+'&quot;)">'+(r.checkedIn?'입장완료':'입장 처리')+'</button></div>'
-      : '';
-    return '<div class="res-card"><div class="res-card-header" onclick="toggleCard(\''+r.resNum+'\')"><div><div style="display:flex;align-items:center"><span class="res-num-badge">'+r.resNum+'</span><span class="res-name">'+r.name+'</span></div><div class="res-session">'+r.session+' · '+r.ticketType+' '+r.quantity+'매</div></div><span class="pay-badge '+bc+'">'+r.payStatus+'</span></div><div class="res-card-body" id="body-'+r.resNum+'"><div class="res-detail-grid"><div><div class="res-detail-label">연락처</div><div class="res-detail-value">'+r.phone+'</div></div><div><div class="res-detail-label">결제금액</div><div class="res-detail-value gold">'+(r.total===0?'무료':(r.total||0).toLocaleString()+'원')+'</div></div><div><div class="res-detail-label">이메일</div><div class="res-detail-value" style="font-size:12px">'+r.email+'</div></div><div><div class="res-detail-label">증빙확인</div><div class="res-detail-value'+(r.needProof?' proof':'')+'">'+(r.needProof?'현장 확인 필요':'해당 없음')+'</div></div></div>'+actions+'</div></div>';
-  }).join('');
+  el.innerHTML = list.map(r => buildResCard(r)).join('');
 }
+
+function buildResCard(r) {
+  const bc = r.payStatus==='입금확인'?'pay-confirmed':r.payStatus==='미입금'?'pay-pending':'pay-cancelled';
+  const ticketUrl = '/ticket.html?res=' + encodeURIComponent(r.resNum||'')
+    + '&name=' + encodeURIComponent(r.name||'')
+    + '&session=' + encodeURIComponent(r.session||'')
+    + '&type=' + encodeURIComponent(r.ticketType||'')
+    + '&qty=' + (r.quantity||1);
+
+  let actions = '';
+  if (r.payStatus === '미입금') {
+    actions = '<div class="res-actions">'
+      + btn('confirm', '입금 확인', 'confirmPay("' + r.resNum + '")')
+      + btn('', '회차 변경', 'changeSession("' + r.resNum + '")')
+      + btn('danger', '예약 취소', 'cancelRes("' + r.resNum + '")')
+      + '</div>';
+  } else if (r.payStatus === '입금확인') {
+    actions = '<div class="res-actions">'
+      + btn('info', '티켓 확인', 'window.open("' + ticketUrl + '","_blank")')
+      + btn('', '티켓 재발송', 'resendTicket("' + r.resNum + '")')
+      + btn('', '회차 변경', 'changeSession("' + r.resNum + '")')
+      + btn('danger', '예약 취소', 'cancelRes("' + r.resNum + '")')
+      + btn(r.checkedIn ? 'checked' : '', r.checkedIn ? '✓입장완료' : '입장처리', r.checkedIn ? '' : 'doCheckInById("' + r.resNum + '")')
+      + '</div>';
+  }
+
+  return '<div class="res-card">'
+    + '<div class="res-card-header" onclick="toggleCard(\'' + r.resNum + '\')">'
+    +   '<div><div style="display:flex;align-items:center">'
+    +     '<span class="res-num-badge">' + (r.resNum||'') + '</span>'
+    +     '<span class="res-name">' + (r.name||'') + '</span>'
+    +   '</div>'
+    +   '<div class="res-session">' + (r.session||'') + ' · ' + (r.ticketType||'') + ' ' + (r.quantity||0) + '매</div></div>'
+    +   '<span class="pay-badge ' + bc + '">' + r.payStatus + '</span>'
+    + '</div>'
+    + '<div class="res-card-body" id="body-' + r.resNum + '">'
+    +   '<div class="res-detail-grid">'
+    +     '<div><div class="res-detail-label">연락처</div><div class="res-detail-value">' + (r.phone||'') + '</div></div>'
+    +     '<div><div class="res-detail-label">결제금액</div><div class="res-detail-value gold">' + ((r.total||0)===0?'무료':(r.total||0).toLocaleString()+'원') + '</div></div>'
+    +     '<div><div class="res-detail-label">이메일</div><div class="res-detail-value" style="font-size:12px">' + (r.email||'') + '</div></div>'
+    +     '<div><div class="res-detail-label">증빙확인</div><div class="res-detail-value' + (r.needProof?' proof':'') + '">' + (r.needProof?'현장 확인 필요':'해당 없음') + '</div></div>'
+    +   '</div>'
+    +   actions
+    + '</div>'
+    + '</div>';
+}
+
+function btn(cls, label, onclick) {
+  const disabled = !onclick ? ' style="pointer-events:none"' : '';
+  return '<button class="action-btn' + (cls?' '+cls:'') + '" onclick="' + onclick + '"' + disabled + '>' + label + '</button>';
+}
+
 function toggleCard(rn) { document.getElementById('body-'+rn).classList.toggle('open'); }
-function setFilter(f,btn) { currentFilter=f; document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active')); btn.classList.add('active'); renderReservations(); }
+function setFilter(f,b) { currentFilter=f; document.querySelectorAll('.filter-btn').forEach(x=>x.classList.remove('active')); b.classList.add('active'); renderReservations(); }
 function filterRes(q) { currentSearch=q.trim(); renderReservations(); }
+
 async function confirmPay(rn) {
-  if (!confirm(rn+' 입금 확인 처리하시겠습니까?')) return;
+  if (!confirm(rn + ' 입금 확인 처리하시겠습니까?')) return;
   const r = await callAPI({action:'confirmPayment',resNum:rn});
   if (r.success) { toast('티켓이 발송됩니다.'); await loadData(); } else toast('오류: '+(r.message||'실패'));
 }
 async function cancelRes(rn) {
-  if (!confirm(rn+' 예약을 취소하시겠습니까?')) return;
+  if (!confirm(rn + ' 예약을 취소하시겠습니까?')) return;
   const r = await callAPI({action:'cancel',resNum:rn});
   if (r.success) { toast('취소됐습니다.'); await loadData(); }
 }
-async function resendTicket(rn) { const r=await callAPI({action:'resendTicket',resNum:rn}); toast(r.success?'티켓이 재발송됐습니다.':'재발송 실패'); }
-async function doCheckInById(rn) { const r=await callAPI({action:'checkIn',resNum:rn}); if(r.success){toast('입장 처리됐습니다.');await loadData();} }
+async function resendTicket(rn) {
+  const r = await callAPI({action:'resendTicket',resNum:rn});
+  toast(r.success ? '티켓이 재발송됐습니다.' : '재발송 실패');
+}
+async function doCheckInById(rn) {
+  const r = await callAPI({action:'checkIn',resNum:rn});
+  if (r.success) { toast('입장 처리됐습니다.'); await loadData(); }
+}
 
-// ── 회차 목록 렌더 ──
+// ── 회차 변경 모달 ──
+function changeSession(resNum) {
+  const reservation = reservations.find(r => r.resNum === resNum);
+  if (!reservation) return;
+  modalResNum = resNum;
+  modalNewSessionId = null;
+
+  document.getElementById('modal-sub').innerHTML =
+    '<strong style="color:var(--white)">' + reservation.name + '</strong> 님의 현재 회차:<br>'
+    + '<span style="color:var(--gold)">' + reservation.session + '</span><br>'
+    + '<span style="font-size:11px">변경할 회차를 선택해 주세요.</span>';
+
+  document.getElementById('modal-sess-list').innerHTML = sessions.map(s => {
+    const isCurrent = reservation.session === sessionLabel(s);
+    const isFull = s.status === 'closed';
+    return '<div class="modal-sess-item' + (isCurrent?' sel':'') + (isFull?' disabled':'') + '" '
+      + (isFull ? '' : 'onclick="selectModalSession(\'' + s.id + '\', this)"') + '>'
+      + '<div style="font-size:13px;font-weight:500">' + sessionLabel(s) + '</div>'
+      + '<div style="font-size:11px;color:var(--gray);margin-top:2px">' + s.seats + '석 ' + (isFull?'· 마감':'') + (isCurrent?' · 현재 회차':'') + '</div>'
+      + '</div>';
+  }).join('');
+
+  document.getElementById('modal-bg').classList.add('show');
+}
+
+function selectModalSession(id, el) {
+  modalNewSessionId = id;
+  document.querySelectorAll('.modal-sess-item').forEach(x => x.classList.remove('sel'));
+  el.classList.add('sel');
+}
+
+function closeModal() {
+  document.getElementById('modal-bg').classList.remove('show');
+  modalResNum = null; modalNewSessionId = null;
+}
+
+async function confirmSessionChange() {
+  if (!modalNewSessionId) { toast('변경할 회차를 선택해 주세요.'); return; }
+  const newSession = sessions.find(s => s.id === modalNewSessionId);
+  if (!newSession) return;
+  const r = await callAPI({
+    action: 'changeSession',
+    resNum: modalResNum,
+    newSessionId: modalNewSessionId,
+    newSessionLabel: sessionLabel(newSession),
+  });
+  if (r.success) {
+    toast('회차가 변경됐습니다.');
+    closeModal();
+    await loadData();
+  } else {
+    toast('변경 실패: ' + (r.message || '오류'));
+  }
+}
+
+// ── 회차 관리 ──
 function renderSessionList() {
   const el = document.getElementById('session-list');
   if (!sessions.length) { el.innerHTML = '<div class="empty-state">등록된 회차가 없습니다.<br>아래 폼에서 추가해 주세요.</div>'; return; }
   el.innerHTML = sessions.map(s => {
     const st = s.status==='open'?'예매중':s.status==='closed'?'마감':'오픈예정';
     const isSelected = editingSessionId === s.id;
-    return '<div class="session-item'+(isSelected?' selected':'')+'" id="si-'+s.id+'" onclick="selectSession(\''+s.id+'\')">'+
-      '<div><div class="session-item-date">'+sessionLabel(s)+'</div><div class="session-item-info">'+s.seats+'석 · '+st+'</div></div>'+
-      '<div class="item-btns">'+
-        '<button class="icon-btn danger" onclick="event.stopPropagation();deleteSession(\''+s.id+'\')">삭제</button>'+
-      '</div>'+
-    '</div>';
+    return '<div class="session-item' + (isSelected?' selected':'') + '" id="si-'+s.id+'" onclick="selectSession(\'' + s.id + '\')">'
+      + '<div><div class="session-item-date">' + sessionLabel(s) + '</div><div class="session-item-info">' + s.seats + '석 · ' + st + '</div></div>'
+      + '<div class="item-btns"><button class="icon-btn danger" onclick="event.stopPropagation();deleteSession(\'' + s.id + '\')">삭제</button></div>'
+      + '</div>';
   }).join('');
 }
 
-// ── 회차 클릭 → 폼 채우기 ──
 function selectSession(id) {
-  const s = sessions.find(s => s.id === id);
+  const s = sessions.find(s=>s.id===id);
   if (!s) return;
   editingSessionId = id;
   document.getElementById('sess-date').value   = s.date;
@@ -489,177 +589,107 @@ function resetSessionForm() {
   renderSessionList();
 }
 
-// ── 회차 추가 ──
 async function addSession() {
-  const date   = document.getElementById('sess-date').value;
-  const time   = document.getElementById('sess-time').value;
-  const seats  = parseInt(document.getElementById('sess-seats').value);
-  const status = document.getElementById('sess-status').value;
+  const date=document.getElementById('sess-date').value, time=document.getElementById('sess-time').value;
+  const seats=parseInt(document.getElementById('sess-seats').value), status=document.getElementById('sess-status').value;
   if (!date||!time||!seats) { toast('날짜, 시간, 좌석 수를 모두 입력해 주세요.'); return; }
-  const session = { id:'S'+Date.now(), date, time, seats, booked:0, status };
+  const session = {id:'S'+Date.now(), date, time, seats, booked:0, status};
   const r = await callAPI({action:'addSession',session});
-  if (r.success) {
-    sessions.push(session);
-    sessions = sortSessions(sessions);
-    resetSessionForm();
-    renderSessionList(); renderDashboard();
-    toast('회차가 추가됐습니다.');
-  }
+  if (r.success) { sessions.push(session); sessions=sortSessions(sessions); resetSessionForm(); renderDashboard(); toast('회차가 추가됐습니다.'); }
 }
 
-// ── 회차 수정 ──
 async function updateSession() {
   if (!editingSessionId) return;
-  const date   = document.getElementById('sess-date').value;
-  const time   = document.getElementById('sess-time').value;
-  const seats  = parseInt(document.getElementById('sess-seats').value);
-  const status = document.getElementById('sess-status').value;
+  const date=document.getElementById('sess-date').value, time=document.getElementById('sess-time').value;
+  const seats=parseInt(document.getElementById('sess-seats').value), status=document.getElementById('sess-status').value;
   if (!date||!time||!seats) { toast('날짜, 시간, 좌석 수를 모두 입력해 주세요.'); return; }
-  const session = { id:editingSessionId, date, time, seats, status };
+  const session = {id:editingSessionId, date, time, seats, status};
   const r = await callAPI({action:'updateSession',session});
-  if (r.success) {
-    const idx = sessions.findIndex(s=>s.id===editingSessionId);
-    if (idx !== -1) sessions[idx] = {...sessions[idx], ...session};
-    sessions = sortSessions(sessions);
-    resetSessionForm();
-    renderSessionList(); renderDashboard();
-    toast('회차가 수정됐습니다.');
-  }
+  if (r.success) { const idx=sessions.findIndex(s=>s.id===editingSessionId); if(idx!==-1) sessions[idx]={...sessions[idx],...session}; sessions=sortSessions(sessions); resetSessionForm(); renderDashboard(); toast('회차가 수정됐습니다.'); }
 }
 
-// ── 회차 삭제 ──
 async function deleteSession(id) {
-  const s = sessions.find(s=>s.id===id);
-  if (!s) return;
+  const s=sessions.find(s=>s.id===id); if(!s) return;
   if (!confirm(sessionLabel(s)+' 회차를 삭제하시겠습니까?')) return;
   const r = await callAPI({action:'deleteSession',id});
-  if (r.success) {
-    sessions = sessions.filter(s=>s.id!==id);
-    if (editingSessionId===id) resetSessionForm();
-    else renderSessionList();
-    renderDashboard();
-    toast('회차가 삭제됐습니다.');
-  }
+  if (r.success) { sessions=sessions.filter(s=>s.id!==id); if(editingSessionId===id) resetSessionForm(); else renderSessionList(); renderDashboard(); toast('삭제됐습니다.'); }
 }
 
 // ── 할인 프리셋 ──
 function renderPresets() {
   const el = document.getElementById('preset-list');
   if (!presets.length) { el.innerHTML = '<div class="empty-state">등록된 프리셋이 없습니다.</div>'; return; }
-  el.innerHTML = presets.map((p, i) => {
-    const isEditing = editingPresetName === p.name;
-    const itemHtml = isEditing
-      ? '<div class="edit-panel" id="ep-'+i+'">' +
-          '<div class="edit-panel-title">할인 수정</div>' +
-          '<div class="form-row">' +
-            '<div class="form-group"><label>할인명</label><input type="text" class="form-input" id="ep-name-'+i+'" value="'+p.name+'"></div>' +
-            '<div class="form-group"><label>단가 (원)</label><input type="number" class="form-input" id="ep-price-'+i+'" value="'+p.price+'"></div>' +
-          '</div>' +
-          '<label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--gray);cursor:pointer;margin-bottom:10px;">' +
-            '<input type="checkbox" id="ep-proof-'+i+'" '+(p.needProof?'checked':'')+' style="width:14px;height:14px;accent-color:var(--gold);"> 현장 증빙 필요' +
-          '</label>' +
-          '<div class="edit-row">' +
-            '<button class="edit-save" onclick="saveEditPreset(\''+p.name+'\','+i+')">저장</button>' +
-            '<button class="edit-cancel" onclick="cancelEditPreset()">취소</button>' +
-          '</div>' +
-        '</div>'
-      : '<div class="preset-item" draggable="true" data-index="'+i+'" ondragstart="onDragStart(event,'+i+')" ondragover="onDragOver(event,'+i+')" ondrop="onDrop(event,'+i+')" ondragend="onDragEnd()">' +
-          '<span class="drag-handle">⠿</span>' +
-          '<div class="preset-info">' +
-            '<div class="preset-name-edit">'+p.name+'</div>' +
-            '<div class="preset-price-edit">'+(p.price===0?'무료':p.price.toLocaleString()+'원')+'</div>' +
-            (p.needProof?'<div class="preset-proof-label">현장 증빙 필요</div>':'') +
-          '</div>' +
-          '<div class="preset-actions">' +
-            '<button class="toggle-btn '+(p.active?'on':'off')+'" onclick="togglePreset(\''+p.name+'\')">'+( p.active?'활성':'비활성')+'</button>' +
-            '<button class="icon-btn" onclick="startEditPreset(\''+p.name+'\')">수정</button>' +
-            '<button class="icon-btn danger" onclick="deletePreset(\''+p.name+'\')">삭제</button>' +
-          '</div>' +
-        '</div>';
-    return itemHtml;
+  el.innerHTML = presets.map((p,i) => {
+    if (editingPresetName === p.name) {
+      return '<div class="edit-panel">'
+        + '<div class="edit-panel-title">할인 수정</div>'
+        + '<div class="form-row">'
+        +   '<div class="form-group"><label>할인명</label><input type="text" class="form-input" id="ep-name-'+i+'" value="'+p.name+'"></div>'
+        +   '<div class="form-group"><label>판매가격 (원)</label><input type="number" class="form-input" id="ep-price-'+i+'" value="'+p.price+'"></div>'
+        + '</div>'
+        + '<label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--gray);cursor:pointer;margin-bottom:10px;">'
+        +   '<input type="checkbox" id="ep-proof-'+i+'" '+(p.needProof?'checked':'')+' style="width:14px;height:14px;accent-color:var(--gold);"> 현장 증빙 필요'
+        + '</label>'
+        + '<div class="edit-row">'
+        +   '<button class="edit-save" onclick="saveEditPreset(\''+p.name+'\','+i+')">저장</button>'
+        +   '<button class="edit-cancel" onclick="cancelEditPreset()">취소</button>'
+        + '</div></div>';
+    }
+    return '<div class="preset-item" draggable="true" data-index="'+i+'" ondragstart="onDragStart(event,'+i+')" ondragover="onDragOver(event,'+i+')" ondrop="onDrop(event,'+i+')" ondragend="onDragEnd()">'
+      + '<span class="drag-handle">⠿</span>'
+      + '<div class="preset-info">'
+      +   '<div class="preset-name-edit">'+p.name+'</div>'
+      +   '<div class="preset-price-edit">'+(p.price===0?'무료':p.price.toLocaleString()+'원')+'</div>'
+      +   (p.needProof?'<div class="preset-proof-label">현장 증빙 필요</div>':'')
+      + '</div>'
+      + '<div class="preset-actions">'
+      +   '<button class="toggle-btn '+(p.active?'on':'off')+'" onclick="togglePreset(\''+p.name+'\')">'+( p.active?'활성':'비활성')+'</button>'
+      +   '<button class="icon-btn" onclick="startEditPreset(\''+p.name+'\')">수정</button>'
+      +   '<button class="icon-btn danger" onclick="deletePreset(\''+p.name+'\')">삭제</button>'
+      + '</div></div>';
   }).join('');
 }
 
-function startEditPreset(name) { editingPresetName = name; renderPresets(); }
-function cancelEditPreset() { editingPresetName = null; renderPresets(); }
+function startEditPreset(name) { editingPresetName=name; renderPresets(); }
+function cancelEditPreset() { editingPresetName=null; renderPresets(); }
 
 async function saveEditPreset(originalName, i) {
-  const newName  = document.getElementById('ep-name-'+i).value.trim();
-  const newPrice = parseInt(document.getElementById('ep-price-'+i).value) || 0;
-  const newProof = document.getElementById('ep-proof-'+i).checked;
+  const newName=document.getElementById('ep-name-'+i).value.trim();
+  const newPrice=parseInt(document.getElementById('ep-price-'+i).value)||0;
+  const newProof=document.getElementById('ep-proof-'+i).checked;
   if (!newName) { toast('할인명을 입력해 주세요.'); return; }
-  const idx = presets.findIndex(p => p.name === originalName);
-  if (idx === -1) return;
-  const updated = {...presets[idx], name:newName, price:newPrice, needProof:newProof};
-  // 삭제 후 새로 저장
-  await callAPI({action:'deletePreset', name:originalName});
-  await callAPI({action:'savePreset', preset:updated});
-  presets[idx] = updated;
-  editingPresetName = null;
-  renderPresets();
-  toast('수정됐습니다.');
+  const idx=presets.findIndex(p=>p.name===originalName); if(idx===-1) return;
+  const updated={...presets[idx],name:newName,price:newPrice,needProof:newProof};
+  await callAPI({action:'deletePreset',name:originalName});
+  await callAPI({action:'savePreset',preset:updated});
+  presets[idx]=updated; editingPresetName=null; renderPresets(); toast('수정됐습니다.');
 }
 
 async function deletePreset(name) {
   if (!confirm('"'+name+'" 할인을 삭제하시겠습니까?')) return;
-  const r = await callAPI({action:'deletePreset', name});
-  if (r.success) { presets = presets.filter(p=>p.name!==name); renderPresets(); toast('삭제됐습니다.'); }
+  const r=await callAPI({action:'deletePreset',name});
+  if(r.success){presets=presets.filter(p=>p.name!==name);renderPresets();toast('삭제됐습니다.');}
 }
-
 async function togglePreset(name) {
-  const p = presets.find(p=>p.name===name);
-  if (!p) return;
-  p.active = !p.active;
-  await callAPI({action:'togglePreset', name, active:p.active});
-  renderPresets();
+  const p=presets.find(p=>p.name===name); if(!p) return;
+  p.active=!p.active;
+  await callAPI({action:'togglePreset',name,active:p.active}); renderPresets();
 }
-
-// ── 드래그 앤 드롭 (순서 변경) ──
-function onDragStart(e, i) {
-  dragSrcIndex = i;
-  e.currentTarget.classList.add('dragging');
-  e.dataTransfer.effectAllowed = 'move';
-}
-function onDragOver(e, i) {
-  e.preventDefault();
-  e.dataTransfer.dropEffect = 'move';
-  document.querySelectorAll('.preset-item').forEach(el => el.classList.remove('drag-over'));
-  const items = document.querySelectorAll('.preset-item');
-  if (items[i]) items[i].classList.add('drag-over');
-}
-function onDrop(e, i) {
-  e.preventDefault();
-  if (dragSrcIndex === null || dragSrcIndex === i) return;
-  const moved = presets.splice(dragSrcIndex, 1)[0];
-  presets.splice(i, 0, moved);
-  callAPI({action:'reorderPresets', presets});
-  dragSrcIndex = null;
-  renderPresets();
-  toast('순서가 변경됐습니다.');
-}
-function onDragEnd() {
-  document.querySelectorAll('.preset-item').forEach(el => { el.classList.remove('dragging'); el.classList.remove('drag-over'); });
-  dragSrcIndex = null;
-}
-
-
+function onDragStart(e,i){dragSrcIndex=i;e.currentTarget.classList.add('dragging');e.dataTransfer.effectAllowed='move';}
+function onDragOver(e,i){e.preventDefault();document.querySelectorAll('.preset-item').forEach(el=>el.classList.remove('drag-over'));const items=document.querySelectorAll('.preset-item');if(items[i])items[i].classList.add('drag-over');}
+function onDrop(e,i){e.preventDefault();if(dragSrcIndex===null||dragSrcIndex===i)return;const moved=presets.splice(dragSrcIndex,1)[0];presets.splice(i,0,moved);callAPI({action:'reorderPresets',presets});dragSrcIndex=null;renderPresets();toast('순서 변경됐습니다.');}
+function onDragEnd(){document.querySelectorAll('.preset-item').forEach(el=>{el.classList.remove('dragging');el.classList.remove('drag-over');});dragSrcIndex=null;}
 
 async function addPreset() {
-  const name  = document.getElementById('new-preset-name').value.trim();
-  const price = parseInt(document.getElementById('new-preset-price').value);
-  const proof = document.getElementById('new-preset-proof').checked;
-  if (!name) { toast('할인명을 입력해 주세요.'); return; }
-  if (isNaN(price) || price < 0) { toast('판매가격을 입력해 주세요.'); return; }
-  if (presets.find(p=>p.name===name)) { toast('이미 존재하는 할인명입니다.'); return; }
-  const preset = {name, price, needProof:proof, active:true};
-  const r = await callAPI({action:'savePreset', preset});
-  if (r.success) {
-    presets.push(preset);
-    document.getElementById('new-preset-name').value  = '';
-    document.getElementById('new-preset-price').value = '';
-    document.getElementById('new-preset-proof').checked = false;
-    renderPresets(); toast('프리셋이 저장됐습니다.');
-  }
+  const name=document.getElementById('new-preset-name').value.trim();
+  const price=parseInt(document.getElementById('new-preset-price').value);
+  const proof=document.getElementById('new-preset-proof').checked;
+  if (!name){toast('할인명을 입력해 주세요.');return;}
+  if (isNaN(price)||price<0){toast('판매가격을 입력해 주세요.');return;}
+  if (presets.find(p=>p.name===name)){toast('이미 존재하는 할인명입니다.');return;}
+  const preset={name,price,needProof:proof,active:true};
+  const r=await callAPI({action:'savePreset',preset});
+  if(r.success){presets.push(preset);document.getElementById('new-preset-name').value='';document.getElementById('new-preset-price').value='';document.getElementById('new-preset-proof').checked=false;renderPresets();toast('저장됐습니다.');}
 }
 
 // ── 공연 설정 ──
@@ -680,60 +710,60 @@ function syncPerfForm() {
 }
 async function savePerf() {
   const data = {
-    agency:performance.agency, tel:document.getElementById('agency-tel').value.trim(),
-    email:document.getElementById('agency-email').value.trim(),
-    kakaopayLink:document.getElementById('kakaopay-link').value.trim(),
-    name:document.getElementById('perf-name').value.trim(),
-    agency:document.getElementById('agency-name').value.trim(),
-    subtitle:document.getElementById('perf-subtitle').value.trim(),
-    host:document.getElementById('perf-host').value.trim(),
-    organizer:document.getElementById('perf-organizer').value.trim(),
-    sponsor:document.getElementById('perf-sponsor').value.trim(),
-    account:document.getElementById('perf-account').value.trim(),
-    accountHolder:document.getElementById('perf-account-holder').value.trim(),
-    open:document.getElementById('perf-open').value,
-    maxQty:parseInt(document.getElementById('perf-max-qty').value)||4,
+    agency:        document.getElementById('agency-name').value.trim(),
+    tel:           document.getElementById('agency-tel').value.trim(),
+    email:         document.getElementById('agency-email').value.trim(),
+    kakaopayLink:  document.getElementById('kakaopay-link').value.trim(),
+    name:          document.getElementById('perf-name').value.trim(),
+    subtitle:      document.getElementById('perf-subtitle').value.trim(),
+    host:          document.getElementById('perf-host').value.trim(),
+    organizer:     document.getElementById('perf-organizer').value.trim(),
+    sponsor:       document.getElementById('perf-sponsor').value.trim(),
+    account:       document.getElementById('perf-account').value.trim(),
+    accountHolder: document.getElementById('perf-account-holder').value.trim(),
+    open:          document.getElementById('perf-open').value,
+    maxQty:        parseInt(document.getElementById('perf-max-qty').value)||4,
   };
-  const r = await callAPI({action:'savePerformance',data});
-  if (r.success) { performance=data; toast('저장됐습니다.'); renderDashboard(); } else toast('저장 실패');
+  const r=await callAPI({action:'savePerformance',data});
+  if(r.success){performance=data;toast('저장됐습니다.');renderDashboard();}else toast('저장 실패');
 }
 
 // ── 입장 확인 ──
 function doCheckIn() {
-  const input  = document.getElementById('qr-input').value.trim().toUpperCase();
-  const result = document.getElementById('check-result');
-  const status = document.getElementById('check-status');
-  const detail = document.getElementById('check-detail');
-  if (!input) return;
-  const r = reservations.find(r=>r.resNum===input);
-  result.className = 'check-result show';
-  if (!r) { result.classList.add('fail'); status.className='check-status fail'; status.textContent='예약 정보를 찾을 수 없습니다.'; detail.innerHTML=''; return; }
-  if (r.payStatus!=='입금확인') { result.classList.add('fail'); status.className='check-status fail'; status.textContent='입금 미확인 — '+r.payStatus; detail.innerHTML='<div style="font-size:12px;color:var(--gray);margin-top:8px">'+r.name+' · '+r.session+'</div>'; return; }
-  result.classList.add('ok'); status.className='check-status ok';
-  status.textContent = r.checkedIn?'이미 입장 처리된 티켓입니다.':'입장 확인 ✓';
-  detail.innerHTML = '<div style="margin-top:12px;display:grid;gap:6px;font-size:13px"><div style="display:flex;justify-content:space-between"><span style="color:var(--gray)">예매자</span><span>'+r.name+'</span></div><div style="display:flex;justify-content:space-between"><span style="color:var(--gray)">회차</span><span>'+r.session+'</span></div><div style="display:flex;justify-content:space-between"><span style="color:var(--gray)">좌석</span><span>'+r.ticketType+' '+r.quantity+'매</span></div>'+(r.needProof?'<div style="color:var(--orange);font-size:12px;margin-top:4px">⚠ 증빙 서류 확인 필요</div>':'')+' </div>';
-  if (!r.checkedIn) { r.checkedIn=true; callAPI({action:'checkIn',resNum:r.resNum}); }
+  const input=document.getElementById('qr-input').value.trim().toUpperCase();
+  const result=document.getElementById('check-result'),status=document.getElementById('check-status'),detail=document.getElementById('check-detail');
+  if(!input)return;
+  const r=reservations.find(r=>r.resNum===input);
+  result.className='check-result show';
+  if(!r){result.classList.add('fail');status.className='check-status fail';status.textContent='예약 정보를 찾을 수 없습니다.';detail.innerHTML='';return;}
+  if(r.payStatus!=='입금확인'){result.classList.add('fail');status.className='check-status fail';status.textContent='입금 미확인 — '+r.payStatus;detail.innerHTML='<div style="font-size:12px;color:var(--gray);margin-top:8px">'+r.name+' · '+r.session+'</div>';return;}
+  result.classList.add('ok');status.className='check-status ok';
+  status.textContent=r.checkedIn?'이미 입장 처리된 티켓입니다.':'입장 확인 ✓';
+  detail.innerHTML='<div style="margin-top:12px;display:grid;gap:6px;font-size:13px">'
+    +'<div style="display:flex;justify-content:space-between"><span style="color:var(--gray)">예매자</span><span>'+r.name+'</span></div>'
+    +'<div style="display:flex;justify-content:space-between"><span style="color:var(--gray)">회차</span><span>'+r.session+'</span></div>'
+    +'<div style="display:flex;justify-content:space-between"><span style="color:var(--gray)">좌석</span><span>'+r.ticketType+' '+r.quantity+'매</span></div>'
+    +(r.needProof?'<div style="color:var(--orange);font-size:12px;margin-top:4px">⚠ 증빙 서류 확인 필요</div>':'')
+    +'</div>';
+  if(!r.checkedIn){r.checkedIn=true;callAPI({action:'checkIn',resNum:r.resNum});}
   document.getElementById('qr-input').value='';
 }
 
 // ── 엑셀 내보내기 ──
 async function exportExcel() {
   try {
-    const res = await fetch('/api/export', {headers:{'x-admin-key':ADMIN_PW}});
-    if (!res.ok) { toast('내보내기 실패'); return; }
-    const blob = await res.blob();
-    const url  = URL.createObjectURL(blob);
-    const a    = document.createElement('a');
-    const date = new Date().toLocaleDateString('ko-KR').replace(/\. /g,'-').replace('.','');
-    a.href=url; a.download='예약목록_'+date+'.csv';
-    document.body.appendChild(a); a.click();
-    document.body.removeChild(a); URL.revokeObjectURL(url);
+    const res=await fetch('/api/export',{headers:{'x-admin-key':ADMIN_PW}});
+    if(!res.ok){toast('내보내기 실패');return;}
+    const blob=await res.blob(), url=URL.createObjectURL(blob), a=document.createElement('a');
+    const date=new Date().toLocaleDateString('ko-KR').replace(/\. /g,'-').replace('.','');
+    a.href=url;a.download='예약목록_'+date+'.csv';
+    document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url);
     toast('다운로드됩니다.');
-  } catch(e) { toast('내보내기 오류'); }
+  } catch(e){toast('내보내기 오류');}
 }
 
 // ── 탭 ──
-function switchTab(tab, el) {
+function switchTab(tab,el) {
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
   document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));
   el.classList.add('active');
@@ -743,13 +773,9 @@ function switchTab(tab, el) {
 // ── API ──
 async function callAPI(payload) {
   try {
-    const res = await fetch(API_BASE, {
-      method:'POST',
-      headers:{'Content-Type':'application/json','x-admin-key':ADMIN_PW},
-      body:JSON.stringify(payload),
-    });
+    const res=await fetch(API_BASE,{method:'POST',headers:{'Content-Type':'application/json','x-admin-key':ADMIN_PW},body:JSON.stringify(payload)});
     return await res.json();
-  } catch(e) { return {success:false,message:e.message}; }
+  } catch(e){return{success:false,message:e.message};}
 }
 </script>
 </body>
