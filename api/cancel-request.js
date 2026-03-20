@@ -1,7 +1,7 @@
 // api/cancel-request.js — 관객 취소 신청 API
 // POST /api/cancel-request
 
-import { findReservation, addLog, getPerformance } from '../lib/db.js';
+import { findReservation, updateReservation, addLog, getPerformance } from '../lib/db.js';
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -52,6 +52,10 @@ export default async function handler(req, res) {
     if (!newSessionId || !newSessionLabel)
       return res.status(400).json({ success: false, message: '변경할 회차 정보가 없습니다.' });
 
+    // 예약 상태에 변경신청 기록
+    await updateReservation(resNum, {
+      changeRequest: { type: 'change', newSessionId, newSessionLabel, requestedAt: new Date().toISOString() }
+    });
     await addLog({
       resNum,
       name:   reservation.name,
@@ -78,6 +82,11 @@ export default async function handler(req, res) {
     }
     return res.status(200).json({ success: true, resNum, name: reservation.name });
   }
+
+  // 예약 상태에 취소신청 기록
+  await updateReservation(resNum, {
+    changeRequest: { type: 'cancel', reason: reason || '', requestedAt: new Date().toISOString() }
+  });
 
   // 취소 신청 로그 저장
   await addLog({
