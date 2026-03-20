@@ -3,289 +3,140 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>예매 취소 신청</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
+<title>예매 취소 / 날짜 변경</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
 <style>
-* { box-sizing: border-box; margin: 0; padding: 0; }
-:root {
-  --black: #0d0d0d;
-  --white: #f5f2ea;
-  --gold:  #c9a84c;
-  --gray:  #888;
-  --gray2: #444;
-  --red:   #c0392b;
-  --border: #222;
-  --surface: #141414;
-  --radius: 6px;
-}
-html, body {
-  min-height: 100vh;
-  background: var(--black);
-  color: var(--white);
-  font-family: 'Noto Sans KR', sans-serif;
-  font-weight: 300;
-}
-header {
-  text-align: center;
-  padding: 48px 24px 32px;
-  border-bottom: 1px solid var(--border);
-}
-.header-label {
-  font-size: 10px;
-  letter-spacing: 0.35em;
-  color: var(--gold);
-  text-transform: uppercase;
-  margin-bottom: 14px;
-}
-.header-title {
-  font-size: 22px;
-  font-weight: 500;
-  letter-spacing: -0.02em;
-}
-.header-sub {
-  font-size: 12px;
-  color: var(--gray);
-  margin-top: 8px;
-  line-height: 1.8;
-}
-.container {
-  max-width: 480px;
-  margin: 0 auto;
-  padding: 32px 20px 60px;
-}
-
-/* 안내 박스 */
-.notice-box {
-  background: #1a1a0f;
-  border: 1px solid #3a3010;
-  border-radius: var(--radius);
-  padding: 16px;
-  margin-bottom: 28px;
-  font-size: 12px;
-  color: #c9a84c;
-  line-height: 2;
-}
-.notice-box strong { font-weight: 500; }
-
-/* 폼 */
-.form-group { margin-bottom: 18px; }
-.form-group label {
-  display: block;
-  font-size: 10px;
-  letter-spacing: 0.2em;
-  color: var(--gray);
-  text-transform: uppercase;
-  margin-bottom: 8px;
-}
-input[type="text"],
-input[type="tel"],
-textarea {
-  width: 100%;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  color: var(--white);
-  font-family: 'Noto Sans KR', sans-serif;
-  font-size: 15px;
-  font-weight: 300;
-  padding: 13px 16px;
-  transition: border-color 0.2s;
-  resize: none;
-}
-input:focus, textarea:focus {
-  outline: none;
-  border-color: var(--gold);
-}
-input::placeholder, textarea::placeholder { color: #444; }
-input.error { border-color: var(--red); }
-
-.error-msg {
-  font-size: 11px;
-  color: var(--red);
-  margin-top: 6px;
-  display: none;
-}
-.error-msg.show { display: block; }
-
+:root{--black:#0d0d0d;--white:#f5f2ea;--gold:#c9a84c;--gray:#888;--gray2:#444;--red:#c0392b;--orange:#e07b39;--border:#222;--surface:#141414;--radius:6px;}
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{min-height:100vh;background:var(--black);color:var(--white);font-family:'Noto Sans KR',sans-serif;font-weight:300;}
+header{text-align:center;padding:44px 24px 28px;border-bottom:1px solid var(--border);}
+.header-label{font-size:10px;letter-spacing:.35em;color:var(--gold);text-transform:uppercase;margin-bottom:12px;}
+.header-title{font-size:20px;font-weight:500;letter-spacing:-.01em;}
+.header-sub{font-size:12px;color:var(--gray);margin-top:8px;line-height:1.9;}
+.container{max-width:480px;margin:0 auto;padding:28px 20px 60px;}
+.notice-box{background:#1a1a0f;border:1px solid #3a3010;border-radius:var(--radius);padding:14px 16px;margin-bottom:24px;font-size:12px;color:#c9a84c;line-height:2;}
+.notice-box.danger{background:#1a0f0f;border-color:#5a2020;color:#e07b7b;}
+.form-group{margin-bottom:16px;}
+.form-group label{display:block;font-size:10px;letter-spacing:.2em;color:var(--gray);text-transform:uppercase;margin-bottom:7px;}
+input[type=text],input[type=tel]{width:100%;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);color:var(--white);font-family:inherit;font-size:14px;font-weight:300;padding:12px 14px;transition:border-color .2s;}
+input:focus{outline:none;border-color:var(--gold);}
+input::placeholder{color:#444;}
+input.error{border-color:var(--red);}
+.err-msg{font-size:11px;color:var(--red);margin-top:5px;display:none;}
+.err-msg.show{display:block;}
+/* 액션 탭 */
+.action-tabs{display:flex;gap:8px;margin-bottom:20px;}
+.action-tab{flex:1;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:12px;text-align:center;cursor:pointer;font-size:13px;color:var(--gray);transition:all .15s;}
+.action-tab.active{border-color:var(--gold);color:var(--gold);background:#1e1c0f;}
+/* 예약 확인 카드 */
+.confirm-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:16px;}
+.confirm-title{font-size:10px;letter-spacing:.2em;color:var(--gold);text-transform:uppercase;margin-bottom:12px;}
+.confirm-row{display:flex;justify-content:space-between;font-size:13px;margin-bottom:7px;}
+.confirm-label{color:var(--gray);}
+.confirm-value{}
+.confirm-value.warn{color:var(--orange);}
+/* 회차 선택 */
+.sess-list{margin-bottom:16px;}
+.sess-item{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:12px 14px;margin-bottom:8px;cursor:pointer;transition:border-color .15s;}
+.sess-item:hover:not(.disabled){border-color:var(--gold);}
+.sess-item.sel{border-color:var(--gold);background:#1e1c0f;}
+.sess-item.disabled{opacity:.4;cursor:not-allowed;}
+.sess-item.current{border-color:#555;}
+.sess-date{font-size:13px;font-weight:500;margin-bottom:2px;}
+.sess-info{font-size:11px;color:var(--gray);}
 /* 버튼 */
-.submit-btn {
-  width: 100%;
-  background: #2a1a1a;
-  color: #e07b7b;
-  border: 1px solid #5a2d2d;
-  border-radius: var(--radius);
-  font-family: 'Noto Sans KR', sans-serif;
-  font-size: 14px;
-  font-weight: 500;
-  letter-spacing: 0.1em;
-  padding: 16px;
-  cursor: pointer;
-  transition: all 0.2s;
-  margin-top: 8px;
-}
-.submit-btn:hover:not(:disabled) {
-  background: #3a2020;
-  border-color: #e07b7b;
-}
-.submit-btn:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-}
-
-/* 예약 정보 확인 카드 */
-.confirm-card {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 18px;
-  margin-bottom: 20px;
-}
-.confirm-title {
-  font-size: 10px;
-  letter-spacing: 0.2em;
-  color: var(--gold);
-  text-transform: uppercase;
-  margin-bottom: 14px;
-}
-.confirm-row {
-  display: flex;
-  justify-content: space-between;
-  font-size: 13px;
-  margin-bottom: 8px;
-}
-.confirm-row:last-child { margin-bottom: 0; }
-.confirm-label { color: var(--gray); }
-.confirm-value { font-weight: 400; }
-.confirm-value.red { color: #e07b7b; }
-
-/* 완료 화면 */
-.result-screen {
-  display: none;
-  text-align: center;
-  padding: 40px 0;
-}
-.result-screen.show { display: block; }
-.result-icon {
-  width: 56px; height: 56px;
-  border: 1px solid #5a2d2d;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin: 0 auto 20px;
-}
-.result-icon svg { width: 24px; height: 24px; }
-.result-title {
-  font-size: 18px;
-  font-weight: 500;
-  margin-bottom: 12px;
-}
-.result-desc {
-  font-size: 13px;
-  color: var(--gray);
-  line-height: 2;
-}
-
+.primary-btn{width:100%;background:var(--gold);color:#0d0d0d;border:none;border-radius:var(--radius);font-family:inherit;font-size:14px;font-weight:700;letter-spacing:.1em;padding:15px;cursor:pointer;margin-top:6px;}
+.primary-btn:hover:not(:disabled){filter:brightness(1.1);}
+.primary-btn:disabled{background:#2a2a2a;color:var(--gray);cursor:not-allowed;}
+.danger-btn{width:100%;background:#2a1a1a;color:#e07b7b;border:1px solid #5a2d2d;border-radius:var(--radius);font-family:inherit;font-size:14px;font-weight:500;letter-spacing:.1em;padding:15px;cursor:pointer;margin-top:6px;}
+.danger-btn:hover{background:#3a2020;}
+.back-link{display:block;text-align:center;margin-top:20px;font-size:12px;color:var(--gray);text-decoration:none;cursor:pointer;}
+.back-link:hover{color:var(--white);}
 /* 로딩 */
-.loading { display: none; text-align: center; padding: 30px; color: var(--gray); font-size: 13px; }
-.loading.show { display: block; }
-@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
-.loading span { animation: pulse 1.2s ease-in-out infinite; display: inline-block; margin: 0 2px; }
-.loading span:nth-child(2) { animation-delay: 0.2s; }
-.loading span:nth-child(3) { animation-delay: 0.4s; }
-
-.back-link {
-  display: block;
-  text-align: center;
-  margin-top: 24px;
-  font-size: 12px;
-  color: var(--gray);
-  text-decoration: none;
-  letter-spacing: 0.1em;
-}
-.back-link:hover { color: var(--white); }
+.loading{display:none;text-align:center;padding:32px;color:var(--gray);font-size:13px;}
+.loading.show{display:block;}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+.loading span{animation:pulse 1.2s ease-in-out infinite;display:inline-block;margin:0 2px;}
+.loading span:nth-child(2){animation-delay:.2s;}
+.loading span:nth-child(3){animation-delay:.4s;}
+/* 완료 */
+.result-screen{display:none;text-align:center;padding:40px 0;}
+.result-screen.show{display:block;}
+.result-icon{width:52px;height:52px;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 18px;}
+.result-icon.cancel{border:1px solid #5a2d2d;}
+.result-icon.change{border:1px solid var(--gold);}
+.result-title{font-size:18px;font-weight:500;margin-bottom:10px;}
+.result-desc{font-size:13px;color:var(--gray);line-height:2;}
 </style>
 </head>
 <body>
 
 <header>
-  <div class="header-label">주식회사 극단아리랑</div>
-  <div class="header-title">예매 취소 신청</div>
+  <div class="header-label" id="header-agency">주식회사 극단아리랑</div>
+  <div class="header-title">예매 취소 / 날짜 변경</div>
   <div class="header-sub">
-    취소 신청 접수 후 담당자 확인을 통해 처리됩니다.<br>
-    입금 완료 건은 환불 처리까지 1~3 영업일 소요될 수 있습니다.
+    취소는 공연 당일 불가합니다.<br>
+    날짜 변경은 공연 전까지 신청 가능합니다.
   </div>
 </header>
 
 <div class="container">
 
-  <!-- 취소 폼 -->
-  <div id="cancel-form">
+  <!-- 1단계: 예약 조회 -->
+  <div id="step-lookup">
     <div class="notice-box">
-      <strong>취소 신청 전 확인해 주세요</strong><br>
-      · 공연 당일은 취소가 불가합니다<br>
-      · 입금 완료 건은 환불까지 시간이 소요됩니다<br>
-      · 취소 문의: <span id="notice-tel">관리자 연락처</span>
+      문의: <span id="notice-tel">—</span>
     </div>
-
-    <div class="notice-box" style="background:#0f1a2e;border-color:#1a3a6e;color:#7aabee">
-      입금 완료 후 카카오톡으로 알려주세요<br>
-      <a href="https://pf.kakao.com/_xlUqEX/chat"
-         style="color:#7aabee;font-weight:500"
-         target="_blank">💬 주식회사 극단아리랑 채널로 알리기</a>
-    </div>
-
     <div class="form-group">
       <label>예약번호</label>
-      <input type="text" id="res-num" placeholder="예: DQ-0416-001"
-             style="text-transform:uppercase; letter-spacing:0.1em">
-      <div class="error-msg" id="err-resnum">예약번호를 입력해 주세요.</div>
+      <input type="text" id="res-num" placeholder="예: DQ-0416-001" style="text-transform:uppercase">
+      <div class="err-msg" id="err-resnum">예약번호를 입력해 주세요.</div>
     </div>
-
     <div class="form-group">
       <label>연락처 (예약 시 입력한 번호)</label>
-      <input type="tel" id="phone" placeholder="010-0000-0000" oninput="formatPhone(this)">
-      <div class="error-msg" id="err-phone">연락처를 입력해 주세요.</div>
+      <input type="tel" id="phone" placeholder="010-0000-0000" oninput="fmtPhone(this)">
+      <div class="err-msg" id="err-phone">연락처를 입력해 주세요.</div>
     </div>
-
-    <div class="form-group">
-      <label>취소 사유 (선택)</label>
-      <textarea id="reason" rows="3" placeholder="취소 사유를 간단히 입력해 주세요."></textarea>
-    </div>
-
-    <button class="submit-btn" id="lookup-btn" onclick="lookupReservation()">
-      예약 조회하기
-    </button>
+    <button class="primary-btn" onclick="lookup()">예약 조회</button>
   </div>
 
-  <!-- 예약 확인 + 최종 취소 -->
-  <div id="confirm-section" style="display:none">
+  <!-- 2단계: 취소 / 날짜 변경 선택 -->
+  <div id="step-action" style="display:none">
     <div class="confirm-card">
-      <div class="confirm-title">취소할 예약 정보</div>
-      <div class="confirm-row">
-        <span class="confirm-label">예약번호</span>
-        <span class="confirm-value" id="c-resnum"></span>
-      </div>
-      <div class="confirm-row">
-        <span class="confirm-label">예매자</span>
-        <span class="confirm-value" id="c-name"></span>
-      </div>
-      <div class="confirm-row">
-        <span class="confirm-label">회차</span>
-        <span class="confirm-value" id="c-session"></span>
-      </div>
-      <div class="confirm-row">
-        <span class="confirm-label">입금 상태</span>
-        <span class="confirm-value red" id="c-status"></span>
-      </div>
+      <div class="confirm-title">예약 정보</div>
+      <div class="confirm-row"><span class="confirm-label">예약번호</span><span class="confirm-value" id="c-resnum"></span></div>
+      <div class="confirm-row"><span class="confirm-label">예매자</span><span class="confirm-value" id="c-name"></span></div>
+      <div class="confirm-row"><span class="confirm-label">회차</span><span class="confirm-value" id="c-session"></span></div>
+      <div class="confirm-row"><span class="confirm-label">상태</span><span class="confirm-value warn" id="c-status"></span></div>
     </div>
 
-    <button class="submit-btn" id="cancel-btn" onclick="submitCancel()">
-      위 예약을 취소 신청합니다
-    </button>
+    <!-- 액션 탭 -->
+    <div class="action-tabs">
+      <div class="action-tab active" id="tab-change" onclick="setActionTab('change')">날짜 변경</div>
+      <div class="action-tab" id="tab-cancel" onclick="setActionTab('cancel')">예매 취소</div>
+    </div>
 
-    <a href="#" class="back-link" onclick="resetForm(); return false;">← 다시 입력하기</a>
+    <!-- 날짜 변경 패널 -->
+    <div id="panel-change">
+      <div style="font-size:12px;color:var(--gray);margin-bottom:14px;line-height:1.8;">
+        변경할 회차를 선택해 주세요.<br>
+        <span style="color:var(--orange);font-size:11px;">공연 당일은 날짜 변경도 불가합니다.</span>
+      </div>
+      <div class="sess-list" id="sess-list"></div>
+      <button class="primary-btn" id="change-btn" onclick="submitChange()" disabled>날짜 변경 신청</button>
+    </div>
+
+    <!-- 취소 패널 -->
+    <div id="panel-cancel" style="display:none">
+      <div id="cancel-notice"></div>
+      <div class="form-group" style="margin-top:14px;">
+        <label>취소 사유 (선택)</label>
+        <input type="text" id="reason" placeholder="사유를 간단히 입력해 주세요.">
+      </div>
+      <button class="danger-btn" id="cancel-btn" onclick="submitCancel()">예매 취소 신청</button>
+    </div>
+
+    <span class="back-link" onclick="resetForm()">← 다시 입력하기</span>
   </div>
 
   <!-- 로딩 -->
@@ -295,130 +146,258 @@ input.error { border-color: var(--red); }
 
   <!-- 완료 -->
   <div class="result-screen" id="result-screen">
-    <div class="result-icon">
-      <svg viewBox="0 0 24 24" fill="none" stroke="#e07b7b" stroke-width="1.5" stroke-linecap="round">
-        <path d="M20 6L9 17l-5-5"/>
-      </svg>
+    <div class="result-icon" id="result-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="1.5" stroke-linecap="round" width="22" height="22" id="result-svg"></svg>
     </div>
-    <div class="result-title">취소 신청이 접수되었습니다</div>
-    <div class="result-desc">
-      담당자 확인 후 처리해 드립니다.<br>
-      문의: <span id="result-tel"></span>
-    </div>
+    <div class="result-title" id="result-title"></div>
+    <div class="result-desc" id="result-desc"></div>
   </div>
 
 </div>
 
 <script>
-let lookupData  = null;
-let cancelReason = '';
+const DAYS = ['일','월','화','수','목','금','토'];
+let CFG = { sessions:[], performance:{} };
+let lookupData = null;
+let selectedNewSessionId = null;
+let currentAction = 'change';
 
-// 공연 설정에서 연락처 로드
-async function loadConfig() {
+async function init() {
   try {
-    const res  = await fetch('/api/config');
-    const data = await res.json();
-    const tel  = data.performance?.tel || '';
-    if (tel) {
-      document.getElementById('notice-tel').textContent = tel;
-      document.getElementById('result-tel').textContent = tel;
+    const res = await fetch('/api/config');
+    CFG = await res.json();
+    const p = CFG.performance || {};
+    if (p.agency) document.getElementById('header-agency').textContent = p.agency;
+    if (p.tel) {
+      document.getElementById('notice-tel').textContent = p.tel;
     }
   } catch(e) {}
 }
 
-function formatPhone(input) {
-  let val = input.value.replace(/\D/g,'');
-  if (val.length > 11) val = val.slice(0,11);
-  if (val.length >= 8) val = val.slice(0,3)+'-'+val.slice(3,7)+'-'+val.slice(7);
-  else if (val.length >= 4) val = val.slice(0,3)+'-'+val.slice(3);
-  input.value = val;
+function fmtPhone(input) {
+  let v=input.value.replace(/\D/g,'');
+  if(v.length>11)v=v.slice(0,11);
+  if(v.length>=8)v=v.slice(0,3)+'-'+v.slice(3,7)+'-'+v.slice(7);
+  else if(v.length>=4)v=v.slice(0,3)+'-'+v.slice(3);
+  input.value=v;
 }
 
-async function lookupReservation() {
+function sessLabel(s) {
+  const d = new Date(s.date + 'T00:00:00');
+  return (d.getMonth()+1) + '월 ' + d.getDate() + '일 (' + DAYS[d.getDay()] + ') ' + s.time;
+}
+
+// 공연 당일 여부 체크
+function isSameDay(sessionDate) {
+  const today = new Date();
+  const d     = new Date(sessionDate + 'T00:00:00');
+  return today.getFullYear()===d.getFullYear() && today.getMonth()===d.getMonth() && today.getDate()===d.getDate();
+}
+
+// 공연이 이미 지났는지 체크
+function isPast(sessionDate, sessionTime) {
+  const now  = new Date();
+  const perf = new Date(sessionDate + 'T' + sessionTime + ':00');
+  return now > perf;
+}
+
+async function lookup() {
   const resNum = document.getElementById('res-num').value.trim().toUpperCase();
   const phone  = document.getElementById('phone').value.trim();
-  cancelReason = document.getElementById('reason').value.trim();
-
   let valid = true;
-  if (!resNum) { document.getElementById('err-resnum').classList.add('show'); valid = false; }
+  if (!resNum) { document.getElementById('err-resnum').classList.add('show'); valid=false; }
   else document.getElementById('err-resnum').classList.remove('show');
-  if (!phone)  { document.getElementById('err-phone').classList.add('show'); valid = false; }
+  if (!phone)  { document.getElementById('err-phone').classList.add('show'); valid=false; }
   else document.getElementById('err-phone').classList.remove('show');
   if (!valid) return;
 
-  document.getElementById('cancel-form').style.display    = 'none';
+  document.getElementById('step-lookup').style.display = 'none';
   document.getElementById('loading').classList.add('show');
 
   try {
     const res  = await fetch('/api/cancel-request', {
-      method:  'POST',
-      headers: { 'Content-Type': 'application/json' },
-      // 조회만 할 때는 lookup: true 플래그 전송
-      body: JSON.stringify({ resNum, phone, lookup: true }),
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({resNum, phone, lookup:true}),
     });
     const data = await res.json();
     document.getElementById('loading').classList.remove('show');
 
     if (!data.success) {
-      document.getElementById('cancel-form').style.display = 'block';
+      document.getElementById('step-lookup').style.display = 'block';
       document.getElementById('err-resnum').textContent = data.message;
       document.getElementById('err-resnum').classList.add('show');
       return;
     }
 
-    // 예약 정보 표시
     lookupData = data;
-    document.getElementById('c-resnum').textContent  = data.resNum;
-    document.getElementById('c-name').textContent    = data.name;
-    document.getElementById('c-session').textContent = data.session;
-    document.getElementById('c-status').textContent  = data.payStatus;
-    document.getElementById('confirm-section').style.display = 'block';
-
+    showActionStep(data);
   } catch(e) {
     document.getElementById('loading').classList.remove('show');
-    document.getElementById('cancel-form').style.display = 'block';
+    document.getElementById('step-lookup').style.display = 'block';
+    alert('네트워크 오류가 발생했습니다.');
+  }
+}
+
+function showActionStep(data) {
+  document.getElementById('c-resnum').textContent  = data.resNum;
+  document.getElementById('c-name').textContent    = data.name;
+  document.getElementById('c-session').textContent = data.session;
+  document.getElementById('c-status').textContent  = data.payStatus;
+
+  // 회차 찾기
+  const currentSession = CFG.sessions.find(s => data.session.includes(s.date));
+
+  // 당일 여부
+  const isToday = currentSession && isSameDay(currentSession.date);
+
+  // 취소 패널 안내 설정
+  const cancelNotice = document.getElementById('cancel-notice');
+  const cancelBtn    = document.getElementById('cancel-btn');
+  if (isToday) {
+    cancelNotice.innerHTML = '<div class="notice-box danger">공연 당일은 예매 취소가 불가합니다.</div>';
+    cancelBtn.disabled = true;
+    cancelBtn.style.opacity = '0.4';
+    cancelBtn.style.cursor  = 'not-allowed';
+  } else {
+    cancelNotice.innerHTML = '<div class="notice-box">취소 신청 후 담당자 확인을 통해 처리됩니다.<br>입금 완료 건은 환불까지 1~3 영업일 소요될 수 있습니다.</div>';
+    cancelBtn.disabled = false;
+  }
+
+  // 날짜 변경 회차 목록
+  renderSessList(data.session, isToday);
+
+  document.getElementById('step-action').style.display = 'block';
+}
+
+function renderSessList(currentSessionLabel, isToday) {
+  const list = document.getElementById('sess-list');
+  if (!CFG.sessions.length) { list.innerHTML = '<div style="color:var(--gray);font-size:13px;text-align:center;padding:20px;">변경 가능한 회차가 없습니다.</div>'; return; }
+
+  list.innerHTML = CFG.sessions.map(s => {
+    const label      = sessLabel(s);
+    const isCurrent  = label === currentSessionLabel || currentSessionLabel.includes(s.date);
+    const isPastSess = isPast(s.date, s.time);
+    const isTodaySess = isSameDay(s.date);
+    const isFull     = s.status === 'closed' || s.remain <= 0;
+    const disabled   = isCurrent || isPastSess || isFull || (isToday && isTodaySess);
+
+    let infoText = s.seats + '석';
+    if (isCurrent)   infoText += ' · 현재 회차';
+    else if (isPastSess) infoText += ' · 지난 공연';
+    else if (isFull) infoText += ' · 마감';
+    else             infoText += ' · 잔여 ' + (s.remain||'?') + '석';
+
+    return '<div class="sess-item' + (isCurrent?' current':'') + (disabled&&!isCurrent?' disabled':'') + '" '
+      + (disabled ? '' : 'onclick="selectSess(\'' + s.id + '\', this)"') + '>'
+      + '<div class="sess-date">' + label + '</div>'
+      + '<div class="sess-info">' + infoText + '</div>'
+      + '</div>';
+  }).join('');
+}
+
+function selectSess(id, el) {
+  selectedNewSessionId = id;
+  document.querySelectorAll('.sess-item').forEach(x => x.classList.remove('sel'));
+  el.classList.add('sel');
+  document.getElementById('change-btn').disabled = false;
+}
+
+function setActionTab(tab) {
+  currentAction = tab;
+  document.getElementById('tab-change').classList.toggle('active', tab==='change');
+  document.getElementById('tab-cancel').classList.toggle('active', tab==='cancel');
+  document.getElementById('panel-change').style.display = tab==='change' ? 'block' : 'none';
+  document.getElementById('panel-cancel').style.display = tab==='cancel' ? 'block' : 'none';
+}
+
+async function submitChange() {
+  if (!selectedNewSessionId) { alert('변경할 회차를 선택해 주세요.'); return; }
+  const newSession = CFG.sessions.find(s => s.id === selectedNewSessionId);
+  if (!newSession) return;
+
+  document.getElementById('step-action').style.display = 'none';
+  document.getElementById('loading').classList.add('show');
+
+  try {
+    const res  = await fetch('/api/cancel-request', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        resNum:          lookupData.resNum,
+        phone:           document.getElementById('phone').value.trim(),
+        requestType:     'change',
+        newSessionId:    selectedNewSessionId,
+        newSessionLabel: sessLabel(newSession),
+      }),
+    });
+    const data = await res.json();
+    document.getElementById('loading').classList.remove('show');
+    if (data.success) showResult('change', data);
+    else { document.getElementById('step-action').style.display='block'; alert(data.message||'오류가 발생했습니다.'); }
+  } catch(e) {
+    document.getElementById('loading').classList.remove('show');
+    document.getElementById('step-action').style.display = 'block';
     alert('네트워크 오류가 발생했습니다.');
   }
 }
 
 async function submitCancel() {
-  if (!lookupData) return;
-  document.getElementById('confirm-section').style.display = 'none';
+  document.getElementById('step-action').style.display = 'none';
   document.getElementById('loading').classList.add('show');
 
   try {
     const res  = await fetch('/api/cancel-request', {
-      method:  'POST',
-      headers: { 'Content-Type': 'application/json' },
+      method:'POST', headers:{'Content-Type':'application/json'},
       body: JSON.stringify({
-        resNum: lookupData.resNum,
-        phone:  document.getElementById('phone').value.trim(),
-        reason: cancelReason,
+        resNum:      lookupData.resNum,
+        phone:       document.getElementById('phone').value.trim(),
+        requestType: 'cancel',
+        reason:      document.getElementById('reason').value.trim(),
       }),
     });
     const data = await res.json();
     document.getElementById('loading').classList.remove('show');
-
-    if (data.success) {
-      document.getElementById('result-screen').classList.add('show');
-    } else {
-      document.getElementById('confirm-section').style.display = 'block';
-      alert(data.message || '오류가 발생했습니다.');
-    }
+    if (data.success) showResult('cancel', data);
+    else { document.getElementById('step-action').style.display='block'; alert(data.message||'오류가 발생했습니다.'); }
   } catch(e) {
     document.getElementById('loading').classList.remove('show');
-    document.getElementById('confirm-section').style.display = 'block';
+    document.getElementById('step-action').style.display = 'block';
     alert('네트워크 오류가 발생했습니다.');
   }
 }
 
-function resetForm() {
-  lookupData = null;
-  document.getElementById('confirm-section').style.display = 'none';
-  document.getElementById('cancel-form').style.display     = 'block';
+function showResult(type, data) {
+  const icon  = document.getElementById('result-icon');
+  const svg   = document.getElementById('result-svg');
+  const title = document.getElementById('result-title');
+  const desc  = document.getElementById('result-desc');
+  const p     = CFG.performance || {};
+
+  if (type === 'change') {
+    icon.className  = 'result-icon change';
+    svg.setAttribute('stroke','#c9a84c');
+    svg.innerHTML   = '<path d="M5 12l5 5 9-10"/>';
+    title.textContent = '날짜 변경 신청이 접수되었습니다';
+    desc.innerHTML  = '담당자 확인 후 처리해 드립니다.<br>문의: <span style="color:var(--white)">' + (p.tel||'—') + '</span>';
+  } else {
+    icon.className  = 'result-icon cancel';
+    svg.setAttribute('stroke','#e07b7b');
+    svg.innerHTML   = '<path d="M18 6L6 18M6 6l12 12"/>';
+    title.textContent = '취소 신청이 접수되었습니다';
+    desc.innerHTML  = '담당자 확인 후 처리해 드립니다.<br>문의: <span style="color:var(--white)">' + (p.tel||'—') + '</span>';
+  }
+  document.getElementById('result-screen').classList.add('show');
 }
 
-loadConfig();
+function resetForm() {
+  lookupData = null; selectedNewSessionId = null;
+  document.getElementById('step-action').style.display = 'none';
+  document.getElementById('step-lookup').style.display = 'block';
+  document.getElementById('res-num').value = '';
+  document.getElementById('phone').value   = '';
+  setActionTab('change');
+}
+
+init();
 </script>
 </body>
 </html>
