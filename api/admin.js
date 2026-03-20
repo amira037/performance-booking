@@ -173,6 +173,26 @@ export default async function handler(req, res) {
     return res.status(200).json({ success: true });
   }
 
+  // ── 회차 변경 (관리자 직권) ─────────────────────────────
+  if (action === 'changeSession') {
+    const { resNum, newSessionId, newSessionLabel } = payload;
+    const reservation = await findReservation(resNum);
+    if (!reservation) return res.status(404).json({ success: false, message: '예약을 찾을 수 없습니다.' });
+
+    // 기존 회차 좌석 복구
+    if (reservation.payStatus === '입금확인' || reservation.payStatus === '미입금') {
+      await decrementBooked(reservation.sessionId, reservation.quantity);
+    }
+    // 새 회차 좌석 추가
+    await incrementBooked(newSessionId, reservation.quantity);
+
+    await updateReservation(resNum, {
+      sessionId: newSessionId,
+      session:   newSessionLabel,
+    });
+    return res.status(200).json({ success: true });
+  }
+
   // deletePreset
   if (action === 'deletePreset') {
     const presets = await getPresets();
