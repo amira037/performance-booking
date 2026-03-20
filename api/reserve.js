@@ -59,21 +59,28 @@ export default async function handler(req, res) {
   await removeLock(lockId);
   await incrementBooked(sessionId, quantity);
 
-  // 공연 정보 로드 후 알림톡 발송
-  const perf = await getPerformance();
-  const cancelUrl = (process.env.TICKET_BASE_URL || '').replace('/ticket.html', '') + '/cancel.html';
-  const sent = await sendReservationAlimtalk({
-    name, phone, resNum,
-    session: sessionLabel,
-    ticketType, quantity, total,
-    perfName:      perf.name          || '공연',
-    account:       perf.account       || '',
-    accountHolder: perf.accountHolder || '',
-    kakaopayLink:  perf.kakaopayLink  || '',
-    cancelUrl,
-  });
+  // 예약 저장 완료 → 알림톡은 실패해도 예약은 성공 처리
+  let sent = false;
+  try {
+    const perf = await getPerformance();
+    const cancelUrl = (process.env.TICKET_BASE_URL || '').replace('/ticket.html', '') + '/cancel.html';
+    sent = await sendReservationAlimtalk({
+      name, phone, resNum,
+      session: sessionLabel,
+      ticketType, quantity, total,
+      perfName:      perf.name          || '공연',
+      account:       perf.account       || '',
+      accountHolder: perf.accountHolder || '',
+      kakaopayLink:  perf.kakaopayLink  || '',
+      cancelUrl,
+    });
+  } catch(alimErr) {
+    console.error('알림톡 발송 오류 (예약은 완료됨):', alimErr.message);
+  }
 
-  await addLog({ resNum, name, phone, type: '예약확인', result: sent ? '성공' : '실패' });
+  try {
+    await addLog({ resNum, name, phone, type: '예약확인', result: sent ? '성공' : '실패' });
+  } catch(logErr) {}
 
   return res.status(200).json({ success: true, resNum });
 }
