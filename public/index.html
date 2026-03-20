@@ -3,882 +3,768 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>덕질의 이해 — 예매</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;600;700&family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
+<title>공연 예약 관리자</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
 <style>
-  :root {
-    --black: #0f0f0f;
-    --white: #fafaf7;
-    --cream: #f4f1e8;
-    --gold: #c9a84c;
-    --gold-light: #e8d5a0;
-    --gray: #888;
-    --gray-light: #e8e8e0;
-    --red: #c0392b;
-    --success: #2d6a4f;
-    --radius: 4px;
-  }
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  html { scroll-behavior: smooth; }
-  body {
-    background: var(--black);
-    color: var(--white);
-    font-family: 'Noto Sans KR', sans-serif;
-    font-weight: 300;
-    min-height: 100vh;
-    overflow-x: hidden;
-  }
-
-  /* 헤더 */
-  header {
-    text-align: center;
-    padding: 60px 24px 40px;
-    border-bottom: 1px solid #222;
-    position: relative;
-  }
-  .header-label {
-    font-size: 11px;
-    letter-spacing: 0.3em;
-    color: var(--gold);
-    text-transform: uppercase;
-    margin-bottom: 20px;
-  }
-  .header-title {
-    font-family: 'Noto Serif KR', serif;
-    font-size: clamp(32px, 6vw, 56px);
-    font-weight: 700;
-    letter-spacing: -0.02em;
-    line-height: 1.1;
-    margin-bottom: 16px;
-  }
-  .header-sub {
-    font-size: 13px;
-    color: var(--gray);
-    letter-spacing: 0.1em;
-  }
-  .gold-line {
-    width: 40px;
-    height: 1px;
-    background: var(--gold);
-    margin: 24px auto;
-  }
-
-  /* 메인 레이아웃 */
-  .container {
-    max-width: 560px;
-    margin: 0 auto;
-    padding: 40px 24px 80px;
-  }
-
-  /* 섹션 */
-  .section {
-    margin-bottom: 40px;
-  }
-  .section-title {
-    font-size: 11px;
-    letter-spacing: 0.25em;
-    color: var(--gold);
-    text-transform: uppercase;
-    margin-bottom: 16px;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-  }
-  .section-title::after {
-    content: '';
-    flex: 1;
-    height: 1px;
-    background: #222;
-  }
-  .section-num {
-    width: 20px;
-    height: 20px;
-    border: 1px solid var(--gold);
-    border-radius: 50%;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 10px;
-    color: var(--gold);
-    flex-shrink: 0;
-  }
-
-  /* 회차 선택 카드 */
-  .session-grid {
-    display: grid;
-    gap: 8px;
-  }
-  .session-card {
-    border: 1px solid #2a2a2a;
-    border-radius: var(--radius);
-    padding: 16px 20px;
-    cursor: pointer;
-    transition: all 0.2s;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    position: relative;
-    background: #141414;
-  }
-  .session-card:hover:not(.sold-out) {
-    border-color: var(--gold);
-    background: #1a1a14;
-  }
-  .session-card.selected {
-    border-color: var(--gold);
-    background: #1e1c0f;
-  }
-  .session-card.sold-out {
-    opacity: 0.4;
-    cursor: not-allowed;
-  }
-  .session-info {}
-  .session-date {
-    font-size: 13px;
-    color: var(--gray);
-    margin-bottom: 4px;
-  }
-  .session-time {
-    font-size: 18px;
-    font-weight: 500;
-    letter-spacing: 0.05em;
-  }
-  .session-right {
-    text-align: right;
-  }
-  .session-remain {
-    font-size: 12px;
-    color: var(--gray);
-  }
-  .session-remain.low {
-    color: #e07b39;
-  }
-  .session-remain.sold {
-    color: var(--red);
-  }
-  .check-icon {
-    width: 20px;
-    height: 20px;
-    border-radius: 50%;
-    background: var(--gold);
-    display: none;
-    align-items: center;
-    justify-content: center;
-    margin-top: 4px;
-    margin-left: auto;
-  }
-  .check-icon svg { width: 10px; height: 10px; }
-  .session-card.selected .check-icon { display: flex; }
-
-  /* 유형/매수 선택 */
-  .select-row {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 12px;
-  }
-  .select-group label {
-    display: block;
-    font-size: 11px;
-    letter-spacing: 0.15em;
-    color: var(--gray);
-    margin-bottom: 8px;
-    text-transform: uppercase;
-  }
-  select {
-    width: 100%;
-    background: #141414;
-    border: 1px solid #2a2a2a;
-    border-radius: var(--radius);
-    color: var(--white);
-    font-family: 'Noto Sans KR', sans-serif;
-    font-size: 14px;
-    padding: 12px 16px;
-    appearance: none;
-    -webkit-appearance: none;
-    cursor: pointer;
-    transition: border-color 0.2s;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23888' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
-    background-repeat: no-repeat;
-    background-position: right 14px center;
-    padding-right: 36px;
-  }
-  select:focus {
-    outline: none;
-    border-color: var(--gold);
-  }
-  select option { background: #1a1a1a; }
-
-  /* 가격 표시 */
-  .price-display {
-    background: #141414;
-    border: 1px solid #2a2a2a;
-    border-radius: var(--radius);
-    padding: 20px;
-    margin-top: 16px;
-  }
-  .price-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    font-size: 13px;
-    color: var(--gray);
-    margin-bottom: 8px;
-  }
-  .price-total-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding-top: 12px;
-    border-top: 1px solid #2a2a2a;
-    margin-top: 4px;
-  }
-  .price-total-label {
-    font-size: 12px;
-    letter-spacing: 0.15em;
-    color: var(--gold);
-    text-transform: uppercase;
-  }
-  .price-total-amount {
-    font-size: 22px;
-    font-weight: 500;
-    letter-spacing: -0.02em;
-  }
-  .proof-notice {
-    margin-top: 10px;
-    font-size: 11px;
-    color: #e07b39;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-  }
-
-  /* 입력 폼 */
-  .input-group {
-    margin-bottom: 16px;
-  }
-  .input-group label {
-    display: block;
-    font-size: 11px;
-    letter-spacing: 0.15em;
-    color: var(--gray);
-    margin-bottom: 8px;
-    text-transform: uppercase;
-  }
-  input[type="text"],
-  input[type="tel"],
-  input[type="email"] {
-    width: 100%;
-    background: #141414;
-    border: 1px solid #2a2a2a;
-    border-radius: var(--radius);
-    color: var(--white);
-    font-family: 'Noto Sans KR', sans-serif;
-    font-size: 15px;
-    font-weight: 300;
-    padding: 13px 16px;
-    transition: border-color 0.2s;
-  }
-  input:focus {
-    outline: none;
-    border-color: var(--gold);
-  }
-  input::placeholder { color: #444; }
-
-  /* 입금 안내 */
-  .account-box {
-    background: #141414;
-    border: 1px solid #2a2a2a;
-    border-radius: var(--radius);
-    padding: 20px;
-  }
-  .account-notice {
-    font-size: 12px;
-    color: var(--gray);
-    line-height: 1.8;
-    margin-bottom: 16px;
-  }
-  .account-info {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    background: #0f0f0f;
-    border: 1px solid #333;
-    border-radius: var(--radius);
-    padding: 14px 16px;
-  }
-  .account-bank {
-    font-size: 11px;
-    color: var(--gold);
-    letter-spacing: 0.1em;
-    margin-bottom: 4px;
-  }
-  .account-num {
-    font-size: 16px;
-    font-weight: 500;
-    letter-spacing: 0.05em;
-  }
-  .copy-btn {
-    background: none;
-    border: 1px solid #333;
-    border-radius: var(--radius);
-    color: var(--gray);
-    font-size: 11px;
-    padding: 6px 12px;
-    cursor: pointer;
-    font-family: inherit;
-    transition: all 0.2s;
-    letter-spacing: 0.1em;
-  }
-  .copy-btn:hover {
-    border-color: var(--gold);
-    color: var(--gold);
-  }
-  .account-deadline {
-    margin-top: 12px;
-    font-size: 11px;
-    color: #e07b39;
-    text-align: center;
-    letter-spacing: 0.05em;
-  }
-
-  /* 제출 버튼 */
-  .submit-btn {
-    width: 100%;
-    background: var(--gold);
-    color: var(--black);
-    border: none;
-    border-radius: var(--radius);
-    font-family: 'Noto Sans KR', sans-serif;
-    font-size: 15px;
-    font-weight: 700;
-    letter-spacing: 0.15em;
-    padding: 18px;
-    cursor: pointer;
-    transition: all 0.2s;
-    margin-top: 8px;
-  }
-  .submit-btn:hover:not(:disabled) {
-    background: var(--gold-light);
-  }
-  .submit-btn:disabled {
-    background: #2a2a2a;
-    color: var(--gray);
-    cursor: not-allowed;
-  }
-
-  /* 에러 메시지 */
-  .error-msg {
-    font-size: 11px;
-    color: var(--red);
-    margin-top: 6px;
-    display: none;
-  }
-  .error-msg.show { display: block; }
-  input.error, select.error { border-color: var(--red); }
-
-  /* 완료 화면 */
-  .success-screen {
-    display: none;
-    text-align: center;
-    padding: 60px 0;
-  }
-  .success-screen.show { display: block; }
-  .success-icon {
-    width: 64px;
-    height: 64px;
-    border: 1px solid var(--gold);
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin: 0 auto 24px;
-  }
-  .success-icon svg { width: 28px; height: 28px; }
-  .success-res-num {
-    font-family: 'Noto Serif KR', serif;
-    font-size: 28px;
-    font-weight: 600;
-    color: var(--gold);
-    letter-spacing: 0.1em;
-    margin: 16px 0;
-  }
-  .success-desc {
-    font-size: 13px;
-    color: var(--gray);
-    line-height: 2;
-  }
-  .success-account {
-    background: #141414;
-    border: 1px solid #2a2a2a;
-    border-radius: var(--radius);
-    padding: 20px;
-    margin: 24px 0;
-    text-align: left;
-  }
-  .success-account-label {
-    font-size: 11px;
-    color: var(--gold);
-    letter-spacing: 0.2em;
-    text-transform: uppercase;
-    margin-bottom: 12px;
-  }
-  .success-account-row {
-    display: flex;
-    justify-content: space-between;
-    font-size: 13px;
-    color: var(--gray);
-    margin-bottom: 6px;
-  }
-  .success-account-row span:last-child {
-    color: var(--white);
-  }
-
-  /* 로딩 */
-  .loading {
-    display: none;
-    text-align: center;
-    padding: 40px 0;
-    color: var(--gray);
-    font-size: 13px;
-    letter-spacing: 0.2em;
-  }
-  .loading.show { display: block; }
-  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
-  .loading-dots span {
-    animation: pulse 1.2s ease-in-out infinite;
-    display: inline-block;
-    margin: 0 2px;
-  }
-  .loading-dots span:nth-child(2) { animation-delay: 0.2s; }
-  .loading-dots span:nth-child(3) { animation-delay: 0.4s; }
-
-  /* 진행 표시 */
-  .step-indicator {
-    display: flex;
-    gap: 6px;
-    margin-bottom: 32px;
-  }
-  .step-dot {
-    height: 2px;
-    flex: 1;
-    background: #222;
-    border-radius: 2px;
-    transition: background 0.3s;
-  }
-  .step-dot.active { background: var(--gold); }
+:root {
+  --bg:#0f0f0f; --surface:#161616; --surface2:#1e1e1e;
+  --border:#2a2a2a; --gold:#c9a84c; --white:#f0ede6;
+  --gray:#888; --gray2:#555; --red:#c0392b; --orange:#e07b39; --radius:6px;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--white);font-family:'Noto Sans KR',sans-serif;font-weight:300;font-size:14px;}
+/* 로그인 */
+.login-screen{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;}
+.login-box{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:40px;width:100%;max-width:360px;text-align:center;}
+.login-title{font-size:11px;letter-spacing:.3em;color:var(--gold);text-transform:uppercase;margin-bottom:24px;}
+.login-input{width:100%;background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);color:var(--white);font-family:inherit;font-size:14px;padding:12px 16px;margin-bottom:12px;text-align:center;letter-spacing:.2em;}
+.login-input:focus{outline:none;border-color:var(--gold);}
+.login-btn{width:100%;background:var(--gold);color:#0f0f0f;border:none;border-radius:var(--radius);font-family:inherit;font-size:13px;font-weight:700;letter-spacing:.15em;padding:13px;cursor:pointer;}
+.login-error{font-size:12px;color:var(--red);margin-top:10px;display:none;}
+/* 앱 */
+.app{display:none;min-height:100vh;flex-direction:column;}
+.app.show{display:flex;}
+.topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:0 16px;height:52px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;}
+.topbar-title{font-size:13px;font-weight:500;}
+.topbar-title span{color:var(--gold);}
+.topbar-right{display:flex;align-items:center;gap:8px;}
+.top-btn{background:none;border:1px solid var(--border);border-radius:var(--radius);color:var(--gray);font-family:inherit;font-size:11px;letter-spacing:.08em;padding:6px 10px;cursor:pointer;white-space:nowrap;}
+.top-btn:hover{border-color:var(--gold);color:var(--gold);}
+.logout-btn{background:none;border:none;color:var(--gray2);font-family:inherit;font-size:11px;cursor:pointer;}
+/* 탭 */
+.tabs{background:var(--surface);border-bottom:1px solid var(--border);display:flex;padding:0 8px;overflow-x:auto;scrollbar-width:none;}
+.tabs::-webkit-scrollbar{display:none;}
+.tab{padding:12px 12px;font-size:12px;letter-spacing:.08em;color:var(--gray);cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;flex-shrink:0;}
+.tab.active{color:var(--gold);border-bottom-color:var(--gold);}
+/* 콘텐츠 */
+.content{padding:16px;flex:1;}
+.tab-content{display:none;}
+.tab-content.active{display:block;}
+/* 통계 */
+.stat-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:16px;}
+.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;}
+.stat-label{font-size:10px;letter-spacing:.2em;color:var(--gray);text-transform:uppercase;margin-bottom:8px;}
+.stat-value{font-size:22px;font-weight:500;}
+.stat-value.gold{color:var(--gold);}
+.stat-sub{font-size:11px;color:var(--gray2);margin-top:4px;}
+/* 회차 현황 바 */
+.session-status{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:16px;}
+.session-status-header{padding:12px 16px;font-size:10px;letter-spacing:.2em;color:var(--gold);text-transform:uppercase;border-bottom:1px solid var(--border);}
+.session-row{display:flex;align-items:center;padding:12px 16px;border-bottom:1px solid var(--border);gap:12px;}
+.session-row:last-child{border-bottom:none;}
+.session-bar-wrap{flex:1;}
+.session-bar-label{display:flex;justify-content:space-between;font-size:12px;margin-bottom:6px;}
+.session-bar-bg{height:4px;background:var(--border);border-radius:2px;overflow:hidden;}
+.session-bar-fill{height:100%;background:var(--gold);border-radius:2px;}
+.session-bar-fill.full{background:var(--red);}
+.badge{font-size:10px;padding:3px 8px;border-radius:3px;flex-shrink:0;}
+.badge-open{background:#1a2e1e;color:#4caf7d;}
+.badge-sold{background:#2e1a1a;color:#e07b7b;}
+.badge-low{background:#2e2014;color:#e07b39;}
+/* 필터 */
+.filter-row{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;}
+.filter-btn{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);color:var(--gray);font-family:inherit;font-size:11px;padding:6px 12px;cursor:pointer;}
+.filter-btn.active{border-color:var(--gold);color:var(--gold);}
+.search-input{width:100%;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);color:var(--white);font-family:inherit;font-size:13px;padding:10px 14px;margin-bottom:12px;}
+.search-input:focus{outline:none;border-color:var(--gold);}
+/* 예약 카드 */
+.res-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:8px;overflow:hidden;}
+.res-card-header{padding:12px 14px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;}
+.res-num-badge{font-size:10px;color:var(--gold);background:#1e1c0f;border:1px solid #3a3010;border-radius:3px;padding:3px 7px;}
+.res-name{font-size:14px;font-weight:500;margin-left:8px;}
+.res-session{font-size:11px;color:var(--gray);margin-top:2px;}
+.pay-badge{font-size:10px;padding:4px 10px;border-radius:3px;flex-shrink:0;}
+.pay-pending{background:#2a2010;color:#e07b39;}
+.pay-confirmed{background:#1a2e1e;color:#4caf7d;}
+.pay-cancelled{background:#2a1a1a;color:#e07b7b;}
+.res-card-body{padding:0 14px 14px;border-top:1px solid var(--border);display:none;}
+.res-card-body.open{display:block;}
+.res-detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px 16px;margin:12px 0;}
+.res-detail-label{font-size:10px;color:var(--gray);margin-bottom:3px;}
+.res-detail-value{font-size:13px;}
+.res-detail-value.gold{color:var(--gold);font-weight:500;}
+.res-detail-value.proof{color:var(--orange);font-size:11px;}
+.res-actions{display:flex;gap:8px;margin-top:12px;}
+.action-btn{flex:1;background:none;border:1px solid var(--border);border-radius:var(--radius);color:var(--gray);font-family:inherit;font-size:11px;padding:9px;cursor:pointer;}
+.action-btn.confirm{border-color:#2d5a3d;color:#4caf7d;background:#111e15;}
+.action-btn.danger{border-color:#5a2d2d;color:#e07b7b;}
+/* 공연/프리셋 폼 */
+.section-box{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:12px;}
+.section-title{font-size:10px;letter-spacing:.2em;color:var(--gold);text-transform:uppercase;margin-bottom:14px;}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;}
+.form-group label{display:block;font-size:10px;letter-spacing:.15em;color:var(--gray);text-transform:uppercase;margin-bottom:6px;}
+.form-input,.form-select{width:100%;background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);color:var(--white);font-family:inherit;font-size:13px;padding:10px 12px;}
+.form-input:focus,.form-select:focus{outline:none;border-color:var(--gold);}
+.form-select option{background:#1a1a1a;}
+.full{grid-column:1/-1;}
+.hint{font-size:11px;color:var(--gray2);margin-top:5px;}
+.save-btn{width:100%;background:var(--gold);color:#0f0f0f;border:none;border-radius:var(--radius);font-family:inherit;font-size:13px;font-weight:700;letter-spacing:.15em;padding:12px;cursor:pointer;margin-top:4px;}
+/* 회차 아이템 */
+.session-item{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;gap:12px;}
+.session-item-date{font-size:14px;font-weight:500;margin-bottom:3px;}
+.session-item-info{font-size:12px;color:var(--gray);}
+.item-btns{display:flex;gap:6px;flex-shrink:0;}
+.icon-btn{background:none;border:1px solid var(--border);border-radius:var(--radius);color:var(--gray);font-family:inherit;font-size:11px;padding:5px 10px;cursor:pointer;}
+.icon-btn:hover{border-color:var(--gold);color:var(--gold);}
+.icon-btn.danger:hover{border-color:var(--red);color:var(--red);}
+/* 프리셋 */
+.preset-item{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;}
+.preset-name{font-size:14px;font-weight:500;margin-bottom:4px;}
+.preset-price{font-size:12px;color:var(--gold);}
+.preset-proof{font-size:11px;color:var(--orange);}
+.toggle-btn{background:none;border:1px solid var(--border);border-radius:var(--radius);font-family:inherit;font-size:11px;padding:6px 12px;cursor:pointer;}
+.toggle-btn.on{border-color:var(--gold);color:var(--gold);}
+.toggle-btn.off{border-color:var(--gray2);color:var(--gray2);}
+/* 입장 */
+.qr-wrap{padding:20px 0;}
+.qr-input-row{display:flex;gap:8px;margin-bottom:16px;}
+.qr-input{flex:1;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);color:var(--white);font-family:inherit;font-size:16px;font-weight:500;padding:14px 16px;text-align:center;letter-spacing:.1em;}
+.qr-input:focus{outline:none;border-color:var(--gold);}
+.qr-check-btn{background:var(--gold);color:#0f0f0f;border:none;border-radius:var(--radius);font-family:inherit;font-size:13px;font-weight:700;padding:14px 18px;cursor:pointer;}
+.check-result{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;display:none;}
+.check-result.show{display:block;}
+.check-result.ok{border-color:#2d5a3d;}
+.check-result.fail{border-color:#5a2d2d;}
+.check-status{font-size:14px;font-weight:500;margin-bottom:10px;}
+.check-status.ok{color:#4caf7d;}
+.check-status.fail{color:#e07b7b;}
+/* 유틸 */
+.empty-state{text-align:center;padding:32px;color:var(--gray2);font-size:13px;line-height:2;}
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--surface);border:1px solid var(--gold);border-radius:var(--radius);color:var(--white);font-size:13px;padding:12px 20px;z-index:999;opacity:0;pointer-events:none;transition:opacity .3s;white-space:nowrap;}
+.toast.show{opacity:1;}
 </style>
 </head>
 <body>
 
-<header>
-  <div class="header-label">블루블라인드 기획</div>
-  <h1 class="header-title">덕질의 이해</h1>
-  <div class="gold-line"></div>
-  <div class="header-sub">2025 · 04 · 16 — 19 &nbsp;|&nbsp; 예매 안내</div>
-</header>
-
-<div class="container">
-
-  <!-- 진행 표시 -->
-  <div class="step-indicator">
-    <div class="step-dot active" id="dot1"></div>
-    <div class="step-dot" id="dot2"></div>
-    <div class="step-dot" id="dot3"></div>
+<!-- 로그인 -->
+<div class="login-screen" id="login-screen">
+  <div class="login-box">
+    <div class="login-title">관리자 로그인</div>
+    <div style="font-size:18px;font-weight:500;margin-bottom:24px;">공연 예약 관리</div>
+    <input type="password" class="login-input" id="pw-input" placeholder="비밀번호"
+           onkeydown="if(event.key==='Enter')doLogin()">
+    <button class="login-btn" onclick="doLogin()">로그인</button>
+    <div class="login-error" id="login-error">비밀번호가 올바르지 않습니다.</div>
   </div>
-
-  <!-- 예매 폼 -->
-  <div id="booking-form">
-
-    <!-- 1. 회차 선택 -->
-    <div class="section" id="section-session">
-      <div class="section-title">
-        <span class="section-num">1</span>
-        회차 선택
-      </div>
-      <div class="session-grid" id="session-grid">
-        <!-- JS로 동적 생성 -->
-      </div>
-      <div class="error-msg" id="err-session">회차를 선택해 주세요.</div>
-    </div>
-
-    <!-- 2. 예매 유형 + 매수 -->
-    <div class="section">
-      <div class="section-title">
-        <span class="section-num">2</span>
-        예매 유형 및 매수
-      </div>
-      <div class="select-row">
-        <div class="select-group">
-          <label>예매 유형</label>
-          <select id="ticket-type" onchange="updatePrice()">
-            <!-- JS로 동적 생성 -->
-          </select>
-          <div class="error-msg" id="err-type">예매 유형을 선택해 주세요.</div>
-        </div>
-        <div class="select-group">
-          <label>매수</label>
-          <select id="quantity" onchange="updatePrice()">
-            <option value="1">1매</option>
-            <option value="2">2매</option>
-            <option value="3">3매</option>
-            <option value="4">4매</option>
-          </select>
-        </div>
-      </div>
-
-      <div class="price-display">
-        <div class="price-row">
-          <span id="price-type-label">—</span>
-          <span id="price-unit-display">—</span>
-        </div>
-        <div class="price-row">
-          <span>수량</span>
-          <span id="price-qty-display">—</span>
-        </div>
-        <div class="price-total-row">
-          <span class="price-total-label">합계</span>
-          <span class="price-total-amount" id="price-total">0원</span>
-        </div>
-        <div class="proof-notice" id="proof-notice" style="display:none">
-          <svg width="12" height="12" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7" stroke="#e07b39" stroke-width="1.5"/><path d="M8 5v4M8 11v1" stroke="#e07b39" stroke-width="1.5" stroke-linecap="round"/></svg>
-          입장 시 해당 자격 증빙 서류를 지참해 주세요.
-        </div>
-      </div>
-    </div>
-
-    <!-- 3. 관객 정보 -->
-    <div class="section">
-      <div class="section-title">
-        <span class="section-num">3</span>
-        예매자 정보
-      </div>
-      <div class="input-group">
-        <label>이름</label>
-        <input type="text" id="name" placeholder="홍길동">
-        <div class="error-msg" id="err-name">이름을 입력해 주세요.</div>
-      </div>
-      <div class="input-group">
-        <label>연락처</label>
-        <input type="tel" id="phone" placeholder="010-0000-0000" oninput="formatPhone(this)">
-        <div class="error-msg" id="err-phone">올바른 연락처를 입력해 주세요.</div>
-      </div>
-      <div class="input-group">
-        <label>이메일</label>
-        <input type="email" id="email" placeholder="example@email.com">
-        <div class="error-msg" id="err-email">올바른 이메일을 입력해 주세요.</div>
-      </div>
-    </div>
-
-    <!-- 4. 입금 안내 -->
-    <div class="section">
-      <div class="section-title">
-        <span class="section-num">4</span>
-        입금 안내
-      </div>
-      <div class="account-box">
-        <div class="account-notice">
-          예약 완료 후 <strong style="color:var(--white)">24시간 이내</strong>에 아래 계좌로 입금해 주세요.<br>
-          입금 확인 후 카카오톡으로 모바일 티켓이 발송됩니다.<br>
-          미입금 시 예약이 자동 취소됩니다.
-        </div>
-        <div class="account-info">
-          <div>
-            <div class="account-bank">기업은행</div>
-            <div class="account-num" id="account-display">000-000000-00-000</div>
-            <div style="font-size:12px;color:var(--gray);margin-top:4px">예금주: 블루블라인드</div>
-          </div>
-          <button class="copy-btn" onclick="copyAccount()">복사</button>
-        </div>
-        <div class="account-deadline">입금액: <span id="deadline-amount" style="color:var(--gold);font-weight:500">—</span></div>
-      </div>
-    </div>
-
-    <!-- 제출 -->
-    <button class="submit-btn" id="submit-btn" onclick="submitBooking()">
-      예매 신청하기
-    </button>
-
-  </div>
-
-  <!-- 로딩 -->
-  <div class="loading" id="loading">
-    <div style="margin-bottom:12px">처리 중입니다</div>
-    <div class="loading-dots">
-      <span>·</span><span>·</span><span>·</span>
-    </div>
-  </div>
-
-  <!-- 완료 화면 -->
-  <div class="success-screen" id="success-screen">
-    <div class="success-icon">
-      <svg viewBox="0 0 28 28" fill="none" stroke="#c9a84c" stroke-width="1.5" stroke-linecap="round">
-        <path d="M6 14l6 6 10-12"/>
-      </svg>
-    </div>
-    <div style="font-size:12px;letter-spacing:0.2em;color:var(--gray);text-transform:uppercase">예매 완료</div>
-    <div class="success-res-num" id="success-res-num">DQ-0416-001</div>
-    <div class="success-desc">
-      카카오톡으로 예약 확인 메시지가 발송됩니다.<br>
-      24시간 이내 입금 후 모바일 티켓이 발송됩니다.
-    </div>
-
-    <div class="success-account">
-      <div class="success-account-label">입금 정보</div>
-      <div class="success-account-row"><span>은행</span><span>기업은행</span></div>
-      <div class="success-account-row"><span>계좌번호</span><span id="s-account">000-000000-00-000</span></div>
-      <div class="success-account-row"><span>예금주</span><span>블루블라인드</span></div>
-      <div class="success-account-row"><span>입금금액</span><span id="s-amount" style="color:var(--gold);font-weight:500">—</span></div>
-      <div class="success-account-row"><span>입금기한</span><span id="s-deadline" style="color:#e07b39">—</span></div>
-    </div>
-
-    <div style="font-size:12px;color:var(--gray);line-height:2">
-      문의: <span style="color:var(--white)">010-0000-0000</span>
-    </div>
-  </div>
-
 </div>
 
-<script>
-// ============================================================
-// 설정값 — 관리자가 수정
-// ============================================================
-const CONFIG = {
-  ACCOUNT: '기업은행 000-000000-00-000',
-  ACCOUNT_HOLDER: '블루블라인드',
-  CONTACT: '010-0000-0000',
-  SCRIPT_URL: 'YOUR_APPS_SCRIPT_WEB_APP_URL', // Apps Script 배포 URL로 교체
+<!-- 앱 -->
+<div class="app" id="app">
+  <div class="topbar">
+    <div class="topbar-title"><span id="topbar-title">공연 관리자</span></div>
+    <div class="topbar-right">
+      <button class="top-btn" onclick="exportExcel()">엑셀 내보내기</button>
+      <button class="top-btn" onclick="loadData()">새로고침</button>
+      <button class="logout-btn" onclick="doLogout()">로그아웃</button>
+    </div>
+  </div>
+  <div class="tabs">
+    <div class="tab active" onclick="switchTab('dashboard',this)">현황</div>
+    <div class="tab" onclick="switchTab('reservations',this)">예약 목록</div>
+    <div class="tab" onclick="switchTab('performance',this)">공연 설정</div>
+    <div class="tab" onclick="switchTab('presets',this)">할인 설정</div>
+    <div class="tab" onclick="switchTab('checkin',this)">입장 확인</div>
+  </div>
+  <div class="content">
 
-  SESSIONS: [
-    { id: 'S1', date: '4월 16일 (수)', time: '19:30', remain: 10, total: 10 },
-    { id: 'S2', date: '4월 17일 (목)', time: '19:30', remain: 10, total: 10 },
-    { id: 'S3', date: '4월 18일 (금)', time: '15:00', remain: 10, total: 10 },
-    { id: 'S4', date: '4월 19일 (토)', time: '15:00', remain: 10, total: 10 },
-  ],
-
-  PRESETS: [
-    { name: '일반',           price: 30000, needProof: false },
-    { name: '얼리버드',       price: 24000, needProof: false },
-    { name: '학생',           price: 24000, needProof: true  },
-    { name: '팬클럽/멤버십',  price: 21000, needProof: true  },
-    { name: '단체 (5인 이상)',price: 24000, needProof: false },
-    { name: '장애인/국가유공자', price: 15000, needProof: true },
-    { name: '초대권',          price: 0,     needProof: true  },
-  ],
-};
-
-// ============================================================
-// 초기화
-// ============================================================
-let selectedSession = null;
-
-function init() {
-  renderSessions();
-  renderTicketTypes();
-  updatePrice();
-  document.getElementById('account-display').textContent = CONFIG.ACCOUNT.replace('기업은행 ', '');
-}
-
-function renderSessions() {
-  const grid = document.getElementById('session-grid');
-  grid.innerHTML = CONFIG.SESSIONS.map(s => {
-    const isSoldOut = s.remain === 0;
-    const isLow = s.remain > 0 && s.remain <= 3;
-    const remainText = isSoldOut ? '매진'
-      : isLow ? `잔여 ${s.remain}석`
-      : `잔여 ${s.remain}석`;
-    const remainClass = isSoldOut ? 'sold' : isLow ? 'low' : '';
-
-    return `
-    <div class="session-card${isSoldOut ? ' sold-out' : ''}"
-         onclick="${isSoldOut ? '' : `selectSession('${s.id}')`}"
-         id="session-${s.id}">
-      <div class="session-info">
-        <div class="session-date">${s.date}</div>
-        <div class="session-time">${s.time}</div>
-      </div>
-      <div class="session-right">
-        <div class="session-remain ${remainClass}">${remainText}</div>
-        <div class="check-icon">
-          <svg viewBox="0 0 10 10" fill="none" stroke="${'#0f0f0f'}" stroke-width="1.5" stroke-linecap="round">
-            <path d="M2 5l2.5 2.5 4-4"/>
-          </svg>
+    <!-- 현황 -->
+    <div class="tab-content active" id="tab-dashboard">
+      <div class="stat-grid">
+        <div class="stat-card">
+          <div class="stat-label">전체 예약</div>
+          <div class="stat-value" id="stat-total">—</div>
+          <div class="stat-sub" id="stat-total-sub">—</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">입금 확인</div>
+          <div class="stat-value gold" id="stat-confirmed">—</div>
+          <div class="stat-sub" id="stat-confirmed-sub">—</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">미입금</div>
+          <div class="stat-value" id="stat-pending">—</div>
+          <div class="stat-sub">24시간 후 자동 취소</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">예상 수입</div>
+          <div class="stat-value gold" id="stat-revenue">—</div>
+          <div class="stat-sub">입금확인 기준</div>
         </div>
       </div>
-    </div>`;
+      <div class="session-status">
+        <div class="session-status-header">회차별 현황</div>
+        <div id="session-status-list"></div>
+      </div>
+    </div>
+
+    <!-- 예약 목록 -->
+    <div class="tab-content" id="tab-reservations">
+      <input class="search-input" type="text" placeholder="이름 또는 예약번호 검색..."
+             oninput="filterRes(this.value)">
+      <div class="filter-row">
+        <button class="filter-btn active" onclick="setFilter('all',this)">전체</button>
+        <button class="filter-btn" onclick="setFilter('미입금',this)">미입금</button>
+        <button class="filter-btn" onclick="setFilter('입금확인',this)">입금확인</button>
+        <button class="filter-btn" onclick="setFilter('취소',this)">취소</button>
+      </div>
+      <div id="res-list"></div>
+    </div>
+
+    <!-- 공연 설정 -->
+    <div class="tab-content" id="tab-performance">
+      <div class="section-box">
+        <div class="section-title">기획사 정보</div>
+        <div class="form-row">
+          <div class="form-group full">
+            <label>기획사 이름</label>
+            <input type="text" class="form-input" id="agency-name" placeholder="예: 주식회사 극단아리랑">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>문의 전화</label>
+            <input type="tel" class="form-input" id="agency-tel" placeholder="예: 02-741-5332">
+          </div>
+          <div class="form-group">
+            <label>문의 이메일 (선택)</label>
+            <input type="email" class="form-input" id="agency-email" placeholder="예: info@example.com">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group full">
+            <label>카카오페이 송금 링크 (선택)</label>
+            <input type="url" class="form-input" id="kakaopay-link" placeholder="https://qr.kakaopay.com/...">
+            <div class="hint">카카오페이 앱 → 송금 → 송금링크 만들기 → 금액 자유입력</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section-box">
+        <div class="section-title">공연 정보</div>
+        <div class="form-row">
+          <div class="form-group full">
+            <label>공연명</label>
+            <input type="text" class="form-input" id="perf-name" placeholder="예: 덕질의 이해">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group full">
+            <label>티켓 부제목 (영문)</label>
+            <input type="text" class="form-input" id="perf-subtitle" placeholder="예: 2025 SPECIAL PERFORMANCE">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>주최</label>
+            <input type="text" class="form-input" id="perf-host" placeholder="예: 주식회사 극단아리랑">
+          </div>
+          <div class="form-group">
+            <label>주관</label>
+            <input type="text" class="form-input" id="perf-organizer" placeholder="예: 주식회사 극단아리랑">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group full">
+            <label>후원 (쉼표로 구분)</label>
+            <input type="text" class="form-input" id="perf-sponsor" placeholder="예: 문화체육관광부, 한국문화예술위원회">
+          </div>
+        </div>
+      </div>
+
+      <div class="section-box">
+        <div class="section-title">예매 설정</div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>입금 계좌</label>
+            <input type="text" class="form-input" id="perf-account" placeholder="예: 기업은행 000-000-000">
+          </div>
+          <div class="form-group">
+            <label>예금주</label>
+            <input type="text" class="form-input" id="perf-account-holder" placeholder="예: 주식회사 극단아리랑">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>예매 상태</label>
+            <select class="form-select" id="perf-open">
+              <option value="open">예매 중</option>
+              <option value="closed">예매 마감</option>
+              <option value="soon">오픈 예정</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>1인 최대 매수</label>
+            <input type="number" class="form-input" id="perf-max-qty" placeholder="4" min="1" max="10">
+          </div>
+        </div>
+        <button class="save-btn" onclick="savePerf()">전체 설정 저장</button>
+      </div>
+
+      <div style="font-size:10px;letter-spacing:.2em;color:var(--gold);text-transform:uppercase;margin-bottom:12px;">회차 관리</div>
+      <div id="session-list" style="margin-bottom:16px;"></div>
+
+      <div class="section-box">
+        <div class="section-title">회차 추가</div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>날짜</label>
+            <input type="date" class="form-input" id="new-date">
+          </div>
+          <div class="form-group">
+            <label>시간</label>
+            <input type="time" class="form-input" id="new-time">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>좌석 수</label>
+            <input type="number" class="form-input" id="new-seats" placeholder="10" min="1">
+          </div>
+          <div class="form-group">
+            <label>상태</label>
+            <select class="form-select" id="new-status">
+              <option value="open">예매 중</option>
+              <option value="closed">마감</option>
+              <option value="soon">오픈 예정</option>
+            </select>
+          </div>
+        </div>
+        <button class="save-btn" onclick="addSession()">회차 추가</button>
+      </div>
+    </div>
+
+    <!-- 할인 설정 -->
+    <div class="tab-content" id="tab-presets">
+      <div id="preset-list" style="margin-bottom:16px;"></div>
+      <div class="section-box">
+        <div class="section-title">새 할인 추가</div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>할인명</label>
+            <input type="text" class="form-input" id="new-preset-name" placeholder="예: 시니어 할인">
+          </div>
+          <div class="form-group">
+            <label>할인방식</label>
+            <select class="form-select" id="new-preset-type" onchange="updatePreview()">
+              <option value="정액">정액 (원)</option>
+              <option value="정률">정률 (%)</option>
+              <option value="없음">할인 없음</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>할인값</label>
+            <input type="number" class="form-input" id="new-preset-value" placeholder="0" oninput="updatePreview()">
+          </div>
+          <div class="form-group">
+            <label>최종 단가</label>
+            <input type="text" class="form-input" id="new-preset-preview" readonly
+                   style="color:var(--gold);background:#1e1c0f;">
+          </div>
+        </div>
+        <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--gray);margin-bottom:14px;cursor:pointer;">
+          <input type="checkbox" id="new-preset-proof" style="width:14px;height:14px;accent-color:var(--gold);">
+          입장 시 증빙 서류 확인 필요
+        </label>
+        <button class="save-btn" onclick="addPreset()">프리셋 저장</button>
+      </div>
+    </div>
+
+    <!-- 입장 확인 -->
+    <div class="tab-content" id="tab-checkin">
+      <div class="qr-wrap">
+        <div style="font-size:11px;letter-spacing:.2em;color:var(--gray);text-transform:uppercase;margin-bottom:14px;">예약번호 입력 또는 QR 스캔</div>
+        <div class="qr-input-row">
+          <input type="text" class="qr-input" id="qr-input" placeholder="DQ-0416-001"
+                 style="text-transform:uppercase"
+                 onkeydown="if(event.key==='Enter')doCheckIn()">
+          <button class="qr-check-btn" onclick="doCheckIn()">확인</button>
+        </div>
+        <div class="check-result" id="check-result">
+          <div class="check-status" id="check-status"></div>
+          <div id="check-detail"></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const API_BASE = '/api/admin';
+let ADMIN_PW = '';
+let reservations = [], sessions = [], presets = [], performance = {};
+let currentFilter = 'all', currentSearch = '';
+const BASE_PRICE = 30000;
+
+// ── 토스트 ──
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+// ── 로그인 ──
+function doLogin() {
+  const pw = document.getElementById('pw-input').value;
+  if (!pw) return;
+  ADMIN_PW = pw;
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('app').classList.add('show');
+  loadData();
+}
+function doLogout() {
+  ADMIN_PW = '';
+  document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('app').classList.remove('show');
+  document.getElementById('pw-input').value = '';
+}
+document.getElementById('pw-input').focus();
+
+// ── 데이터 로드 ──
+async function loadData() {
+  try {
+    const res = await fetch(API_BASE, {
+      headers: { 'x-admin-key': ADMIN_PW }
+    });
+    if (res.status === 401) {
+      document.getElementById('login-error').style.display = 'block';
+      doLogout();
+      return;
+    }
+    const data = await res.json();
+    reservations = data.reservations || [];
+    sessions     = data.sessions     || [];
+    presets      = data.presets      || [];
+    performance  = data.performance  || {};
+    renderAll();
+  } catch(e) {
+    toast('데이터 로드 실패: ' + e.message);
+  }
+}
+
+function renderAll() {
+  renderDashboard();
+  renderReservations();
+  renderSessions();
+  renderPresets();
+  syncPerfForm();
+  const title = performance.name || '공연 관리자';
+  document.getElementById('topbar-title').textContent = title;
+}
+
+// ── 현황 ──
+function renderDashboard() {
+  const confirmed = reservations.filter(r => r.payStatus === '입금확인');
+  const pending   = reservations.filter(r => r.payStatus === '미입금');
+  const revenue   = confirmed.reduce((s, r) => s + (r.total || 0), 0);
+  const totalSeats = sessions.reduce((s, s2) => s + (s2.seats || 0), 0);
+
+  document.getElementById('stat-total').textContent     = reservations.length + '건';
+  document.getElementById('stat-total-sub').textContent = '총 ' + totalSeats + '석 기준';
+  document.getElementById('stat-confirmed').textContent = confirmed.length + '건';
+  document.getElementById('stat-confirmed-sub').textContent =
+    confirmed.reduce((s,r) => s + (r.quantity||0), 0) + '석 확정';
+  document.getElementById('stat-pending').textContent = pending.length + '건';
+  document.getElementById('stat-revenue').textContent = revenue.toLocaleString() + '원';
+
+  const days = ['일','월','화','수','목','금','토'];
+  document.getElementById('session-status-list').innerHTML = sessions.map(s => {
+    const booked = reservations
+      .filter(r => r.sessionId === s.id && r.payStatus === '입금확인')
+      .reduce((sum, r) => sum + (r.quantity||0), 0);
+    const pct    = s.seats > 0 ? Math.round(booked / s.seats * 100) : 0;
+    const remain = s.seats - booked;
+    const isFull = remain <= 0 || s.status === 'closed';
+    const isLow  = !isFull && remain <= 3;
+    const bc = isFull ? 'badge-sold' : isLow ? 'badge-low' : 'badge-open';
+    const bt = isFull ? '마감' : isLow ? '마감임박' : '예매중';
+    const d  = new Date(s.date + 'T00:00:00');
+    const label = (d.getMonth()+1) + '월 ' + d.getDate() + '일 (' + days[d.getDay()] + ') ' + s.time;
+    return '<div class="session-row">' +
+      '<div class="session-bar-wrap">' +
+        '<div class="session-bar-label"><span>' + label + '</span><span style="color:var(--gray)">' + booked + '/' + s.seats + '석</span></div>' +
+        '<div class="session-bar-bg"><div class="session-bar-fill' + (isFull?' full':'') + '" style="width:' + pct + '%"></div></div>' +
+      '</div>' +
+      '<span class="badge ' + bc + '">' + bt + '</span>' +
+    '</div>';
   }).join('');
 }
 
-function renderTicketTypes() {
-  const sel = document.getElementById('ticket-type');
-  sel.innerHTML = CONFIG.PRESETS.map(p =>
-    `<option value="${p.name}">${p.name} — ${p.price === 0 ? '무료' : p.price.toLocaleString() + '원'}</option>`
+// ── 예약 목록 ──
+function renderReservations() {
+  let list = reservations;
+  if (currentFilter !== 'all') {
+    list = list.filter(r => currentFilter === '취소'
+      ? r.payStatus.includes('취소')
+      : r.payStatus === currentFilter);
+  }
+  if (currentSearch) {
+    const q = currentSearch.toLowerCase();
+    list = list.filter(r => r.name.includes(q) || (r.resNum||'').toLowerCase().includes(q));
+  }
+  const el = document.getElementById('res-list');
+  if (!list.length) { el.innerHTML = '<div class="empty-state">해당하는 예약이 없습니다.</div>'; return; }
+  el.innerHTML = list.map(r => {
+    const bc = r.payStatus === '입금확인' ? 'pay-confirmed' : r.payStatus === '미입금' ? 'pay-pending' : 'pay-cancelled';
+    const actions = r.payStatus === '미입금'
+      ? '<div class="res-actions"><button class="action-btn confirm" onclick="confirmPay(\'' + r.resNum + '\')">입금 확인 처리</button><button class="action-btn danger" onclick="cancelRes(\'' + r.resNum + '\')">예약 취소</button></div>'
+      : r.payStatus === '입금확인'
+      ? '<div class="res-actions"><button class="action-btn" onclick="resendTicket(\'' + r.resNum + '\')">티켓 재발송</button><button class="action-btn" onclick="doCheckInById(\'' + r.resNum + '\')">' + (r.checkedIn ? '입장완료' : '입장 처리') + '</button></div>'
+      : '';
+    return '<div class="res-card">' +
+      '<div class="res-card-header" onclick="toggleCard(\'' + r.resNum + '\')">' +
+        '<div><div style="display:flex;align-items:center"><span class="res-num-badge">' + r.resNum + '</span><span class="res-name">' + r.name + '</span></div>' +
+        '<div class="res-session">' + r.session + ' · ' + r.ticketType + ' ' + r.quantity + '매</div></div>' +
+        '<span class="pay-badge ' + bc + '">' + r.payStatus + '</span>' +
+      '</div>' +
+      '<div class="res-card-body" id="body-' + r.resNum + '">' +
+        '<div class="res-detail-grid">' +
+          '<div><div class="res-detail-label">연락처</div><div class="res-detail-value">' + r.phone + '</div></div>' +
+          '<div><div class="res-detail-label">결제금액</div><div class="res-detail-value gold">' + (r.total===0?'무료':(r.total||0).toLocaleString()+'원') + '</div></div>' +
+          '<div><div class="res-detail-label">이메일</div><div class="res-detail-value" style="font-size:12px">' + r.email + '</div></div>' +
+          '<div><div class="res-detail-label">증빙확인</div><div class="res-detail-value' + (r.needProof?' proof':'') + '">' + (r.needProof?'현장 확인 필요':'해당 없음') + '</div></div>' +
+        '</div>' +
+        actions +
+      '</div>' +
+    '</div>';
+  }).join('');
+}
+
+function toggleCard(resNum) {
+  document.getElementById('body-' + resNum).classList.toggle('open');
+}
+function setFilter(f, btn) {
+  currentFilter = f;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderReservations();
+}
+function filterRes(q) { currentSearch = q.trim(); renderReservations(); }
+
+async function confirmPay(resNum) {
+  if (!confirm(resNum + ' 입금 확인 처리하시겠습니까?')) return;
+  const r = await callAPI({ action: 'confirmPayment', resNum });
+  if (r.success) { toast('입금 확인 처리됐습니다. 티켓이 발송됩니다.'); await loadData(); }
+  else toast('오류: ' + (r.message || '실패'));
+}
+async function cancelRes(resNum) {
+  if (!confirm(resNum + ' 예약을 취소하시겠습니까?')) return;
+  const r = await callAPI({ action: 'cancel', resNum });
+  if (r.success) { toast('예약이 취소됐습니다.'); await loadData(); }
+}
+async function resendTicket(resNum) {
+  const r = await callAPI({ action: 'resendTicket', resNum });
+  toast(r.success ? '티켓이 재발송됐습니다.' : '재발송 실패');
+}
+async function doCheckInById(resNum) {
+  const r = await callAPI({ action: 'checkIn', resNum });
+  if (r.success) { toast('입장 처리됐습니다.'); await loadData(); }
+}
+
+// ── 엑셀 내보내기 ──
+async function exportExcel() {
+  try {
+    const res = await fetch('/api/export', { headers: { 'x-admin-key': ADMIN_PW } });
+    if (!res.ok) { toast('내보내기 실패 (권한 확인)'); return; }
+    const blob = await res.blob();
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    const date = new Date().toLocaleDateString('ko-KR').replace(/\. /g,'-').replace('.','');
+    a.href = url; a.download = '예약목록_' + date + '.csv';
+    document.body.appendChild(a); a.click();
+    document.body.removeChild(a); URL.revokeObjectURL(url);
+    toast('파일이 다운로드됩니다.');
+  } catch(e) { toast('내보내기 오류: ' + e.message); }
+}
+
+// ── 공연 설정 ──
+function syncPerfForm() {
+  document.getElementById('agency-name').value       = performance.agency        || '';
+  document.getElementById('agency-tel').value        = performance.tel           || '';
+  document.getElementById('agency-email').value      = performance.email         || '';
+  document.getElementById('kakaopay-link').value     = performance.kakaopayLink  || '';
+  document.getElementById('perf-name').value         = performance.name          || '';
+  document.getElementById('perf-subtitle').value     = performance.subtitle      || '';
+  document.getElementById('perf-host').value         = performance.host          || '';
+  document.getElementById('perf-organizer').value    = performance.organizer     || '';
+  document.getElementById('perf-sponsor').value      = performance.sponsor       || '';
+  document.getElementById('perf-account').value      = performance.account       || '';
+  document.getElementById('perf-account-holder').value = performance.accountHolder || '';
+  document.getElementById('perf-open').value         = performance.open          || 'open';
+  document.getElementById('perf-max-qty').value      = performance.maxQty        || 4;
+}
+async function savePerf() {
+  const data = {
+    agency:        document.getElementById('agency-name').value.trim(),
+    tel:           document.getElementById('agency-tel').value.trim(),
+    email:         document.getElementById('agency-email').value.trim(),
+    kakaopayLink:  document.getElementById('kakaopay-link').value.trim(),
+    name:          document.getElementById('perf-name').value.trim(),
+    subtitle:      document.getElementById('perf-subtitle').value.trim(),
+    host:          document.getElementById('perf-host').value.trim(),
+    organizer:     document.getElementById('perf-organizer').value.trim(),
+    sponsor:       document.getElementById('perf-sponsor').value.trim(),
+    account:       document.getElementById('perf-account').value.trim(),
+    accountHolder: document.getElementById('perf-account-holder').value.trim(),
+    open:          document.getElementById('perf-open').value,
+    maxQty:        parseInt(document.getElementById('perf-max-qty').value) || 4,
+  };
+  const r = await callAPI({ action: 'savePerformance', data });
+  if (r.success) { performance = data; toast('저장됐습니다.'); renderDashboard(); }
+  else toast('저장 실패');
+}
+
+// ── 회차 관리 ──
+function renderSessions() {
+  const el = document.getElementById('session-list');
+  if (!sessions.length) { el.innerHTML = '<div class="empty-state">등록된 회차가 없습니다.</div>'; return; }
+  const days = ['일','월','화','수','목','금','토'];
+  el.innerHTML = sessions.map(s => {
+    const d = new Date(s.date + 'T00:00:00');
+    const label = (d.getMonth()+1) + '월 ' + d.getDate() + '일 (' + days[d.getDay()] + ') ' + s.time;
+    const st = s.status === 'open' ? '예매중' : s.status === 'closed' ? '마감' : '오픈예정';
+    return '<div class="session-item">' +
+      '<div><div class="session-item-date">' + label + '</div>' +
+      '<div class="session-item-info">' + s.seats + '석 · ' + st + '</div></div>' +
+      '<div class="item-btns">' +
+        '<button class="icon-btn danger" onclick="deleteSession(\'' + s.id + '\')">삭제</button>' +
+      '</div>' +
+    '</div>';
+  }).join('');
+}
+async function addSession() {
+  const date  = document.getElementById('new-date').value;
+  const time  = document.getElementById('new-time').value;
+  const seats = parseInt(document.getElementById('new-seats').value);
+  const status = document.getElementById('new-status').value;
+  if (!date || !time || !seats) { toast('날짜, 시간, 좌석 수를 모두 입력해 주세요.'); return; }
+  const session = { id: 'S' + Date.now(), date, time, seats, booked: 0, status };
+  const r = await callAPI({ action: 'addSession', session });
+  if (r.success) {
+    sessions.push(session);
+    document.getElementById('new-date').value = '';
+    document.getElementById('new-time').value = '';
+    document.getElementById('new-seats').value = '';
+    renderSessions(); renderDashboard();
+    toast('회차가 추가됐습니다.');
+  }
+}
+async function deleteSession(id) {
+  const s = sessions.find(s => s.id === id);
+  if (!s) return;
+  const days = ['일','월','화','수','목','금','토'];
+  const d = new Date(s.date + 'T00:00:00');
+  const label = (d.getMonth()+1) + '월 ' + d.getDate() + '일 (' + days[d.getDay()] + ') ' + s.time;
+  if (!confirm(label + ' 회차를 삭제하시겠습니까?')) return;
+  const r = await callAPI({ action: 'deleteSession', id });
+  if (r.success) { sessions = sessions.filter(s => s.id !== id); renderSessions(); renderDashboard(); toast('회차가 삭제됐습니다.'); }
+}
+
+// ── 할인 프리셋 ──
+function renderPresets() {
+  const el = document.getElementById('preset-list');
+  if (!presets.length) { el.innerHTML = '<div class="empty-state">등록된 프리셋이 없습니다.</div>'; return; }
+  el.innerHTML = presets.map(p =>
+    '<div class="preset-item">' +
+      '<div><div class="preset-name">' + p.name + '</div>' +
+        '<div class="preset-price">' + (p.price===0?'무료':p.price.toLocaleString()+'원') + '</div>' +
+        (p.needProof ? '<div class="preset-proof">현장 증빙 필요</div>' : '') +
+      '</div>' +
+      '<button class="toggle-btn ' + (p.active?'on':'off') + '" onclick="togglePreset(\'' + p.name + '\')">' + (p.active?'활성':'비활성') + '</button>' +
+    '</div>'
   ).join('');
 }
-
-function selectSession(id) {
-  selectedSession = id;
-  document.querySelectorAll('.session-card').forEach(el => el.classList.remove('selected'));
-  document.getElementById(`session-${id}`).classList.add('selected');
-  document.getElementById('err-session').classList.remove('show');
-
-  // 진행 표시
-  document.getElementById('dot1').classList.add('active');
-  document.getElementById('dot2').classList.add('active');
+function updatePreview() {
+  const type = document.getElementById('new-preset-type').value;
+  const val  = parseFloat(document.getElementById('new-preset-value').value) || 0;
+  let price  = BASE_PRICE;
+  if (type === '정액') price = Math.max(0, BASE_PRICE - val);
+  else if (type === '정률') price = Math.round(BASE_PRICE * (1 - val/100));
+  document.getElementById('new-preset-preview').value = price === 0 ? '무료' : price.toLocaleString() + '원';
 }
-
-function updatePrice() {
-  const typeName = document.getElementById('ticket-type').value;
-  const qty = parseInt(document.getElementById('quantity').value);
-  const preset = CONFIG.PRESETS.find(p => p.name === typeName);
-  if (!preset) return;
-
-  const total = preset.price * qty;
-
-  document.getElementById('price-type-label').textContent = preset.name;
-  document.getElementById('price-unit-display').textContent =
-    preset.price === 0 ? '무료' : preset.price.toLocaleString() + '원';
-  document.getElementById('price-qty-display').textContent = `${qty}매`;
-  document.getElementById('price-total').textContent =
-    total === 0 ? '무료' : total.toLocaleString() + '원';
-  document.getElementById('deadline-amount').textContent =
-    total === 0 ? '무료 (입금 불필요)' : total.toLocaleString() + '원';
-
-  const proofNotice = document.getElementById('proof-notice');
-  proofNotice.style.display = preset.needProof ? 'flex' : 'none';
-}
-
-function formatPhone(input) {
-  let val = input.value.replace(/\D/g, '');
-  if (val.length > 11) val = val.slice(0, 11);
-  if (val.length >= 8) val = val.slice(0,3) + '-' + val.slice(3,7) + '-' + val.slice(7);
-  else if (val.length >= 4) val = val.slice(0,3) + '-' + val.slice(3);
-  input.value = val;
-}
-
-function copyAccount() {
-  const acc = CONFIG.ACCOUNT.replace('기업은행 ', '');
-  navigator.clipboard.writeText(acc).then(() => {
-    const btn = document.querySelector('.copy-btn');
-    btn.textContent = '복사됨';
-    setTimeout(() => btn.textContent = '복사', 1500);
-  });
-}
-
-// ============================================================
-// 유효성 검사
-// ============================================================
-function validate() {
-  let valid = true;
-
-  if (!selectedSession) {
-    document.getElementById('err-session').classList.add('show');
-    valid = false;
+async function addPreset() {
+  const name  = document.getElementById('new-preset-name').value.trim();
+  const type  = document.getElementById('new-preset-type').value;
+  const val   = parseFloat(document.getElementById('new-preset-value').value) || 0;
+  const proof = document.getElementById('new-preset-proof').checked;
+  if (!name) { toast('할인명을 입력해 주세요.'); return; }
+  if (presets.find(p => p.name === name)) { toast('이미 존재하는 할인명입니다.'); return; }
+  let price = BASE_PRICE;
+  if (type === '정액') price = Math.max(0, BASE_PRICE - val);
+  else if (type === '정률') price = Math.round(BASE_PRICE * (1 - val/100));
+  const preset = { name, price, needProof: proof, active: true };
+  const r = await callAPI({ action: 'savePreset', preset });
+  if (r.success) {
+    presets.push(preset);
+    document.getElementById('new-preset-name').value = '';
+    document.getElementById('new-preset-value').value = '';
+    document.getElementById('new-preset-proof').checked = false;
+    document.getElementById('new-preset-preview').value = '';
+    renderPresets(); toast('프리셋이 저장됐습니다.');
   }
-
-  const name = document.getElementById('name').value.trim();
-  if (!name) {
-    document.getElementById('err-name').classList.add('show');
-    document.getElementById('name').classList.add('error');
-    valid = false;
-  } else {
-    document.getElementById('err-name').classList.remove('show');
-    document.getElementById('name').classList.remove('error');
-  }
-
-  const phone = document.getElementById('phone').value.replace(/-/g, '');
-  if (!/^01[0-9]{8,9}$/.test(phone)) {
-    document.getElementById('err-phone').classList.add('show');
-    document.getElementById('phone').classList.add('error');
-    valid = false;
-  } else {
-    document.getElementById('err-phone').classList.remove('show');
-    document.getElementById('phone').classList.remove('error');
-  }
-
-  const email = document.getElementById('email').value.trim();
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-    document.getElementById('err-email').classList.add('show');
-    document.getElementById('email').classList.add('error');
-    valid = false;
-  } else {
-    document.getElementById('err-email').classList.remove('show');
-    document.getElementById('email').classList.remove('error');
-  }
-
-  return valid;
+}
+async function togglePreset(name) {
+  const p = presets.find(p => p.name === name);
+  if (!p) return;
+  p.active = !p.active;
+  await callAPI({ action: 'togglePreset', name, active: p.active });
+  renderPresets();
 }
 
-// ============================================================
-// 예매 제출
-// ============================================================
-async function submitBooking() {
-  if (!validate()) return;
+// ── 입장 확인 ──
+function doCheckIn() {
+  const input  = document.getElementById('qr-input').value.trim().toUpperCase();
+  const result = document.getElementById('check-result');
+  const status = document.getElementById('check-status');
+  const detail = document.getElementById('check-detail');
+  if (!input) return;
+  const r = reservations.find(r => r.resNum === input);
+  result.className = 'check-result show';
+  if (!r) {
+    result.classList.add('fail'); status.className = 'check-status fail';
+    status.textContent = '예약 정보를 찾을 수 없습니다.'; detail.innerHTML = ''; return;
+  }
+  if (r.payStatus !== '입금확인') {
+    result.classList.add('fail'); status.className = 'check-status fail';
+    status.textContent = '입금 미확인 — ' + r.payStatus;
+    detail.innerHTML = '<div style="font-size:12px;color:var(--gray);margin-top:8px">' + r.name + ' · ' + r.session + '</div>'; return;
+  }
+  result.classList.add('ok'); status.className = 'check-status ok';
+  status.textContent = r.checkedIn ? '이미 입장 처리된 티켓입니다.' : '입장 확인 ✓';
+  detail.innerHTML = '<div style="margin-top:12px;display:grid;gap:6px;font-size:13px">' +
+    '<div style="display:flex;justify-content:space-between"><span style="color:var(--gray)">예매자</span><span>' + r.name + '</span></div>' +
+    '<div style="display:flex;justify-content:space-between"><span style="color:var(--gray)">회차</span><span>' + r.session + '</span></div>' +
+    '<div style="display:flex;justify-content:space-between"><span style="color:var(--gray)">좌석</span><span>' + r.ticketType + ' ' + r.quantity + '매</span></div>' +
+    (r.needProof ? '<div style="color:var(--orange);font-size:12px;margin-top:4px">⚠ 증빙 서류 확인 필요</div>' : '') +
+  '</div>';
+  if (!r.checkedIn) { r.checkedIn = true; callAPI({ action: 'checkIn', resNum: r.resNum }); }
+  document.getElementById('qr-input').value = '';
+}
 
-  const typeName = document.getElementById('ticket-type').value;
-  const qty = parseInt(document.getElementById('quantity').value);
-  const preset = CONFIG.PRESETS.find(p => p.name === typeName);
-  const session = CONFIG.SESSIONS.find(s => s.id === selectedSession);
-  const total = preset.price * qty;
+// ── 탭 전환 ──
+function switchTab(tab, el) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('tab-' + tab).classList.add('active');
+}
 
-  const payload = {
-    action: 'reserve',
-    name: document.getElementById('name').value.trim(),
-    phone: document.getElementById('phone').value.trim(),
-    email: document.getElementById('email').value.trim(),
-    sessionId: selectedSession,
-    sessionLabel: `${session.date} ${session.time}`,
-    ticketType: typeName,
-    quantity: qty,
-    unitPrice: preset.price,
-    total: total,
-    needProof: preset.needProof,
-  };
-
-  // UI 전환
-  document.getElementById('booking-form').style.display = 'none';
-  document.getElementById('loading').classList.add('show');
-
+// ── API 호출 ──
+async function callAPI(payload) {
   try {
-    const res = await fetch(CONFIG.SCRIPT_URL, {
+    const res = await fetch(API_BASE, {
       method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-admin-key': ADMIN_PW },
       body: JSON.stringify(payload),
     });
-    const result = await res.json();
-
-    document.getElementById('loading').classList.remove('show');
-
-    if (result.success) {
-      showSuccess(result.resNum, total, payload.sessionLabel);
-    } else {
-      alert('예매 중 오류가 발생했습니다. 다시 시도해 주세요.\n' + (result.message || ''));
-      document.getElementById('booking-form').style.display = 'block';
-    }
-  } catch(e) {
-    document.getElementById('loading').classList.remove('show');
-    document.getElementById('booking-form').style.display = 'block';
-    alert('네트워크 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.');
-  }
+    return await res.json();
+  } catch(e) { return { success: false, message: e.message }; }
 }
-
-function showSuccess(resNum, total, sessionLabel) {
-  const deadline = new Date();
-  deadline.setHours(deadline.getHours() + 24);
-  const deadlineStr = deadline.toLocaleDateString('ko-KR', {
-    month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit'
-  });
-
-  document.getElementById('dot3').classList.add('active');
-  document.getElementById('success-res-num').textContent = resNum;
-  document.getElementById('s-account').textContent = CONFIG.ACCOUNT.replace('기업은행 ', '');
-  document.getElementById('s-amount').textContent = total === 0 ? '무료' : total.toLocaleString() + '원';
-  document.getElementById('s-deadline').textContent = deadlineStr + ' 까지';
-  document.getElementById('success-screen').classList.add('show');
-
-  window.scrollTo({ top: 0, behavior: 'smooth' });
-}
-
-init();
 </script>
 </body>
 </html>
