@@ -3,605 +3,135 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>덕질의 이해 — 관리자</title>
+<title>공연 예약 관리자</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
 <style>
-  :root {
-    --bg: #0f0f0f;
-    --surface: #161616;
-    --surface2: #1e1e1e;
-    --border: #2a2a2a;
-    --gold: #c9a84c;
-    --white: #f0ede6;
-    --gray: #888;
-    --gray2: #555;
-    --red: #c0392b;
-    --green: #2d6a4f;
-    --orange: #e07b39;
-    --radius: 6px;
-  }
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body {
-    background: var(--bg);
-    color: var(--white);
-    font-family: 'Noto Sans KR', sans-serif;
-    font-weight: 300;
-    font-size: 14px;
-  }
-
-  /* 로그인 화면 */
-  .login-screen {
-    min-height: 100vh;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 24px;
-  }
-  .login-box {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 40px;
-    width: 100%;
-    max-width: 360px;
-    text-align: center;
-  }
-  .login-title {
-    font-size: 11px;
-    letter-spacing: 0.3em;
-    color: var(--gold);
-    text-transform: uppercase;
-    margin-bottom: 24px;
-  }
-  .login-input {
-    width: 100%;
-    background: var(--bg);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    color: var(--white);
-    font-family: inherit;
-    font-size: 14px;
-    padding: 12px 16px;
-    margin-bottom: 12px;
-    text-align: center;
-    letter-spacing: 0.2em;
-  }
-  .login-input:focus { outline: none; border-color: var(--gold); }
-  .login-btn {
-    width: 100%;
-    background: var(--gold);
-    color: #0f0f0f;
-    border: none;
-    border-radius: var(--radius);
-    font-family: inherit;
-    font-size: 13px;
-    font-weight: 700;
-    letter-spacing: 0.15em;
-    padding: 13px;
-    cursor: pointer;
-  }
-  .login-error {
-    font-size: 12px;
-    color: var(--red);
-    margin-top: 10px;
-    display: none;
-  }
-
-  /* 메인 레이아웃 */
-  .app { display: none; min-height: 100vh; }
-  .app.show { display: flex; flex-direction: column; }
-
-  /* 상단바 */
-  .topbar {
-    background: var(--surface);
-    border-bottom: 1px solid var(--border);
-    padding: 0 20px;
-    height: 52px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    position: sticky;
-    top: 0;
-    z-index: 100;
-  }
-  .topbar-title {
-    font-size: 13px;
-    font-weight: 500;
-    letter-spacing: 0.1em;
-  }
-  .topbar-title span { color: var(--gold); }
-  .topbar-right { display: flex; align-items: center; gap: 12px; }
-  .sync-btn {
-    background: none;
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    color: var(--gray);
-    font-family: inherit;
-    font-size: 11px;
-    letter-spacing: 0.1em;
-    padding: 6px 12px;
-    cursor: pointer;
-  }
-  .sync-btn:hover { border-color: var(--gold); color: var(--gold); }
-  .logout-btn {
-    background: none;
-    border: none;
-    color: var(--gray2);
-    font-family: inherit;
-    font-size: 11px;
-    cursor: pointer;
-    letter-spacing: 0.1em;
-  }
-
-  /* 탭 */
-  .tabs {
-    background: var(--surface);
-    border-bottom: 1px solid var(--border);
-    display: flex;
-    padding: 0 12px;
-    gap: 0;
-    overflow-x: auto;
-    scrollbar-width: none;
-  }
-  .tabs::-webkit-scrollbar { display: none; }
-  .tab {
-    padding: 12px 14px;
-    font-size: 12px;
-    letter-spacing: 0.08em;
-    color: var(--gray);
-    cursor: pointer;
-    border-bottom: 2px solid transparent;
-    transition: all 0.2s;
-    white-space: nowrap;
-    flex-shrink: 0;
-  }
-  .tab.active {
-    color: var(--gold);
-    border-bottom-color: var(--gold);
-  }
-
-  /* 콘텐츠 영역 */
-  .content { padding: 20px; flex: 1; max-width: 100%; overflow-x: hidden; }
-  .tab-content { display: none; }
-  .tab-content.active { display: block; }
-
-  /* 통계 카드 */
-  .stat-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 10px;
-    margin-bottom: 20px;
-  }
-  .stat-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 16px;
-  }
-  .stat-label {
-    font-size: 10px;
-    letter-spacing: 0.2em;
-    color: var(--gray);
-    text-transform: uppercase;
-    margin-bottom: 8px;
-  }
-  .stat-value {
-    font-size: 24px;
-    font-weight: 500;
-    letter-spacing: -0.02em;
-  }
-  .stat-value.gold { color: var(--gold); }
-  .stat-sub {
-    font-size: 11px;
-    color: var(--gray2);
-    margin-top: 4px;
-  }
-
-  /* 회차별 현황 */
-  .session-status {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    overflow: hidden;
-    margin-bottom: 20px;
-  }
-  .session-status-header {
-    padding: 12px 16px;
-    font-size: 10px;
-    letter-spacing: 0.2em;
-    color: var(--gold);
-    text-transform: uppercase;
-    border-bottom: 1px solid var(--border);
-  }
-  .session-row {
-    display: flex;
-    align-items: center;
-    padding: 12px 16px;
-    border-bottom: 1px solid var(--border);
-    gap: 12px;
-  }
-  .session-row:last-child { border-bottom: none; }
-  .session-bar-wrap { flex: 1; }
-  .session-bar-label {
-    display: flex;
-    justify-content: space-between;
-    font-size: 12px;
-    margin-bottom: 6px;
-  }
-  .session-bar-name { color: var(--white); }
-  .session-bar-count { color: var(--gray); }
-  .session-bar-bg {
-    height: 4px;
-    background: var(--border);
-    border-radius: 2px;
-    overflow: hidden;
-  }
-  .session-bar-fill {
-    height: 100%;
-    background: var(--gold);
-    border-radius: 2px;
-    transition: width 0.5s;
-  }
-  .session-bar-fill.full { background: var(--red); }
-  .session-status-badge {
-    font-size: 10px;
-    letter-spacing: 0.1em;
-    padding: 4px 8px;
-    border-radius: 3px;
-    flex-shrink: 0;
-  }
-  .badge-open { background: #1a2e1e; color: #4caf7d; }
-  .badge-sold { background: #2e1a1a; color: #e07b7b; }
-  .badge-low { background: #2e2014; color: #e07b39; }
-
-  /* 예약 목록 */
-  .filter-row {
-    display: flex;
-    gap: 8px;
-    margin-bottom: 12px;
-    flex-wrap: wrap;
-  }
-  .filter-btn {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    color: var(--gray);
-    font-family: inherit;
-    font-size: 11px;
-    letter-spacing: 0.1em;
-    padding: 6px 12px;
-    cursor: pointer;
-    transition: all 0.15s;
-  }
-  .filter-btn.active {
-    border-color: var(--gold);
-    color: var(--gold);
-    background: #1e1c0f;
-  }
-
-  .search-input {
-    width: 100%;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    color: var(--white);
-    font-family: inherit;
-    font-size: 13px;
-    padding: 10px 14px;
-    margin-bottom: 12px;
-  }
-  .search-input:focus { outline: none; border-color: var(--gold); }
-  .search-input::placeholder { color: var(--gray2); }
-
-  /* 예약 카드 */
-  .res-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    margin-bottom: 8px;
-    overflow: hidden;
-  }
-  .res-card-header {
-    padding: 12px 14px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    cursor: pointer;
-  }
-  .res-card-left { display: flex; align-items: center; gap: 12px; }
-  .res-num-badge {
-    font-size: 10px;
-    letter-spacing: 0.1em;
-    color: var(--gold);
-    background: #1e1c0f;
-    border: 1px solid #3a3010;
-    border-radius: 3px;
-    padding: 3px 7px;
-  }
-  .res-name { font-size: 14px; font-weight: 500; }
-  .res-session { font-size: 11px; color: var(--gray); margin-top: 2px; }
-  .pay-badge {
-    font-size: 10px;
-    letter-spacing: 0.05em;
-    padding: 4px 10px;
-    border-radius: 3px;
-    flex-shrink: 0;
-  }
-  .pay-pending { background: #2a2010; color: #e07b39; }
-  .pay-confirmed { background: #1a2e1e; color: #4caf7d; }
-  .pay-cancelled { background: #2a1a1a; color: #e07b7b; }
-
-  .res-card-body {
-    padding: 0 14px 14px;
-    border-top: 1px solid var(--border);
-    display: none;
-  }
-  .res-card-body.open { display: block; }
-  .res-detail-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 8px 20px;
-    margin: 12px 0;
-  }
-  .res-detail-item {}
-  .res-detail-label { font-size: 10px; color: var(--gray); letter-spacing: 0.1em; margin-bottom: 3px; }
-  .res-detail-value { font-size: 13px; }
-  .res-detail-value.gold { color: var(--gold); font-weight: 500; }
-  .res-detail-value.proof { color: var(--orange); font-size: 11px; }
-
-  .res-actions { display: flex; gap: 8px; margin-top: 12px; }
-  .action-btn {
-    flex: 1;
-    background: none;
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    color: var(--gray);
-    font-family: inherit;
-    font-size: 11px;
-    letter-spacing: 0.1em;
-    padding: 9px;
-    cursor: pointer;
-    transition: all 0.15s;
-  }
-  .action-btn:hover { border-color: var(--gray); color: var(--white); }
-  .action-btn.confirm {
-    border-color: #2d5a3d;
-    color: #4caf7d;
-    background: #111e15;
-  }
-  .action-btn.confirm:hover { background: #1a2e1e; }
-  .action-btn.cancel {
-    border-color: #5a2d2d;
-    color: #e07b7b;
-  }
-
-  /* 프리셋 관리 탭 */
-  .preset-list { margin-bottom: 20px; }
-  .preset-item {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 14px 16px;
-    margin-bottom: 8px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-  }
-  .preset-info {}
-  .preset-name { font-size: 14px; font-weight: 500; margin-bottom: 4px; }
-  .preset-price { font-size: 12px; color: var(--gold); }
-  .preset-proof { font-size: 11px; color: var(--orange); }
-  .preset-toggle {
-    background: none;
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    color: var(--gray);
-    font-family: inherit;
-    font-size: 11px;
-    padding: 6px 12px;
-    cursor: pointer;
-  }
-  .preset-toggle.active { border-color: var(--gold); color: var(--gold); }
-  .preset-toggle.inactive { border-color: var(--gray2); color: var(--gray2); }
-
-  .add-preset-form {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 16px;
-  }
-  .add-preset-title {
-    font-size: 11px;
-    letter-spacing: 0.2em;
-    color: var(--gold);
-    text-transform: uppercase;
-    margin-bottom: 14px;
-  }
-  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
-  .form-group label {
-    display: block;
-    font-size: 10px;
-    letter-spacing: 0.15em;
-    color: var(--gray);
-    text-transform: uppercase;
-    margin-bottom: 6px;
-  }
-  .form-input, .form-select {
-    width: 100%;
-    background: var(--bg);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    color: var(--white);
-    font-family: inherit;
-    font-size: 13px;
-    padding: 10px 12px;
-  }
-  .form-input:focus, .form-select:focus { outline: none; border-color: var(--gold); }
-  .form-select option { background: #1a1a1a; }
-  .proof-toggle {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    cursor: pointer;
-    font-size: 13px;
-    color: var(--gray);
-    margin-bottom: 14px;
-  }
-  .proof-toggle input { width: 14px; height: 14px; accent-color: var(--gold); }
-  .add-btn {
-    width: 100%;
-    background: var(--gold);
-    color: #0f0f0f;
-    border: none;
-    border-radius: var(--radius);
-    font-family: inherit;
-    font-size: 13px;
-    font-weight: 700;
-    letter-spacing: 0.15em;
-    padding: 12px;
-    cursor: pointer;
-  }
-
-  /* 입장 체크 탭 */
-  .qr-area {
-    text-align: center;
-    padding: 30px 0;
-  }
-  .qr-label {
-    font-size: 11px;
-    letter-spacing: 0.2em;
-    color: var(--gray);
-    text-transform: uppercase;
-    margin-bottom: 16px;
-  }
-  .qr-input-wrap {
-    display: flex;
-    gap: 8px;
-    margin-bottom: 20px;
-  }
-  .qr-input {
-    flex: 1;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    color: var(--white);
-    font-family: inherit;
-    font-size: 16px;
-    font-weight: 500;
-    letter-spacing: 0.15em;
-    padding: 14px 16px;
-    text-align: center;
-  }
-  .qr-input:focus { outline: none; border-color: var(--gold); }
-  .qr-check-btn {
-    background: var(--gold);
-    color: #0f0f0f;
-    border: none;
-    border-radius: var(--radius);
-    font-family: inherit;
-    font-size: 13px;
-    font-weight: 700;
-    padding: 14px 20px;
-    cursor: pointer;
-  }
-  .check-result {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 20px;
-    text-align: left;
-    display: none;
-  }
-  .check-result.show { display: block; }
-  .check-result.success { border-color: #2d5a3d; }
-  .check-result.fail { border-color: #5a2d2d; }
-  .check-status {
-    font-size: 13px;
-    font-weight: 500;
-    margin-bottom: 12px;
-  }
-  .check-status.ok { color: #4caf7d; }
-  .check-status.err { color: #e07b7b; }
-
-  /* 회차 아이템 */
-  .session-item {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 14px 16px;
-    margin-bottom: 8px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-  }
-  .session-item-info { flex: 1; min-width: 0; }
-  .session-item-date { font-size: 14px; font-weight: 500; margin-bottom: 3px; }
-  .session-item-seats { font-size: 12px; color: var(--gray); }
-  .session-item-actions { display: flex; gap: 6px; flex-shrink: 0; }
-  .icon-btn {
-    background: none;
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    color: var(--gray);
-    font-family: inherit;
-    font-size: 11px;
-    letter-spacing: 0.05em;
-    padding: 5px 10px;
-    cursor: pointer;
-    transition: all 0.15s;
-  }
-  .icon-btn:hover { border-color: var(--gold); color: var(--gold); }
-  .icon-btn.danger:hover { border-color: var(--red); color: var(--red); }
-  .session-status-dot {
-    width: 6px; height: 6px; border-radius: 50%;
-    display: inline-block; margin-right: 6px;
-  }
-  .dot-open { background: #4caf7d; }
-  .dot-closed { background: #e07b7b; }
-  .dot-soon { background: #e07b39; }
-
-  /* 인라인 편집 */
-  .edit-row {
-    background: var(--surface2);
-    border: 1px solid var(--gold);
-    border-radius: var(--radius);
-    padding: 14px 16px;
-    margin-bottom: 8px;
-  }
-  .edit-row .form-row { margin-bottom: 10px; }
-  .edit-actions { display: flex; gap: 8px; margin-top: 10px; }
-  .save-btn {
-    flex: 1; background: var(--gold); color: #0f0f0f;
-    border: none; border-radius: var(--radius);
-    font-family: inherit; font-size: 12px; font-weight: 700;
-    letter-spacing: 0.1em; padding: 10px; cursor: pointer;
-  }
-  .cancel-edit-btn {
-    flex: 1; background: none; border: 1px solid var(--border);
-    border-radius: var(--radius); color: var(--gray);
-    font-family: inherit; font-size: 12px;
-    padding: 10px; cursor: pointer;
-  }
-
-  .toast {
-    position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
-    background: var(--surface); border: 1px solid var(--gold);
-    border-radius: var(--radius); color: var(--white);
-    font-size: 13px; padding: 12px 20px;
-    letter-spacing: 0.05em; z-index: 999;
-    opacity: 0; pointer-events: none;
-    transition: opacity 0.3s;
-  }
-  .toast.show { opacity: 1; }
-
-  .empty-state {
-    text-align: center;
-    padding: 40px 20px;
-    color: var(--gray2);
-    font-size: 13px;
-    line-height: 2;
-  }
+:root {
+  --bg:#0f0f0f; --surface:#161616; --surface2:#1e1e1e;
+  --border:#2a2a2a; --gold:#c9a84c; --white:#f0ede6;
+  --gray:#888; --gray2:#555; --red:#c0392b; --orange:#e07b39; --radius:6px;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--white);font-family:'Noto Sans KR',sans-serif;font-weight:300;font-size:14px;}
+/* 로그인 */
+.login-screen{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;}
+.login-box{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:40px;width:100%;max-width:360px;text-align:center;}
+.login-title{font-size:11px;letter-spacing:.3em;color:var(--gold);text-transform:uppercase;margin-bottom:24px;}
+.login-input{width:100%;background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);color:var(--white);font-family:inherit;font-size:14px;padding:12px 16px;margin-bottom:12px;text-align:center;letter-spacing:.2em;}
+.login-input:focus{outline:none;border-color:var(--gold);}
+.login-btn{width:100%;background:var(--gold);color:#0f0f0f;border:none;border-radius:var(--radius);font-family:inherit;font-size:13px;font-weight:700;letter-spacing:.15em;padding:13px;cursor:pointer;}
+.login-error{font-size:12px;color:var(--red);margin-top:10px;display:none;}
+/* 앱 */
+.app{display:none;min-height:100vh;flex-direction:column;}
+.app.show{display:flex;}
+.topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:0 16px;height:52px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;}
+.topbar-title{font-size:13px;font-weight:500;}
+.topbar-title span{color:var(--gold);}
+.topbar-right{display:flex;align-items:center;gap:8px;}
+.top-btn{background:none;border:1px solid var(--border);border-radius:var(--radius);color:var(--gray);font-family:inherit;font-size:11px;letter-spacing:.08em;padding:6px 10px;cursor:pointer;white-space:nowrap;}
+.top-btn:hover{border-color:var(--gold);color:var(--gold);}
+.logout-btn{background:none;border:none;color:var(--gray2);font-family:inherit;font-size:11px;cursor:pointer;}
+/* 탭 */
+.tabs{background:var(--surface);border-bottom:1px solid var(--border);display:flex;padding:0 8px;overflow-x:auto;scrollbar-width:none;}
+.tabs::-webkit-scrollbar{display:none;}
+.tab{padding:12px 12px;font-size:12px;letter-spacing:.08em;color:var(--gray);cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;flex-shrink:0;}
+.tab.active{color:var(--gold);border-bottom-color:var(--gold);}
+/* 콘텐츠 */
+.content{padding:16px;flex:1;}
+.tab-content{display:none;}
+.tab-content.active{display:block;}
+/* 통계 */
+.stat-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:16px;}
+.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;}
+.stat-label{font-size:10px;letter-spacing:.2em;color:var(--gray);text-transform:uppercase;margin-bottom:8px;}
+.stat-value{font-size:22px;font-weight:500;}
+.stat-value.gold{color:var(--gold);}
+.stat-sub{font-size:11px;color:var(--gray2);margin-top:4px;}
+/* 회차 현황 바 */
+.session-status{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:16px;}
+.session-status-header{padding:12px 16px;font-size:10px;letter-spacing:.2em;color:var(--gold);text-transform:uppercase;border-bottom:1px solid var(--border);}
+.session-row{display:flex;align-items:center;padding:12px 16px;border-bottom:1px solid var(--border);gap:12px;}
+.session-row:last-child{border-bottom:none;}
+.session-bar-wrap{flex:1;}
+.session-bar-label{display:flex;justify-content:space-between;font-size:12px;margin-bottom:6px;}
+.session-bar-bg{height:4px;background:var(--border);border-radius:2px;overflow:hidden;}
+.session-bar-fill{height:100%;background:var(--gold);border-radius:2px;}
+.session-bar-fill.full{background:var(--red);}
+.badge{font-size:10px;padding:3px 8px;border-radius:3px;flex-shrink:0;}
+.badge-open{background:#1a2e1e;color:#4caf7d;}
+.badge-sold{background:#2e1a1a;color:#e07b7b;}
+.badge-low{background:#2e2014;color:#e07b39;}
+/* 필터 */
+.filter-row{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;}
+.filter-btn{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);color:var(--gray);font-family:inherit;font-size:11px;padding:6px 12px;cursor:pointer;}
+.filter-btn.active{border-color:var(--gold);color:var(--gold);}
+.search-input{width:100%;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);color:var(--white);font-family:inherit;font-size:13px;padding:10px 14px;margin-bottom:12px;}
+.search-input:focus{outline:none;border-color:var(--gold);}
+/* 예약 카드 */
+.res-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:8px;overflow:hidden;}
+.res-card-header{padding:12px 14px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;}
+.res-num-badge{font-size:10px;color:var(--gold);background:#1e1c0f;border:1px solid #3a3010;border-radius:3px;padding:3px 7px;}
+.res-name{font-size:14px;font-weight:500;margin-left:8px;}
+.res-session{font-size:11px;color:var(--gray);margin-top:2px;}
+.pay-badge{font-size:10px;padding:4px 10px;border-radius:3px;flex-shrink:0;}
+.pay-pending{background:#2a2010;color:#e07b39;}
+.pay-confirmed{background:#1a2e1e;color:#4caf7d;}
+.pay-cancelled{background:#2a1a1a;color:#e07b7b;}
+.res-card-body{padding:0 14px 14px;border-top:1px solid var(--border);display:none;}
+.res-card-body.open{display:block;}
+.res-detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px 16px;margin:12px 0;}
+.res-detail-label{font-size:10px;color:var(--gray);margin-bottom:3px;}
+.res-detail-value{font-size:13px;}
+.res-detail-value.gold{color:var(--gold);font-weight:500;}
+.res-detail-value.proof{color:var(--orange);font-size:11px;}
+.res-actions{display:flex;gap:8px;margin-top:12px;}
+.action-btn{flex:1;background:none;border:1px solid var(--border);border-radius:var(--radius);color:var(--gray);font-family:inherit;font-size:11px;padding:9px;cursor:pointer;}
+.action-btn.confirm{border-color:#2d5a3d;color:#4caf7d;background:#111e15;}
+.action-btn.danger{border-color:#5a2d2d;color:#e07b7b;}
+/* 공연/프리셋 폼 */
+.section-box{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:12px;}
+.section-title{font-size:10px;letter-spacing:.2em;color:var(--gold);text-transform:uppercase;margin-bottom:14px;}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;}
+.form-group label{display:block;font-size:10px;letter-spacing:.15em;color:var(--gray);text-transform:uppercase;margin-bottom:6px;}
+.form-input,.form-select{width:100%;background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);color:var(--white);font-family:inherit;font-size:13px;padding:10px 12px;}
+.form-input:focus,.form-select:focus{outline:none;border-color:var(--gold);}
+.form-select option{background:#1a1a1a;}
+.full{grid-column:1/-1;}
+.hint{font-size:11px;color:var(--gray2);margin-top:5px;}
+.save-btn{width:100%;background:var(--gold);color:#0f0f0f;border:none;border-radius:var(--radius);font-family:inherit;font-size:13px;font-weight:700;letter-spacing:.15em;padding:12px;cursor:pointer;margin-top:4px;}
+/* 회차 아이템 */
+.session-item{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;gap:12px;}
+.session-item-date{font-size:14px;font-weight:500;margin-bottom:3px;}
+.session-item-info{font-size:12px;color:var(--gray);}
+.item-btns{display:flex;gap:6px;flex-shrink:0;}
+.icon-btn{background:none;border:1px solid var(--border);border-radius:var(--radius);color:var(--gray);font-family:inherit;font-size:11px;padding:5px 10px;cursor:pointer;}
+.icon-btn:hover{border-color:var(--gold);color:var(--gold);}
+.icon-btn.danger:hover{border-color:var(--red);color:var(--red);}
+/* 프리셋 */
+.preset-item{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;}
+.preset-name{font-size:14px;font-weight:500;margin-bottom:4px;}
+.preset-price{font-size:12px;color:var(--gold);}
+.preset-proof{font-size:11px;color:var(--orange);}
+.toggle-btn{background:none;border:1px solid var(--border);border-radius:var(--radius);font-family:inherit;font-size:11px;padding:6px 12px;cursor:pointer;}
+.toggle-btn.on{border-color:var(--gold);color:var(--gold);}
+.toggle-btn.off{border-color:var(--gray2);color:var(--gray2);}
+/* 입장 */
+.qr-wrap{padding:20px 0;}
+.qr-input-row{display:flex;gap:8px;margin-bottom:16px;}
+.qr-input{flex:1;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);color:var(--white);font-family:inherit;font-size:16px;font-weight:500;padding:14px 16px;text-align:center;letter-spacing:.1em;}
+.qr-input:focus{outline:none;border-color:var(--gold);}
+.qr-check-btn{background:var(--gold);color:#0f0f0f;border:none;border-radius:var(--radius);font-family:inherit;font-size:13px;font-weight:700;padding:14px 18px;cursor:pointer;}
+.check-result{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;display:none;}
+.check-result.show{display:block;}
+.check-result.ok{border-color:#2d5a3d;}
+.check-result.fail{border-color:#5a2d2d;}
+.check-status{font-size:14px;font-weight:500;margin-bottom:10px;}
+.check-status.ok{color:#4caf7d;}
+.check-status.fail{color:#e07b7b;}
+/* 유틸 */
+.empty-state{text-align:center;padding:32px;color:var(--gray2);font-size:13px;line-height:2;}
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--surface);border:1px solid var(--gold);border-radius:var(--radius);color:var(--white);font-size:13px;padding:12px 20px;z-index:999;opacity:0;pointer-events:none;transition:opacity .3s;white-space:nowrap;}
+.toast.show{opacity:1;}
 </style>
 </head>
 <body>
@@ -610,41 +140,40 @@
 <div class="login-screen" id="login-screen">
   <div class="login-box">
     <div class="login-title">관리자 로그인</div>
-    <div style="font-size:18px;font-weight:500;margin-bottom:24px;">덕질의 이해</div>
-    <input type="password" class="login-input" id="pw-input"
-           placeholder="비밀번호" onkeydown="if(event.key==='Enter')doLogin()">
+    <div style="font-size:18px;font-weight:500;margin-bottom:24px;">공연 예약 관리</div>
+    <input type="password" class="login-input" id="pw-input" placeholder="비밀번호"
+           onkeydown="if(event.key==='Enter')doLogin()">
     <button class="login-btn" onclick="doLogin()">로그인</button>
     <div class="login-error" id="login-error">비밀번호가 올바르지 않습니다.</div>
   </div>
 </div>
 
-<!-- 메인 앱 -->
+<!-- 앱 -->
 <div class="app" id="app">
   <div class="topbar">
-    <div class="topbar-title"><span>덕질의 이해</span> 관리자</div>
+    <div class="topbar-title"><span id="topbar-title">공연 관리자</span></div>
     <div class="topbar-right">
-      <button class="sync-btn" onclick="exportExcel()">엑셀 내보내기</button><button class="sync-btn" onclick="loadData()">새로고침</button>
-      <button class="logout-btn" onclick="logout()">로그아웃</button>
+      <button class="top-btn" onclick="exportExcel()">엑셀 내보내기</button>
+      <button class="top-btn" onclick="loadData()">새로고침</button>
+      <button class="logout-btn" onclick="doLogout()">로그아웃</button>
     </div>
   </div>
-
   <div class="tabs">
-    <div class="tab active" onclick="switchTab('dashboard', this)">현황</div>
-    <div class="tab" onclick="switchTab('reservations', this)">예약 목록</div>
-    <div class="tab" onclick="switchTab('performance', this)">공연 설정</div>
-    <div class="tab" onclick="switchTab('presets', this)">할인 설정</div>
-    <div class="tab" onclick="switchTab('checkin', this)">입장 확인</div>
+    <div class="tab active" onclick="switchTab('dashboard',this)">현황</div>
+    <div class="tab" onclick="switchTab('reservations',this)">예약 목록</div>
+    <div class="tab" onclick="switchTab('performance',this)">공연 설정</div>
+    <div class="tab" onclick="switchTab('presets',this)">할인 설정</div>
+    <div class="tab" onclick="switchTab('checkin',this)">입장 확인</div>
   </div>
-
   <div class="content">
 
-    <!-- 현황 탭 -->
+    <!-- 현황 -->
     <div class="tab-content active" id="tab-dashboard">
       <div class="stat-grid">
         <div class="stat-card">
           <div class="stat-label">전체 예약</div>
           <div class="stat-value" id="stat-total">—</div>
-          <div class="stat-sub">총 40석 기준</div>
+          <div class="stat-sub" id="stat-total-sub">—</div>
         </div>
         <div class="stat-card">
           <div class="stat-label">입금 확인</div>
@@ -662,68 +191,64 @@
           <div class="stat-sub">입금확인 기준</div>
         </div>
       </div>
-
       <div class="session-status">
-        <div class="session-status-header">회차별 잔여석</div>
+        <div class="session-status-header">회차별 현황</div>
         <div id="session-status-list"></div>
       </div>
     </div>
 
-    <!-- 예약 목록 탭 -->
+    <!-- 예약 목록 -->
     <div class="tab-content" id="tab-reservations">
       <input class="search-input" type="text" placeholder="이름 또는 예약번호 검색..."
-             oninput="filterReservations(this.value)">
+             oninput="filterRes(this.value)">
       <div class="filter-row">
-        <button class="filter-btn active" onclick="setFilter('all', this)">전체</button>
-        <button class="filter-btn" onclick="setFilter('미입금', this)">미입금</button>
-        <button class="filter-btn" onclick="setFilter('입금확인', this)">입금확인</button>
-        <button class="filter-btn" onclick="setFilter('자동취소', this)">취소</button>
+        <button class="filter-btn active" onclick="setFilter('all',this)">전체</button>
+        <button class="filter-btn" onclick="setFilter('미입금',this)">미입금</button>
+        <button class="filter-btn" onclick="setFilter('입금확인',this)">입금확인</button>
+        <button class="filter-btn" onclick="setFilter('취소',this)">취소</button>
       </div>
       <div id="res-list"></div>
     </div>
 
-    <!-- 공연 설정 탭 -->
+    <!-- 공연 설정 -->
     <div class="tab-content" id="tab-performance">
-
-      <!-- 기획사 정보 -->
-      <div class="add-preset-form" style="margin-bottom:12px">
-        <div class="add-preset-title">기획사 정보</div>
+      <div class="section-box">
+        <div class="section-title">기획사 정보</div>
         <div class="form-row">
-          <div class="form-group" style="grid-column:1/-1">
+          <div class="form-group full">
             <label>기획사 이름</label>
-            <input type="text" class="form-input" id="agency-name" placeholder="예: 블루블라인드">
+            <input type="text" class="form-input" id="agency-name" placeholder="예: 주식회사 극단아리랑">
           </div>
         </div>
         <div class="form-row">
           <div class="form-group">
             <label>문의 전화</label>
-            <input type="tel" class="form-input" id="agency-tel" placeholder="예: 010-0000-0000">
+            <input type="tel" class="form-input" id="agency-tel" placeholder="예: 02-741-5332">
           </div>
           <div class="form-group">
             <label>문의 이메일 (선택)</label>
-            <input type="email" class="form-input" id="agency-email" placeholder="예: info@bluebline.com">
+            <input type="email" class="form-input" id="agency-email" placeholder="예: info@example.com">
           </div>
         </div>
         <div class="form-row">
-          <div class="form-group" style="grid-column:1/-1">
+          <div class="form-group full">
             <label>카카오페이 송금 링크 (선택)</label>
-            <input type="url" class="form-input" id="kakaopay-link" placeholder="예: https://qr.kakaopay.com/XXXXXXXX">
-            <div style="font-size:11px;color:var(--gray);margin-top:6px">카카오페이 앱 → 송금 → 송금링크 만들기 → 금액 자유입력으로 생성</div>
+            <input type="url" class="form-input" id="kakaopay-link" placeholder="https://qr.kakaopay.com/...">
+            <div class="hint">카카오페이 앱 → 송금 → 송금링크 만들기 → 금액 자유입력</div>
           </div>
         </div>
       </div>
 
-      <!-- 공연 정보 -->
-      <div class="add-preset-form" style="margin-bottom:12px">
-        <div class="add-preset-title">공연 정보</div>
+      <div class="section-box">
+        <div class="section-title">공연 정보</div>
         <div class="form-row">
-          <div class="form-group" style="grid-column:1/-1">
+          <div class="form-group full">
             <label>공연명</label>
             <input type="text" class="form-input" id="perf-name" placeholder="예: 덕질의 이해">
           </div>
         </div>
         <div class="form-row">
-          <div class="form-group" style="grid-column:1/-1">
+          <div class="form-group full">
             <label>티켓 부제목 (영문)</label>
             <input type="text" class="form-input" id="perf-subtitle" placeholder="예: 2025 SPECIAL PERFORMANCE">
           </div>
@@ -731,27 +256,36 @@
         <div class="form-row">
           <div class="form-group">
             <label>주최</label>
-            <input type="text" class="form-input" id="perf-host" placeholder="예: 블루블라인드">
+            <input type="text" class="form-input" id="perf-host" placeholder="예: 주식회사 극단아리랑">
           </div>
           <div class="form-group">
             <label>주관</label>
-            <input type="text" class="form-input" id="perf-organizer" placeholder="예: 블루블라인드">
+            <input type="text" class="form-input" id="perf-organizer" placeholder="예: 주식회사 극단아리랑">
           </div>
         </div>
         <div class="form-row">
-          <div class="form-group" style="grid-column:1/-1">
-            <label>후원 (선택, 쉼표로 구분)</label>
+          <div class="form-group full">
+            <label>후원 (쉼표로 구분)</label>
             <input type="text" class="form-input" id="perf-sponsor" placeholder="예: 문화체육관광부, 한국문화예술위원회">
           </div>
         </div>
       </div>
 
-      <!-- 예매 설정 -->
-      <div class="add-preset-form" style="margin-bottom:16px">
-        <div class="add-preset-title">예매 설정</div>
+      <div class="section-box">
+        <div class="section-title">예매 설정</div>
         <div class="form-row">
           <div class="form-group">
-            <label>예매 오픈 상태</label>
+            <label>입금 계좌</label>
+            <input type="text" class="form-input" id="perf-account" placeholder="예: 기업은행 000-000-000">
+          </div>
+          <div class="form-group">
+            <label>예금주</label>
+            <input type="text" class="form-input" id="perf-account-holder" placeholder="예: 주식회사 극단아리랑">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>예매 상태</label>
             <select class="form-select" id="perf-open">
               <option value="open">예매 중</option>
               <option value="closed">예매 마감</option>
@@ -763,52 +297,47 @@
             <input type="number" class="form-input" id="perf-max-qty" placeholder="4" min="1" max="10">
           </div>
         </div>
-        <button class="add-btn" onclick="savePerformanceInfo()">전체 설정 저장</button>
+        <button class="save-btn" onclick="savePerf()">전체 설정 저장</button>
       </div>
 
-      <!-- 회차 목록 -->
-      <div style="font-size:10px;letter-spacing:0.2em;color:var(--gold);text-transform:uppercase;margin-bottom:12px;">
-        회차 관리
-      </div>
-      <div id="session-list" style="margin-bottom:16px"></div>
+      <div style="font-size:10px;letter-spacing:.2em;color:var(--gold);text-transform:uppercase;margin-bottom:12px;">회차 관리</div>
+      <div id="session-list" style="margin-bottom:16px;"></div>
 
-      <!-- 회차 추가 -->
-      <div class="add-preset-form">
-        <div class="add-preset-title">회차 추가</div>
+      <div class="section-box">
+        <div class="section-title">회차 추가</div>
         <div class="form-row">
           <div class="form-group">
             <label>날짜</label>
-            <input type="date" class="form-input" id="new-session-date">
+            <input type="date" class="form-input" id="new-date">
           </div>
           <div class="form-group">
             <label>시간</label>
-            <input type="time" class="form-input" id="new-session-time">
+            <input type="time" class="form-input" id="new-time">
           </div>
         </div>
         <div class="form-row">
           <div class="form-group">
             <label>좌석 수</label>
-            <input type="number" class="form-input" id="new-session-seats" placeholder="10" min="1">
+            <input type="number" class="form-input" id="new-seats" placeholder="10" min="1">
           </div>
           <div class="form-group">
             <label>상태</label>
-            <select class="form-select" id="new-session-status">
+            <select class="form-select" id="new-status">
               <option value="open">예매 중</option>
               <option value="closed">마감</option>
               <option value="soon">오픈 예정</option>
             </select>
           </div>
         </div>
-        <button class="add-btn" onclick="addSession()">회차 추가</button>
+        <button class="save-btn" onclick="addSession()">회차 추가</button>
       </div>
     </div>
 
-    <!-- 할인 설정 탭 -->
+    <!-- 할인 설정 -->
     <div class="tab-content" id="tab-presets">
-      <div class="preset-list" id="preset-list"></div>
-
-      <div class="add-preset-form">
-        <div class="add-preset-title">새 할인 추가</div>
+      <div id="preset-list" style="margin-bottom:16px;"></div>
+      <div class="section-box">
+        <div class="section-title">새 할인 추가</div>
         <div class="form-row">
           <div class="form-group">
             <label>할인명</label>
@@ -816,7 +345,7 @@
           </div>
           <div class="form-group">
             <label>할인방식</label>
-            <select class="form-select" id="new-preset-type" onchange="updatePresetPreview()">
+            <select class="form-select" id="new-preset-type" onchange="updatePreview()">
               <option value="정액">정액 (원)</option>
               <option value="정률">정률 (%)</option>
               <option value="없음">할인 없음</option>
@@ -826,46 +355,35 @@
         <div class="form-row">
           <div class="form-group">
             <label>할인값</label>
-            <input type="number" class="form-input" id="new-preset-value"
-                   placeholder="0" oninput="updatePresetPreview()">
+            <input type="number" class="form-input" id="new-preset-value" placeholder="0" oninput="updatePreview()">
           </div>
           <div class="form-group">
             <label>최종 단가</label>
-            <input type="text" class="form-input" id="new-preset-preview"
-                   placeholder="—" readonly style="color:var(--gold);background:#1e1c0f;">
+            <input type="text" class="form-input" id="new-preset-preview" readonly
+                   style="color:var(--gold);background:#1e1c0f;">
           </div>
         </div>
-        <label class="proof-toggle">
-          <input type="checkbox" id="new-preset-proof">
+        <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--gray);margin-bottom:14px;cursor:pointer;">
+          <input type="checkbox" id="new-preset-proof" style="width:14px;height:14px;accent-color:var(--gold);">
           입장 시 증빙 서류 확인 필요
         </label>
-        <button class="add-btn" onclick="addPreset()">프리셋으로 저장</button>
+        <button class="save-btn" onclick="addPreset()">프리셋 저장</button>
       </div>
     </div>
 
-    <!-- 입장 확인 탭 -->
+    <!-- 입장 확인 -->
     <div class="tab-content" id="tab-checkin">
-      <div class="qr-area">
-        <div class="qr-label">예약번호 또는 QR 스캔</div>
-        <div class="qr-input-wrap">
-          <input type="text" class="qr-input" id="qr-input"
-                 placeholder="DQ-0416-001"
-                 onkeydown="if(event.key==='Enter')checkIn()"
-                 style="text-transform:uppercase">
-          <button class="qr-check-btn" onclick="checkIn()">확인</button>
+      <div class="qr-wrap">
+        <div style="font-size:11px;letter-spacing:.2em;color:var(--gray);text-transform:uppercase;margin-bottom:14px;">예약번호 입력 또는 QR 스캔</div>
+        <div class="qr-input-row">
+          <input type="text" class="qr-input" id="qr-input" placeholder="DQ-0416-001"
+                 style="text-transform:uppercase"
+                 onkeydown="if(event.key==='Enter')doCheckIn()">
+          <button class="qr-check-btn" onclick="doCheckIn()">확인</button>
         </div>
         <div class="check-result" id="check-result">
-          <div class="check-status" id="check-status-text"></div>
+          <div class="check-status" id="check-status"></div>
           <div id="check-detail"></div>
-        </div>
-      </div>
-
-      <div style="margin-top:16px">
-        <div style="font-size:10px;letter-spacing:0.2em;color:var(--gold);text-transform:uppercase;margin-bottom:12px;">
-          오늘 입장 현황
-        </div>
-        <div id="checkin-today-list">
-          <div class="empty-state">오늘 공연 예약 없음</div>
         </div>
       </div>
     </div>
@@ -873,487 +391,322 @@
   </div>
 </div>
 
-<!-- 토스트 알림 -->
 <div class="toast" id="toast"></div>
 
 <script>
-// ============================================================
-// 설정
-// ============================================================
-const ADMIN_PW = '1234';
 const API_BASE = '/api/admin';
+let ADMIN_PW = '';
+let reservations = [], sessions = [], presets = [], performance = {};
+let currentFilter = 'all', currentSearch = '';
+const BASE_PRICE = 30000;
 
-let reservations = [];
-let presets = [];
-let sessions = [];
-let performanceInfo = { name: '덕질의 이해', open: 'open', maxQty: 4 };
-let currentFilter = 'all';
-let currentSearch = '';
-let editingSessionId = null;
-
-// ============================================================
-// 토스트
-// ============================================================
-function showToast(msg) {
+// ── 토스트 ──
+function toast(msg) {
   const t = document.getElementById('toast');
   t.textContent = msg;
   t.classList.add('show');
   setTimeout(() => t.classList.remove('show'), 2500);
 }
 
-// ============================================================
-// 로그인
-// ============================================================
+// ── 로그인 ──
 function doLogin() {
   const pw = document.getElementById('pw-input').value;
-  if (pw === ADMIN_PW) {
-    document.getElementById('login-screen').style.display = 'none';
-    document.getElementById('app').classList.add('show');
-    loadData();
-  } else {
-    document.getElementById('login-error').style.display = 'block';
-  }
+  if (!pw) return;
+  ADMIN_PW = pw;
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('app').classList.add('show');
+  loadData();
 }
-function logout() {
+function doLogout() {
+  ADMIN_PW = '';
   document.getElementById('login-screen').style.display = 'flex';
   document.getElementById('app').classList.remove('show');
   document.getElementById('pw-input').value = '';
 }
+document.getElementById('pw-input').focus();
 
-// ============================================================
-// 데이터 로드
-// ============================================================
+// ── 데이터 로드 ──
 async function loadData() {
   try {
-    const res = await fetch(API_BASE, { headers: { 'x-admin-key': ADMIN_PW } });
+    const res = await fetch(API_BASE, {
+      headers: { 'x-admin-key': ADMIN_PW }
+    });
+    if (res.status === 401) {
+      document.getElementById('login-error').style.display = 'block';
+      doLogout();
+      return;
+    }
     const data = await res.json();
     reservations = data.reservations || [];
-    presets = data.presets || getDefaultPresets();
-    sessions = data.sessions || getDefaultSessions();
-    performanceInfo = data.performanceInfo || performanceInfo;
+    sessions     = data.sessions     || [];
+    presets      = data.presets      || [];
+    performance  = data.performance  || {};
+    renderAll();
   } catch(e) {
-    reservations = getDummyReservations();
-    presets = getDefaultPresets();
-    sessions = getDefaultSessions();
+    toast('데이터 로드 실패: ' + e.message);
   }
-  renderAll();
-}
-
-function getDefaultSessions() {
-  return [
-    { id:'S1', date:'2025-04-16', time:'19:30', seats:10, booked:0, status:'open' },
-    { id:'S2', date:'2025-04-17', time:'19:30', seats:10, booked:0, status:'open' },
-    { id:'S3', date:'2025-04-18', time:'15:00', seats:10, booked:0, status:'open' },
-    { id:'S4', date:'2025-04-19', time:'15:00', seats:10, booked:0, status:'open' },
-  ];
-}
-function getDummyReservations() {
-  return [
-    { resNum:'DQ-0416-001', name:'김민수', phone:'010-1234-5678', email:'kim@email.com',
-      session:'4월 16일 (수) 19:30', sessionId:'S1', ticketType:'일반', quantity:2,
-      total:60000, payStatus:'입금확인', needProof:false, checkedIn:false },
-    { resNum:'DQ-0416-002', name:'이지영', phone:'010-9876-5432', email:'lee@email.com',
-      session:'4월 17일 (목) 19:30', sessionId:'S2', ticketType:'학생', quantity:1,
-      total:24000, payStatus:'미입금', needProof:true, checkedIn:false },
-    { resNum:'DQ-0416-003', name:'박서연', phone:'010-5555-1234', email:'park@email.com',
-      session:'4월 16일 (수) 19:30', sessionId:'S1', ticketType:'팬클럽/멤버십', quantity:2,
-      total:42000, payStatus:'입금확인', needProof:true, checkedIn:false },
-  ];
-}
-function getDefaultPresets() {
-  return [
-    { name:'일반', price:30000, needProof:false, active:true },
-    { name:'얼리버드', price:24000, needProof:false, active:true },
-    { name:'학생', price:24000, needProof:true, active:true },
-    { name:'팬클럽/멤버십', price:21000, needProof:true, active:true },
-    { name:'단체 (5인 이상)', price:24000, needProof:false, active:true },
-    { name:'장애인/국가유공자', price:15000, needProof:true, active:true },
-    { name:'초대권', price:0, needProof:true, active:true },
-  ];
 }
 
 function renderAll() {
   renderDashboard();
   renderReservations();
-  renderPerformance();
+  renderSessions();
   renderPresets();
-  syncPerformanceForm();
+  syncPerfForm();
+  const title = performance.name || '공연 관리자';
+  document.getElementById('topbar-title').textContent = title;
 }
 
-// ============================================================
-// 현황 탭
-// ============================================================
+// ── 현황 ──
 function renderDashboard() {
   const confirmed = reservations.filter(r => r.payStatus === '입금확인');
   const pending   = reservations.filter(r => r.payStatus === '미입금');
-  const revenue   = confirmed.reduce((s,r) => s + r.total, 0);
+  const revenue   = confirmed.reduce((s, r) => s + (r.total || 0), 0);
+  const totalSeats = sessions.reduce((s, s2) => s + (s2.seats || 0), 0);
 
   document.getElementById('stat-total').textContent     = reservations.length + '건';
+  document.getElementById('stat-total-sub').textContent = '총 ' + totalSeats + '석 기준';
   document.getElementById('stat-confirmed').textContent = confirmed.length + '건';
   document.getElementById('stat-confirmed-sub').textContent =
-    confirmed.reduce((s,r) => s + r.quantity, 0) + '석 확정';
+    confirmed.reduce((s,r) => s + (r.quantity||0), 0) + '석 확정';
   document.getElementById('stat-pending').textContent = pending.length + '건';
   document.getElementById('stat-revenue').textContent = revenue.toLocaleString() + '원';
 
-  const totalSeats = sessions.reduce((s,s2) => s + s2.seats, 0);
-  document.querySelector('#stat-total + .stat-sub').textContent = `총 ${totalSeats}석 기준`;
-
-  const list = document.getElementById('session-status-list');
-  list.innerHTML = sessions.map(s => {
+  const days = ['일','월','화','수','목','금','토'];
+  document.getElementById('session-status-list').innerHTML = sessions.map(s => {
     const booked = reservations
       .filter(r => r.sessionId === s.id && r.payStatus === '입금확인')
-      .reduce((sum,r) => sum + r.quantity, 0);
-    const pct = s.seats > 0 ? Math.round((booked / s.seats) * 100) : 0;
+      .reduce((sum, r) => sum + (r.quantity||0), 0);
+    const pct    = s.seats > 0 ? Math.round(booked / s.seats * 100) : 0;
     const remain = s.seats - booked;
     const isFull = remain <= 0 || s.status === 'closed';
     const isLow  = !isFull && remain <= 3;
-    const badgeClass = isFull ? 'badge-sold' : isLow ? 'badge-low' : 'badge-open';
-    const badgeText  = isFull ? '마감' : isLow ? '마감임박' : '예매중';
-    const label = formatSessionLabel(s);
-    return `
-    <div class="session-row">
-      <div class="session-bar-wrap">
-        <div class="session-bar-label">
-          <span class="session-bar-name">${label}</span>
-          <span class="session-bar-count">${booked}/${s.seats}석</span>
-        </div>
-        <div class="session-bar-bg">
-          <div class="session-bar-fill${isFull?' full':''}" style="width:${pct}%"></div>
-        </div>
-      </div>
-      <span class="session-status-badge ${badgeClass}">${badgeText}</span>
-    </div>`;
+    const bc = isFull ? 'badge-sold' : isLow ? 'badge-low' : 'badge-open';
+    const bt = isFull ? '마감' : isLow ? '마감임박' : '예매중';
+    const d  = new Date(s.date + 'T00:00:00');
+    const label = (d.getMonth()+1) + '월 ' + d.getDate() + '일 (' + days[d.getDay()] + ') ' + s.time;
+    return '<div class="session-row">' +
+      '<div class="session-bar-wrap">' +
+        '<div class="session-bar-label"><span>' + label + '</span><span style="color:var(--gray)">' + booked + '/' + s.seats + '석</span></div>' +
+        '<div class="session-bar-bg"><div class="session-bar-fill' + (isFull?' full':'') + '" style="width:' + pct + '%"></div></div>' +
+      '</div>' +
+      '<span class="badge ' + bc + '">' + bt + '</span>' +
+    '</div>';
   }).join('');
 }
 
-function formatSessionLabel(s) {
-  const d = new Date(s.date + 'T00:00:00');
-  const days = ['일','월','화','수','목','금','토'];
-  return `${d.getMonth()+1}월 ${d.getDate()}일 (${days[d.getDay()]}) ${s.time}`;
-}
-
-// ============================================================
-// 공연 설정 탭
-// ============================================================
-function syncPerformanceForm() {
-  document.getElementById('agency-name').value    = performanceInfo.agency     || '블루블라인드';
-  document.getElementById('agency-tel').value     = performanceInfo.tel        || '';
-  document.getElementById('agency-email').value   = performanceInfo.email      || '';
-  document.getElementById('kakaopay-link').value  = performanceInfo.kakaopayLink || '';
-  document.getElementById('perf-name').value      = performanceInfo.name       || '';
-  document.getElementById('perf-subtitle').value  = performanceInfo.subtitle   || '';
-  document.getElementById('perf-host').value      = performanceInfo.host       || '';
-  document.getElementById('perf-organizer').value = performanceInfo.organizer  || '';
-  document.getElementById('perf-sponsor').value   = performanceInfo.sponsor    || '';
-  document.getElementById('perf-open').value      = performanceInfo.open       || 'open';
-  document.getElementById('perf-max-qty').value   = performanceInfo.maxQty     || 4;
-}
-
-async function savePerformanceInfo() {
-  performanceInfo.agency       = document.getElementById('agency-name').value.trim();
-  performanceInfo.tel          = document.getElementById('agency-tel').value.trim();
-  performanceInfo.email        = document.getElementById('agency-email').value.trim();
-  performanceInfo.kakaopayLink = document.getElementById('kakaopay-link').value.trim();
-  performanceInfo.name      = document.getElementById('perf-name').value.trim();
-  performanceInfo.subtitle  = document.getElementById('perf-subtitle').value.trim();
-  performanceInfo.host      = document.getElementById('perf-host').value.trim();
-  performanceInfo.organizer = document.getElementById('perf-organizer').value.trim();
-  performanceInfo.sponsor   = document.getElementById('perf-sponsor').value.trim();
-  performanceInfo.open      = document.getElementById('perf-open').value;
-  performanceInfo.maxQty    = parseInt(document.getElementById('perf-max-qty').value) || 4;
-
-  await callAPI({ action: 'savePerformanceInfo', info: performanceInfo });
-  showToast('설정이 저장되었습니다.');
-  renderDashboard();
-}
-
-function renderPerformance() {
-  const list = document.getElementById('session-list');
-  if (!sessions.length) {
-    list.innerHTML = '<div class="empty-state">등록된 회차가 없습니다.</div>';
-    return;
-  }
-  list.innerHTML = sessions.map(s => {
-    if (editingSessionId === s.id) return renderSessionEditRow(s);
-    const label  = formatSessionLabel(s);
-    const remain = s.seats - s.booked;
-    const dotClass = s.status === 'open' ? 'dot-open'
-      : s.status === 'closed' ? 'dot-closed' : 'dot-soon';
-    const statusText = s.status === 'open' ? '예매중'
-      : s.status === 'closed' ? '마감' : '오픈예정';
-    return `
-    <div class="session-item">
-      <div class="session-item-info">
-        <div class="session-item-date">
-          <span class="session-status-dot ${dotClass}"></span>${label}
-        </div>
-        <div class="session-item-seats">
-          ${s.seats}석 · 잔여 ${remain}석 · ${statusText}
-        </div>
-      </div>
-      <div class="session-item-actions">
-        <button class="icon-btn" onclick="startEditSession('${s.id}')">수정</button>
-        <button class="icon-btn danger" onclick="deleteSession('${s.id}')">삭제</button>
-      </div>
-    </div>`;
-  }).join('');
-}
-
-function renderSessionEditRow(s) {
-  return `
-  <div class="edit-row">
-    <div class="form-row">
-      <div class="form-group">
-        <label>날짜</label>
-        <input type="date" class="form-input" id="edit-date" value="${s.date}">
-      </div>
-      <div class="form-group">
-        <label>시간</label>
-        <input type="time" class="form-input" id="edit-time" value="${s.time}">
-      </div>
-    </div>
-    <div class="form-row">
-      <div class="form-group">
-        <label>좌석 수</label>
-        <input type="number" class="form-input" id="edit-seats" value="${s.seats}" min="1">
-      </div>
-      <div class="form-group">
-        <label>상태</label>
-        <select class="form-select" id="edit-status">
-          <option value="open"   ${s.status==='open'  ?'selected':''}>예매 중</option>
-          <option value="closed" ${s.status==='closed'?'selected':''}>마감</option>
-          <option value="soon"   ${s.status==='soon'  ?'selected':''}>오픈 예정</option>
-        </select>
-      </div>
-    </div>
-    <div class="edit-actions">
-      <button class="save-btn" onclick="saveEditSession('${s.id}')">저장</button>
-      <button class="cancel-edit-btn" onclick="cancelEdit()">취소</button>
-    </div>
-  </div>`;
-}
-
-function startEditSession(id) {
-  editingSessionId = id;
-  renderPerformance();
-}
-
-function cancelEdit() {
-  editingSessionId = null;
-  renderPerformance();
-}
-
-async function saveEditSession(id) {
-  const s = sessions.find(s => s.id === id);
-  if (!s) return;
-  s.date   = document.getElementById('edit-date').value;
-  s.time   = document.getElementById('edit-time').value;
-  s.seats  = parseInt(document.getElementById('edit-seats').value) || s.seats;
-  s.status = document.getElementById('edit-status').value;
-  editingSessionId = null;
-
-  await callAPI({ action: 'updateSession', session: s });
-  showToast('회차가 수정되었습니다.');
-  renderAll();
-}
-
-async function addSession() {
-  const date   = document.getElementById('new-session-date').value;
-  const time   = document.getElementById('new-session-time').value;
-  const seats  = parseInt(document.getElementById('new-session-seats').value);
-  const status = document.getElementById('new-session-status').value;
-
-  if (!date || !time || !seats) { showToast('날짜, 시간, 좌석 수를 모두 입력해 주세요.'); return; }
-
-  const newId = 'S' + Date.now();
-  const newSession = { id: newId, date, time, seats, booked: 0, status };
-  sessions.push(newSession);
-
-  await callAPI({ action: 'addSession', session: newSession });
-  showToast('회차가 추가되었습니다.');
-
-  document.getElementById('new-session-date').value = '';
-  document.getElementById('new-session-time').value = '';
-  document.getElementById('new-session-seats').value = '';
-  renderAll();
-}
-
-async function deleteSession(id) {
-  const s = sessions.find(s => s.id === id);
-  const booked = reservations.filter(r => r.sessionId === id && r.payStatus === '입금확인').length;
-  if (booked > 0) {
-    if (!confirm(`이 회차에 입금 확인된 예약이 ${booked}건 있습니다.\n정말 삭제하시겠습니까?`)) return;
-  } else {
-    if (!confirm(`${formatSessionLabel(s)} 회차를 삭제하시겠습니까?`)) return;
-  }
-  sessions = sessions.filter(s => s.id !== id);
-  await callAPI({ action: 'deleteSession', id });
-  showToast('회차가 삭제되었습니다.');
-  renderAll();
-}
-
-// ============================================================
-// 예약 목록 탭
-// ============================================================
+// ── 예약 목록 ──
 function renderReservations() {
-  let filtered = reservations;
+  let list = reservations;
   if (currentFilter !== 'all') {
-    filtered = filtered.filter(r =>
-      currentFilter === '자동취소' ? r.payStatus.includes('취소') : r.payStatus === currentFilter
-    );
+    list = list.filter(r => currentFilter === '취소'
+      ? r.payStatus.includes('취소')
+      : r.payStatus === currentFilter);
   }
   if (currentSearch) {
     const q = currentSearch.toLowerCase();
-    filtered = filtered.filter(r =>
-      r.name.includes(q) || r.resNum.toLowerCase().includes(q)
-    );
+    list = list.filter(r => r.name.includes(q) || (r.resNum||'').toLowerCase().includes(q));
   }
-  const list = document.getElementById('res-list');
-  if (!filtered.length) {
-    list.innerHTML = '<div class="empty-state">해당하는 예약이 없습니다.</div>';
-    return;
-  }
-  list.innerHTML = filtered.map(r => {
-    const badgeClass = r.payStatus === '입금확인' ? 'pay-confirmed'
-      : r.payStatus === '미입금' ? 'pay-pending' : 'pay-cancelled';
-    return `
-    <div class="res-card">
-      <div class="res-card-header" onclick="toggleCard('${r.resNum}')">
-        <div class="res-card-left">
-          <div>
-            <div style="display:flex;align-items:center;gap:8px;margin-bottom:3px">
-              <span class="res-num-badge">${r.resNum}</span>
-              <span class="res-name">${r.name}</span>
-            </div>
-            <div class="res-session">${r.session} · ${r.ticketType} ${r.quantity}매</div>
-          </div>
-        </div>
-        <span class="pay-badge ${badgeClass}">${r.payStatus}</span>
-      </div>
-      <div class="res-card-body" id="body-${r.resNum}">
-        <div class="res-detail-grid">
-          <div class="res-detail-item">
-            <div class="res-detail-label">연락처</div>
-            <div class="res-detail-value">${r.phone}</div>
-          </div>
-          <div class="res-detail-item">
-            <div class="res-detail-label">결제금액</div>
-            <div class="res-detail-value gold">${r.total === 0 ? '무료' : r.total.toLocaleString() + '원'}</div>
-          </div>
-          <div class="res-detail-item">
-            <div class="res-detail-label">이메일</div>
-            <div class="res-detail-value" style="font-size:12px">${r.email}</div>
-          </div>
-          <div class="res-detail-item">
-            <div class="res-detail-label">증빙확인</div>
-            <div class="res-detail-value${r.needProof?' proof':''}">${r.needProof?'현장 확인 필요':'해당 없음'}</div>
-          </div>
-        </div>
-        ${r.payStatus === '미입금' ? `
-        <div class="res-actions">
-          <button class="action-btn confirm" onclick="confirmPayment('${r.resNum}')">입금 확인 처리</button>
-          <button class="action-btn cancel" onclick="cancelReservation('${r.resNum}')">예약 취소</button>
-        </div>` : ''}
-        ${r.payStatus === '입금확인' ? `
-        <div class="res-actions">
-          <button class="action-btn" onclick="resendTicket('${r.resNum}')">티켓 재발송</button>
-          <button class="action-btn" onclick="markCheckedIn('${r.resNum}')">${r.checkedIn?'입장 완료':'입장 처리'}</button>
-        </div>` : ''}
-      </div>
-    </div>`;
+  const el = document.getElementById('res-list');
+  if (!list.length) { el.innerHTML = '<div class="empty-state">해당하는 예약이 없습니다.</div>'; return; }
+  el.innerHTML = list.map(r => {
+    const bc = r.payStatus === '입금확인' ? 'pay-confirmed' : r.payStatus === '미입금' ? 'pay-pending' : 'pay-cancelled';
+    const actions = r.payStatus === '미입금'
+      ? '<div class="res-actions"><button class="action-btn confirm" onclick="confirmPay(\'' + r.resNum + '\')">입금 확인 처리</button><button class="action-btn danger" onclick="cancelRes(\'' + r.resNum + '\')">예약 취소</button></div>'
+      : r.payStatus === '입금확인'
+      ? '<div class="res-actions"><button class="action-btn" onclick="resendTicket(\'' + r.resNum + '\')">티켓 재발송</button><button class="action-btn" onclick="doCheckInById(\'' + r.resNum + '\')">' + (r.checkedIn ? '입장완료' : '입장 처리') + '</button></div>'
+      : '';
+    return '<div class="res-card">' +
+      '<div class="res-card-header" onclick="toggleCard(\'' + r.resNum + '\')">' +
+        '<div><div style="display:flex;align-items:center"><span class="res-num-badge">' + r.resNum + '</span><span class="res-name">' + r.name + '</span></div>' +
+        '<div class="res-session">' + r.session + ' · ' + r.ticketType + ' ' + r.quantity + '매</div></div>' +
+        '<span class="pay-badge ' + bc + '">' + r.payStatus + '</span>' +
+      '</div>' +
+      '<div class="res-card-body" id="body-' + r.resNum + '">' +
+        '<div class="res-detail-grid">' +
+          '<div><div class="res-detail-label">연락처</div><div class="res-detail-value">' + r.phone + '</div></div>' +
+          '<div><div class="res-detail-label">결제금액</div><div class="res-detail-value gold">' + (r.total===0?'무료':(r.total||0).toLocaleString()+'원') + '</div></div>' +
+          '<div><div class="res-detail-label">이메일</div><div class="res-detail-value" style="font-size:12px">' + r.email + '</div></div>' +
+          '<div><div class="res-detail-label">증빙확인</div><div class="res-detail-value' + (r.needProof?' proof':'') + '">' + (r.needProof?'현장 확인 필요':'해당 없음') + '</div></div>' +
+        '</div>' +
+        actions +
+      '</div>' +
+    '</div>';
   }).join('');
 }
 
 function toggleCard(resNum) {
   document.getElementById('body-' + resNum).classList.toggle('open');
 }
-function setFilter(filter, btn) {
-  currentFilter = filter;
+function setFilter(f, btn) {
+  currentFilter = f;
   document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
   renderReservations();
 }
-function filterReservations(q) {
-  currentSearch = q.trim();
-  renderReservations();
+function filterRes(q) { currentSearch = q.trim(); renderReservations(); }
+
+async function confirmPay(resNum) {
+  if (!confirm(resNum + ' 입금 확인 처리하시겠습니까?')) return;
+  const r = await callAPI({ action: 'confirmPayment', resNum });
+  if (r.success) { toast('입금 확인 처리됐습니다. 티켓이 발송됩니다.'); await loadData(); }
+  else toast('오류: ' + (r.message || '실패'));
 }
-async function confirmPayment(resNum) {
-  if (!confirm(`${resNum} 입금 확인 처리하시겠습니까?`)) return;
-  await callAPI({ action: 'confirmPayment', resNum });
-  const r = reservations.find(r => r.resNum === resNum);
-  if (r) r.payStatus = '입금확인';
-  showToast('입금 확인 처리되었습니다. 티켓이 발송됩니다.');
-  renderAll();
-}
-async function cancelReservation(resNum) {
-  if (!confirm(`${resNum} 예약을 취소하시겠습니까?`)) return;
-  await callAPI({ action: 'cancel', resNum });
-  const r = reservations.find(r => r.resNum === resNum);
-  if (r) r.payStatus = '관리자취소';
-  showToast('예약이 취소되었습니다.');
-  renderAll();
+async function cancelRes(resNum) {
+  if (!confirm(resNum + ' 예약을 취소하시겠습니까?')) return;
+  const r = await callAPI({ action: 'cancel', resNum });
+  if (r.success) { toast('예약이 취소됐습니다.'); await loadData(); }
 }
 async function resendTicket(resNum) {
-  await callAPI({ action: 'resendTicket', resNum });
-  showToast('티켓이 재발송되었습니다.');
+  const r = await callAPI({ action: 'resendTicket', resNum });
+  toast(r.success ? '티켓이 재발송됐습니다.' : '재발송 실패');
 }
-async function markCheckedIn(resNum) {
-  await callAPI({ action: 'checkIn', resNum });
-  const r = reservations.find(r => r.resNum === resNum);
-  if (r) r.checkedIn = true;
-  showToast('입장 처리되었습니다.');
-  renderReservations();
+async function doCheckInById(resNum) {
+  const r = await callAPI({ action: 'checkIn', resNum });
+  if (r.success) { toast('입장 처리됐습니다.'); await loadData(); }
 }
 
-// ============================================================
-// 할인 설정 탭
-// ============================================================
-const BASE_PRICE = 30000;
+// ── 엑셀 내보내기 ──
+async function exportExcel() {
+  try {
+    const res = await fetch('/api/export', { headers: { 'x-admin-key': ADMIN_PW } });
+    if (!res.ok) { toast('내보내기 실패 (권한 확인)'); return; }
+    const blob = await res.blob();
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    const date = new Date().toLocaleDateString('ko-KR').replace(/\. /g,'-').replace('.','');
+    a.href = url; a.download = '예약목록_' + date + '.csv';
+    document.body.appendChild(a); a.click();
+    document.body.removeChild(a); URL.revokeObjectURL(url);
+    toast('파일이 다운로드됩니다.');
+  } catch(e) { toast('내보내기 오류: ' + e.message); }
+}
 
+// ── 공연 설정 ──
+function syncPerfForm() {
+  document.getElementById('agency-name').value       = performance.agency        || '';
+  document.getElementById('agency-tel').value        = performance.tel           || '';
+  document.getElementById('agency-email').value      = performance.email         || '';
+  document.getElementById('kakaopay-link').value     = performance.kakaopayLink  || '';
+  document.getElementById('perf-name').value         = performance.name          || '';
+  document.getElementById('perf-subtitle').value     = performance.subtitle      || '';
+  document.getElementById('perf-host').value         = performance.host          || '';
+  document.getElementById('perf-organizer').value    = performance.organizer     || '';
+  document.getElementById('perf-sponsor').value      = performance.sponsor       || '';
+  document.getElementById('perf-account').value      = performance.account       || '';
+  document.getElementById('perf-account-holder').value = performance.accountHolder || '';
+  document.getElementById('perf-open').value         = performance.open          || 'open';
+  document.getElementById('perf-max-qty').value      = performance.maxQty        || 4;
+}
+async function savePerf() {
+  const data = {
+    agency:        document.getElementById('agency-name').value.trim(),
+    tel:           document.getElementById('agency-tel').value.trim(),
+    email:         document.getElementById('agency-email').value.trim(),
+    kakaopayLink:  document.getElementById('kakaopay-link').value.trim(),
+    name:          document.getElementById('perf-name').value.trim(),
+    subtitle:      document.getElementById('perf-subtitle').value.trim(),
+    host:          document.getElementById('perf-host').value.trim(),
+    organizer:     document.getElementById('perf-organizer').value.trim(),
+    sponsor:       document.getElementById('perf-sponsor').value.trim(),
+    account:       document.getElementById('perf-account').value.trim(),
+    accountHolder: document.getElementById('perf-account-holder').value.trim(),
+    open:          document.getElementById('perf-open').value,
+    maxQty:        parseInt(document.getElementById('perf-max-qty').value) || 4,
+  };
+  const r = await callAPI({ action: 'savePerformance', data });
+  if (r.success) { performance = data; toast('저장됐습니다.'); renderDashboard(); }
+  else toast('저장 실패');
+}
+
+// ── 회차 관리 ──
+function renderSessions() {
+  const el = document.getElementById('session-list');
+  if (!sessions.length) { el.innerHTML = '<div class="empty-state">등록된 회차가 없습니다.</div>'; return; }
+  const days = ['일','월','화','수','목','금','토'];
+  el.innerHTML = sessions.map(s => {
+    const d = new Date(s.date + 'T00:00:00');
+    const label = (d.getMonth()+1) + '월 ' + d.getDate() + '일 (' + days[d.getDay()] + ') ' + s.time;
+    const st = s.status === 'open' ? '예매중' : s.status === 'closed' ? '마감' : '오픈예정';
+    return '<div class="session-item">' +
+      '<div><div class="session-item-date">' + label + '</div>' +
+      '<div class="session-item-info">' + s.seats + '석 · ' + st + '</div></div>' +
+      '<div class="item-btns">' +
+        '<button class="icon-btn danger" onclick="deleteSession(\'' + s.id + '\')">삭제</button>' +
+      '</div>' +
+    '</div>';
+  }).join('');
+}
+async function addSession() {
+  const date  = document.getElementById('new-date').value;
+  const time  = document.getElementById('new-time').value;
+  const seats = parseInt(document.getElementById('new-seats').value);
+  const status = document.getElementById('new-status').value;
+  if (!date || !time || !seats) { toast('날짜, 시간, 좌석 수를 모두 입력해 주세요.'); return; }
+  const session = { id: 'S' + Date.now(), date, time, seats, booked: 0, status };
+  const r = await callAPI({ action: 'addSession', session });
+  if (r.success) {
+    sessions.push(session);
+    document.getElementById('new-date').value = '';
+    document.getElementById('new-time').value = '';
+    document.getElementById('new-seats').value = '';
+    renderSessions(); renderDashboard();
+    toast('회차가 추가됐습니다.');
+  }
+}
+async function deleteSession(id) {
+  const s = sessions.find(s => s.id === id);
+  if (!s) return;
+  const days = ['일','월','화','수','목','금','토'];
+  const d = new Date(s.date + 'T00:00:00');
+  const label = (d.getMonth()+1) + '월 ' + d.getDate() + '일 (' + days[d.getDay()] + ') ' + s.time;
+  if (!confirm(label + ' 회차를 삭제하시겠습니까?')) return;
+  const r = await callAPI({ action: 'deleteSession', id });
+  if (r.success) { sessions = sessions.filter(s => s.id !== id); renderSessions(); renderDashboard(); toast('회차가 삭제됐습니다.'); }
+}
+
+// ── 할인 프리셋 ──
 function renderPresets() {
-  const list = document.getElementById('preset-list');
-  list.innerHTML = presets.map(p => `
-    <div class="preset-item">
-      <div class="preset-info">
-        <div class="preset-name">${p.name}</div>
-        <div class="preset-price">${p.price === 0 ? '무료' : p.price.toLocaleString() + '원'}</div>
-        ${p.needProof ? '<div class="preset-proof">현장 증빙 필요</div>' : ''}
-      </div>
-      <button class="preset-toggle ${p.active?'active':'inactive'}"
-              onclick="togglePreset('${p.name}')">
-        ${p.active ? '활성' : '비활성'}
-      </button>
-    </div>
-  `).join('');
+  const el = document.getElementById('preset-list');
+  if (!presets.length) { el.innerHTML = '<div class="empty-state">등록된 프리셋이 없습니다.</div>'; return; }
+  el.innerHTML = presets.map(p =>
+    '<div class="preset-item">' +
+      '<div><div class="preset-name">' + p.name + '</div>' +
+        '<div class="preset-price">' + (p.price===0?'무료':p.price.toLocaleString()+'원') + '</div>' +
+        (p.needProof ? '<div class="preset-proof">현장 증빙 필요</div>' : '') +
+      '</div>' +
+      '<button class="toggle-btn ' + (p.active?'on':'off') + '" onclick="togglePreset(\'' + p.name + '\')">' + (p.active?'활성':'비활성') + '</button>' +
+    '</div>'
+  ).join('');
 }
-function updatePresetPreview() {
+function updatePreview() {
   const type = document.getElementById('new-preset-type').value;
   const val  = parseFloat(document.getElementById('new-preset-value').value) || 0;
-  let final  = BASE_PRICE;
-  if (type === '정액') final = Math.max(0, BASE_PRICE - val);
-  else if (type === '정률') final = Math.round(BASE_PRICE * (1 - val / 100));
-  document.getElementById('new-preset-preview').value =
-    final === 0 ? '무료' : final.toLocaleString() + '원';
+  let price  = BASE_PRICE;
+  if (type === '정액') price = Math.max(0, BASE_PRICE - val);
+  else if (type === '정률') price = Math.round(BASE_PRICE * (1 - val/100));
+  document.getElementById('new-preset-preview').value = price === 0 ? '무료' : price.toLocaleString() + '원';
 }
 async function addPreset() {
-  const name     = document.getElementById('new-preset-name').value.trim();
-  const type     = document.getElementById('new-preset-type').value;
-  const val      = parseFloat(document.getElementById('new-preset-value').value) || 0;
-  const needProof= document.getElementById('new-preset-proof').checked;
-  if (!name) { showToast('할인명을 입력해 주세요.'); return; }
-  if (presets.find(p => p.name === name)) { showToast('이미 존재하는 할인명입니다.'); return; }
+  const name  = document.getElementById('new-preset-name').value.trim();
+  const type  = document.getElementById('new-preset-type').value;
+  const val   = parseFloat(document.getElementById('new-preset-value').value) || 0;
+  const proof = document.getElementById('new-preset-proof').checked;
+  if (!name) { toast('할인명을 입력해 주세요.'); return; }
+  if (presets.find(p => p.name === name)) { toast('이미 존재하는 할인명입니다.'); return; }
   let price = BASE_PRICE;
   if (type === '정액') price = Math.max(0, BASE_PRICE - val);
-  else if (type === '정률') price = Math.round(BASE_PRICE * (1 - val / 100));
-  const newPreset = { name, price, needProof, active: true };
-  presets.push(newPreset);
-  await callAPI({ action: 'savePreset', preset: newPreset });
-  document.getElementById('new-preset-name').value = '';
-  document.getElementById('new-preset-value').value = '';
-  document.getElementById('new-preset-proof').checked = false;
-  document.getElementById('new-preset-preview').value = '';
-  showToast('프리셋이 저장되었습니다.');
-  renderPresets();
+  else if (type === '정률') price = Math.round(BASE_PRICE * (1 - val/100));
+  const preset = { name, price, needProof: proof, active: true };
+  const r = await callAPI({ action: 'savePreset', preset });
+  if (r.success) {
+    presets.push(preset);
+    document.getElementById('new-preset-name').value = '';
+    document.getElementById('new-preset-value').value = '';
+    document.getElementById('new-preset-proof').checked = false;
+    document.getElementById('new-preset-preview').value = '';
+    renderPresets(); toast('프리셋이 저장됐습니다.');
+  }
 }
 async function togglePreset(name) {
   const p = presets.find(p => p.name === name);
@@ -1363,85 +716,45 @@ async function togglePreset(name) {
   renderPresets();
 }
 
-// ============================================================
-// 입장 확인 탭
-// ============================================================
-function checkIn() {
-  const input = document.getElementById('qr-input').value.trim().toUpperCase();
+// ── 입장 확인 ──
+function doCheckIn() {
+  const input  = document.getElementById('qr-input').value.trim().toUpperCase();
   const result = document.getElementById('check-result');
-  const statusText = document.getElementById('check-status-text');
+  const status = document.getElementById('check-status');
   const detail = document.getElementById('check-detail');
   if (!input) return;
   const r = reservations.find(r => r.resNum === input);
   result.className = 'check-result show';
   if (!r) {
-    result.classList.add('fail');
-    statusText.className = 'check-status err';
-    statusText.textContent = '예약 정보를 찾을 수 없습니다.';
-    detail.innerHTML = '';
-    return;
+    result.classList.add('fail'); status.className = 'check-status fail';
+    status.textContent = '예약 정보를 찾을 수 없습니다.'; detail.innerHTML = ''; return;
   }
   if (r.payStatus !== '입금확인') {
-    result.classList.add('fail');
-    statusText.className = 'check-status err';
-    statusText.textContent = `입금 미확인 — ${r.payStatus}`;
-    detail.innerHTML = `<div style="font-size:12px;color:var(--gray);margin-top:8px">${r.name} · ${r.session}</div>`;
-    return;
+    result.classList.add('fail'); status.className = 'check-status fail';
+    status.textContent = '입금 미확인 — ' + r.payStatus;
+    detail.innerHTML = '<div style="font-size:12px;color:var(--gray);margin-top:8px">' + r.name + ' · ' + r.session + '</div>'; return;
   }
-  result.classList.add('success');
-  statusText.className = 'check-status ok';
-  statusText.textContent = r.checkedIn ? '이미 입장 처리된 티켓입니다.' : '입장 확인 ✓';
-  detail.innerHTML = `
-    <div style="margin-top:12px;display:grid;gap:6px;font-size:13px">
-      <div style="display:flex;justify-content:space-between">
-        <span style="color:var(--gray)">예매자</span><span>${r.name}</span>
-      </div>
-      <div style="display:flex;justify-content:space-between">
-        <span style="color:var(--gray)">회차</span><span>${r.session}</span>
-      </div>
-      <div style="display:flex;justify-content:space-between">
-        <span style="color:var(--gray)">좌석</span><span>${r.ticketType} ${r.quantity}매</span>
-      </div>
-      ${r.needProof ? `<div style="color:var(--orange);font-size:12px;margin-top:4px">⚠ 증빙 서류 확인 필요</div>` : ''}
-    </div>`;
-  if (!r.checkedIn) { r.checkedIn = true; markCheckedIn(r.resNum); }
+  result.classList.add('ok'); status.className = 'check-status ok';
+  status.textContent = r.checkedIn ? '이미 입장 처리된 티켓입니다.' : '입장 확인 ✓';
+  detail.innerHTML = '<div style="margin-top:12px;display:grid;gap:6px;font-size:13px">' +
+    '<div style="display:flex;justify-content:space-between"><span style="color:var(--gray)">예매자</span><span>' + r.name + '</span></div>' +
+    '<div style="display:flex;justify-content:space-between"><span style="color:var(--gray)">회차</span><span>' + r.session + '</span></div>' +
+    '<div style="display:flex;justify-content:space-between"><span style="color:var(--gray)">좌석</span><span>' + r.ticketType + ' ' + r.quantity + '매</span></div>' +
+    (r.needProof ? '<div style="color:var(--orange);font-size:12px;margin-top:4px">⚠ 증빙 서류 확인 필요</div>' : '') +
+  '</div>';
+  if (!r.checkedIn) { r.checkedIn = true; callAPI({ action: 'checkIn', resNum: r.resNum }); }
   document.getElementById('qr-input').value = '';
 }
 
-// ============================================================
-// 탭 전환
-// ============================================================
+// ── 탭 전환 ──
 function switchTab(tab, el) {
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
   document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
-  if (el) el.classList.add('active');
+  el.classList.add('active');
   document.getElementById('tab-' + tab).classList.add('active');
 }
 
-// ============================================================
-// API 호출
-// ============================================================
-
-async function exportExcel() {
-  try {
-    const res = await fetch('/api/export', {
-      headers: { 'x-admin-key': ADMIN_PW }
-    });
-    if (!res.ok) { showToast('내보내기 실패'); return; }
-    const blob = await res.blob();
-    const url  = URL.createObjectURL(blob);
-    const a    = document.createElement('a');
-    const date = new Date().toLocaleDateString('ko-KR').replace(/\. /g,'-').replace('.','');
-    a.href     = url;
-    a.download = '예약목록_' + date + '.csv';
-    a.click();
-    URL.revokeObjectURL(url);
-    showToast('엑셀 파일이 다운로드됩니다.');
-  } catch(e) {
-    showToast('내보내기 오류: ' + e.message);
-  }
-}
-
+// ── API 호출 ──
 async function callAPI(payload) {
   try {
     const res = await fetch(API_BASE, {
@@ -1450,427 +763,8 @@ async function callAPI(payload) {
       body: JSON.stringify(payload),
     });
     return await res.json();
-  } catch(e) { console.log('API 오류:', e.message); return { success: false }; }
+  } catch(e) { return { success: false, message: e.message }; }
 }
-
-document.getElementById('pw-input').focus();
-</script>
-
-const SESSIONS = [
-  { id: 'S1', label: '4월 16일 (수) 19:30', total: 10 },
-  { id: 'S2', label: '4월 17일 (목) 19:30', total: 10 },
-  { id: 'S3', label: '4월 18일 (금) 15:00', total: 10 },
-  { id: 'S4', label: '4월 19일 (토) 15:00', total: 10 },
-];
-
-const BASE_PRICE = 30000;
-
-let reservations = [];
-let presets = [];
-let currentFilter = 'all';
-let currentSearch = '';
-
-// ============================================================
-// 로그인
-// ============================================================
-function doLogin() {
-  const pw = document.getElementById('pw-input').value;
-  if (pw === ADMIN_PW) {
-    document.getElementById('login-screen').style.display = 'none';
-    document.getElementById('app').classList.add('show');
-    loadData();
-  } else {
-    document.getElementById('login-error').style.display = 'block';
-  }
-}
-
-function logout() {
-  document.getElementById('login-screen').style.display = 'flex';
-  document.getElementById('app').classList.remove('show');
-  document.getElementById('pw-input').value = '';
-}
-
-// ============================================================
-// 데이터 로드
-// ============================================================
-async function loadData() {
-  try {
-    const res = await fetch(API_BASE, { headers: { 'x-admin-key': ADMIN_PW } });
-    const data = await res.json();
-    reservations = data.reservations || [];
-    presets = data.presets || getDefaultPresets();
-  } catch(e) {
-    // 오프라인 / 테스트용 더미 데이터
-    reservations = getDummyReservations();
-    presets = getDefaultPresets();
-  }
-  renderAll();
-}
-
-function getDummyReservations() {
-  return [
-    { resNum:'DQ-0416-001', name:'김민수', phone:'010-1234-5678', email:'kim@email.com',
-      session:'4월 16일 (수) 19:30', sessionId:'S1', ticketType:'일반', quantity:2,
-      total:60000, payStatus:'입금확인', needProof:false, checkedIn:false, ts: new Date(Date.now()-3600000) },
-    { resNum:'DQ-0416-002', name:'이지영', phone:'010-9876-5432', email:'lee@email.com',
-      session:'4월 17일 (목) 19:30', sessionId:'S2', ticketType:'학생', quantity:1,
-      total:24000, payStatus:'미입금', needProof:true, checkedIn:false, ts: new Date(Date.now()-1800000) },
-    { resNum:'DQ-0416-003', name:'박서연', phone:'010-5555-1234', email:'park@email.com',
-      session:'4월 16일 (수) 19:30', sessionId:'S1', ticketType:'팬클럽/멤버십', quantity:2,
-      total:42000, payStatus:'입금확인', needProof:true, checkedIn:false, ts: new Date(Date.now()-7200000) },
-  ];
-}
-
-function getDefaultPresets() {
-  return [
-    { name:'일반', price:30000, needProof:false, active:true },
-    { name:'얼리버드', price:24000, needProof:false, active:true },
-    { name:'학생', price:24000, needProof:true, active:true },
-    { name:'팬클럽/멤버십', price:21000, needProof:true, active:true },
-    { name:'단체 (5인 이상)', price:24000, needProof:false, active:true },
-    { name:'장애인/국가유공자', price:15000, needProof:true, active:true },
-    { name:'초대권', price:0, needProof:true, active:true },
-  ];
-}
-
-function renderAll() {
-  renderDashboard();
-  renderReservations();
-  renderPresets();
-}
-
-// ============================================================
-// 현황 탭
-// ============================================================
-function renderDashboard() {
-  const confirmed = reservations.filter(r => r.payStatus === '입금확인');
-  const pending = reservations.filter(r => r.payStatus === '미입금');
-  const revenue = confirmed.reduce((sum, r) => sum + r.total, 0);
-
-  document.getElementById('stat-total').textContent = reservations.length + '건';
-  document.getElementById('stat-confirmed').textContent = confirmed.length + '건';
-  document.getElementById('stat-confirmed-sub').textContent =
-    confirmed.reduce((s,r) => s + r.quantity, 0) + '석 확정';
-  document.getElementById('stat-pending').textContent = pending.length + '건';
-  document.getElementById('stat-revenue').textContent = revenue.toLocaleString() + '원';
-
-  // 회차별 현황
-  const list = document.getElementById('session-status-list');
-  list.innerHTML = SESSIONS.map(s => {
-    const booked = reservations
-      .filter(r => r.sessionId === s.id && r.payStatus === '입금확인')
-      .reduce((sum, r) => sum + r.quantity, 0);
-    const pct = Math.round((booked / s.total) * 100);
-    const remain = s.total - booked;
-    const isFull = remain <= 0;
-    const isLow = remain > 0 && remain <= 3;
-    const badgeClass = isFull ? 'badge-sold' : isLow ? 'badge-low' : 'badge-open';
-    const badgeText = isFull ? '매진' : isLow ? '마감임박' : '예매중';
-
-    return `
-    <div class="session-row">
-      <div class="session-bar-wrap">
-        <div class="session-bar-label">
-          <span class="session-bar-name">${s.label}</span>
-          <span class="session-bar-count">${booked}/${s.total}석</span>
-        </div>
-        <div class="session-bar-bg">
-          <div class="session-bar-fill${isFull?' full':''}" style="width:${pct}%"></div>
-        </div>
-      </div>
-      <span class="session-status-badge ${badgeClass}">${badgeText}</span>
-    </div>`;
-  }).join('');
-}
-
-// ============================================================
-// 예약 목록 탭
-// ============================================================
-function renderReservations() {
-  let filtered = reservations;
-
-  if (currentFilter !== 'all') {
-    filtered = filtered.filter(r => {
-      if (currentFilter === '자동취소') return r.payStatus.includes('취소');
-      return r.payStatus === currentFilter;
-    });
-  }
-
-  if (currentSearch) {
-    const q = currentSearch.toLowerCase();
-    filtered = filtered.filter(r =>
-      r.name.includes(q) || r.resNum.toLowerCase().includes(q)
-    );
-  }
-
-  const list = document.getElementById('res-list');
-  if (!filtered.length) {
-    list.innerHTML = '<div class="empty-state">해당하는 예약이 없습니다.</div>';
-    return;
-  }
-
-  list.innerHTML = filtered.map(r => {
-    const badgeClass = r.payStatus === '입금확인' ? 'pay-confirmed'
-      : r.payStatus === '미입금' ? 'pay-pending' : 'pay-cancelled';
-
-    return `
-    <div class="res-card">
-      <div class="res-card-header" onclick="toggleCard('${r.resNum}')">
-        <div class="res-card-left">
-          <div>
-            <div style="display:flex;align-items:center;gap:8px;margin-bottom:3px">
-              <span class="res-num-badge">${r.resNum}</span>
-              <span class="res-name">${r.name}</span>
-            </div>
-            <div class="res-session">${r.session} · ${r.ticketType} ${r.quantity}매</div>
-          </div>
-        </div>
-        <span class="pay-badge ${badgeClass}">${r.payStatus}</span>
-      </div>
-      <div class="res-card-body" id="body-${r.resNum}">
-        <div class="res-detail-grid">
-          <div class="res-detail-item">
-            <div class="res-detail-label">연락처</div>
-            <div class="res-detail-value">${r.phone}</div>
-          </div>
-          <div class="res-detail-item">
-            <div class="res-detail-label">결제금액</div>
-            <div class="res-detail-value gold">${r.total === 0 ? '무료' : r.total.toLocaleString() + '원'}</div>
-          </div>
-          <div class="res-detail-item">
-            <div class="res-detail-label">이메일</div>
-            <div class="res-detail-value" style="font-size:12px">${r.email}</div>
-          </div>
-          <div class="res-detail-item">
-            <div class="res-detail-label">증빙확인</div>
-            <div class="res-detail-value${r.needProof?' proof':''}">${r.needProof ? '현장 확인 필요' : '해당 없음'}</div>
-          </div>
-        </div>
-        ${r.payStatus === '미입금' ? `
-        <div class="res-actions">
-          <button class="action-btn confirm" onclick="confirmPayment('${r.resNum}')">입금 확인 처리</button>
-          <button class="action-btn cancel" onclick="cancelReservation('${r.resNum}')">예약 취소</button>
-        </div>` : ''}
-        ${r.payStatus === '입금확인' ? `
-        <div class="res-actions">
-          <button class="action-btn" onclick="resendTicket('${r.resNum}')">티켓 재발송</button>
-          <button class="action-btn" onclick="markCheckedIn('${r.resNum}')">${r.checkedIn ? '입장 완료' : '입장 처리'}</button>
-        </div>` : ''}
-      </div>
-    </div>`;
-  }).join('');
-}
-
-function toggleCard(resNum) {
-  const body = document.getElementById('body-' + resNum);
-  body.classList.toggle('open');
-}
-
-function setFilter(filter, btn) {
-  currentFilter = filter;
-  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
-  renderReservations();
-}
-
-function filterReservations(q) {
-  currentSearch = q.trim();
-  renderReservations();
-}
-
-async function confirmPayment(resNum) {
-  if (!confirm(`${resNum} 입금 확인 처리하시겠습니까?`)) return;
-  await callAPI({ action: 'confirmPayment', resNum });
-  const r = reservations.find(r => r.resNum === resNum);
-  if (r) r.payStatus = '입금확인';
-  renderAll();
-}
-
-async function cancelReservation(resNum) {
-  if (!confirm(`${resNum} 예약을 취소하시겠습니까?`)) return;
-  await callAPI({ action: 'cancel', resNum });
-  const r = reservations.find(r => r.resNum === resNum);
-  if (r) r.payStatus = '관리자취소';
-  renderAll();
-}
-
-async function resendTicket(resNum) {
-  await callAPI({ action: 'resendTicket', resNum });
-  alert('티켓이 재발송되었습니다.');
-}
-
-async function markCheckedIn(resNum) {
-  await callAPI({ action: 'checkIn', resNum });
-  const r = reservations.find(r => r.resNum === resNum);
-  if (r) r.checkedIn = true;
-  renderReservations();
-}
-
-// ============================================================
-// 프리셋 탭
-// ============================================================
-function renderPresets() {
-  const list = document.getElementById('preset-list');
-  list.innerHTML = presets.map(p => `
-    <div class="preset-item">
-      <div class="preset-info">
-        <div class="preset-name">${p.name}</div>
-        <div class="preset-price">${p.price === 0 ? '무료' : p.price.toLocaleString() + '원'}</div>
-        ${p.needProof ? '<div class="preset-proof">현장 증빙 필요</div>' : ''}
-      </div>
-      <button class="preset-toggle ${p.active ? 'active' : 'inactive'}"
-              onclick="togglePreset('${p.name}')">
-        ${p.active ? '활성' : '비활성'}
-      </button>
-    </div>
-  `).join('');
-}
-
-function updatePresetPreview() {
-  const type = document.getElementById('new-preset-type').value;
-  const val = parseFloat(document.getElementById('new-preset-value').value) || 0;
-  let final = BASE_PRICE;
-  if (type === '정액') final = Math.max(0, BASE_PRICE - val);
-  else if (type === '정률') final = Math.round(BASE_PRICE * (1 - val / 100));
-  document.getElementById('new-preset-preview').value =
-    final === 0 ? '무료' : final.toLocaleString() + '원';
-}
-
-function addPreset() {
-  const name = document.getElementById('new-preset-name').value.trim();
-  const type = document.getElementById('new-preset-type').value;
-  const val = parseFloat(document.getElementById('new-preset-value').value) || 0;
-  const needProof = document.getElementById('new-preset-proof').checked;
-
-  if (!name) { alert('할인명을 입력해 주세요.'); return; }
-  if (presets.find(p => p.name === name)) { alert('이미 존재하는 할인명입니다.'); return; }
-
-  let price = BASE_PRICE;
-  if (type === '정액') price = Math.max(0, BASE_PRICE - val);
-  else if (type === '정률') price = Math.round(BASE_PRICE * (1 - val / 100));
-
-  const newPreset = { name, price, needProof, active: true };
-  presets.push(newPreset);
-  callAPI({ action: 'savePreset', preset: newPreset });
-
-  document.getElementById('new-preset-name').value = '';
-  document.getElementById('new-preset-value').value = '';
-  document.getElementById('new-preset-proof').checked = false;
-  document.getElementById('new-preset-preview').value = '';
-  renderPresets();
-}
-
-function togglePreset(name) {
-  const p = presets.find(p => p.name === name);
-  if (!p) return;
-  p.active = !p.active;
-  callAPI({ action: 'togglePreset', name, active: p.active });
-  renderPresets();
-}
-
-// ============================================================
-// 입장 확인 탭
-// ============================================================
-function checkIn() {
-  const input = document.getElementById('qr-input').value.trim().toUpperCase();
-  const result = document.getElementById('check-result');
-  const statusText = document.getElementById('check-status-text');
-  const detail = document.getElementById('check-detail');
-
-  if (!input) return;
-
-  const r = reservations.find(r => r.resNum === input);
-
-  result.className = 'check-result show';
-
-  if (!r) {
-    result.classList.add('fail');
-    statusText.className = 'check-status err';
-    statusText.textContent = '예약 정보를 찾을 수 없습니다.';
-    detail.innerHTML = '';
-    return;
-  }
-
-  if (r.payStatus !== '입금확인') {
-    result.classList.add('fail');
-    statusText.className = 'check-status err';
-    statusText.textContent = `입금 미확인 — ${r.payStatus}`;
-    detail.innerHTML = `<div style="font-size:12px;color:var(--gray);margin-top:8px">${r.name} · ${r.session}</div>`;
-    return;
-  }
-
-  result.classList.add('success');
-  statusText.className = 'check-status ok';
-  statusText.textContent = r.checkedIn ? '이미 입장 처리된 티켓입니다.' : '입장 확인';
-  detail.innerHTML = `
-    <div style="margin-top:12px;display:grid;gap:6px;font-size:13px">
-      <div style="display:flex;justify-content:space-between">
-        <span style="color:var(--gray)">예매자</span><span>${r.name}</span>
-      </div>
-      <div style="display:flex;justify-content:space-between">
-        <span style="color:var(--gray)">회차</span><span>${r.session}</span>
-      </div>
-      <div style="display:flex;justify-content:space-between">
-        <span style="color:var(--gray)">좌석</span><span>${r.ticketType} ${r.quantity}매</span>
-      </div>
-      ${r.needProof ? `<div style="color:var(--orange);font-size:12px;margin-top:4px">⚠ 증빙 서류 확인 필요</div>` : ''}
-    </div>`;
-
-  if (!r.checkedIn) {
-    r.checkedIn = true;
-    markCheckedIn(r.resNum);
-  }
-
-  document.getElementById('qr-input').value = '';
-}
-
-// ============================================================
-// 탭 전환
-// ============================================================
-function switchTab(tab) {
-  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
-  event.target.classList.add('active');
-  document.getElementById('tab-' + tab).classList.add('active');
-}
-
-// ============================================================
-// API 호출
-// ============================================================
-
-async function exportExcel() {
-  try {
-    const res = await fetch('/api/export', {
-      headers: { 'x-admin-key': ADMIN_PW }
-    });
-    if (!res.ok) { showToast('내보내기 실패'); return; }
-    const blob = await res.blob();
-    const url  = URL.createObjectURL(blob);
-    const a    = document.createElement('a');
-    const date = new Date().toLocaleDateString('ko-KR').replace(/\. /g,'-').replace('.','');
-    a.href     = url;
-    a.download = '예약목록_' + date + '.csv';
-    a.click();
-    URL.revokeObjectURL(url);
-    showToast('엑셀 파일이 다운로드됩니다.');
-  } catch(e) {
-    showToast('내보내기 오류: ' + e.message);
-  }
-}
-
-async function callAPI(payload) {
-  try {
-    await fetch(SCRIPT_URL, {
-      method: 'POST',
-      body: JSON.stringify(payload),
-    });
-  } catch(e) {
-    console.log('API 호출 오류 (더미 모드):', e);
-  }
-}
-
-// 초기화
-document.getElementById('pw-input').focus();
 </script>
 </body>
 </html>
