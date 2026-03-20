@@ -6,7 +6,7 @@ import {
   getSessions, saveSessions,
   getPresets, savePresets,
   getPerformance, savePerformance,
-  decrementBooked, addLog,
+  decrementBooked, incrementBooked, addLog,
 } from '../lib/db.js';
 import { sendTicketAlimtalk } from '../lib/alimtalk.js';
 
@@ -170,6 +170,13 @@ export default async function handler(req, res) {
     if (idx === -1) return res.status(404).json({ success: false });
     presets[idx].active = payload.active;
     await savePresets(presets);
+    return res.status(200).json({ success: true });
+  }
+
+  // ── 신청 무시 ────────────────────────────────────────────
+  if (action === 'dismissRequest') {
+    const { resNum } = payload;
+    await updateReservation(resNum, { changeRequest: null });
     return res.status(200).json({ success: true });
   }
 
