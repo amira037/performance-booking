@@ -430,31 +430,22 @@ function buildResCard(r) {
   const bc = r.payStatus==='입금확인'?'pay-confirmed':r.payStatus==='미입금'?'pay-pending':'pay-cancelled';
   const hasRequest = r.changeRequest;
   const reqType    = hasRequest ? (r.changeRequest.type === 'cancel' ? '취소신청' : '변경신청') : '';
-
-  // 티켓 URL 생성
-  const tUrl = '/ticket.html?res=' + encodeURIComponent(r.resNum||'')
-    + '&name=' + encodeURIComponent(r.name||'')
-    + '&perf=' + encodeURIComponent(performance.name||'')
-    + '&agency=' + encodeURIComponent(performance.agency||'')
-    + '&tel=' + encodeURIComponent(performance.tel||'')
-    + '&session=' + encodeURIComponent(r.session||'')
-    + '&type=' + encodeURIComponent(r.ticketType||'')
-    + '&qty=' + (r.quantity||1);
+  const rn = r.resNum || '';
 
   let actions = '';
   if (r.payStatus === '미입금') {
     actions = '<div class="res-actions">'
-      + mkBtn('confirm', '입금 확인', 'confirmPay("' + r.resNum + '")')
-      + mkBtn('', '회차 변경', 'changeSession("' + r.resNum + '")')
-      + mkBtn('danger', '예약 취소', 'cancelRes("' + r.resNum + '")')
+      + '<button class="action-btn confirm" data-action="pay" data-rn="' + rn + '">입금 확인</button>'
+      + '<button class="action-btn" data-action="change" data-rn="' + rn + '">회차 변경</button>'
+      + '<button class="action-btn danger" data-action="cancel" data-rn="' + rn + '">예약 취소</button>'
       + '</div>';
   } else if (r.payStatus === '입금확인') {
     actions = '<div class="res-actions">'
-      + mkBtn('info', '티켓 확인', 'openTicket("' + encodeURIComponent(tUrl) + '")')
-      + mkBtn('', '티켓 재발송', 'resendTicket("' + r.resNum + '")')
-      + mkBtn('', '회차 변경', 'changeSession("' + r.resNum + '")')
-      + mkBtn('danger', '예약 취소', 'cancelRes("' + r.resNum + '")')
-      + mkBtn(r.checkedIn ? 'checked' : '', r.checkedIn ? '✓입장완료' : '입장처리', r.checkedIn ? '' : 'doCheckInById("' + r.resNum + '")')
+      + '<button class="action-btn info" data-action="ticket" data-rn="' + rn + '">티켓 확인</button>'
+      + '<button class="action-btn" data-action="resend" data-rn="' + rn + '">티켓 재발송</button>'
+      + '<button class="action-btn" data-action="change" data-rn="' + rn + '">회차 변경</button>'
+      + '<button class="action-btn danger" data-action="cancel" data-rn="' + rn + '">예약 취소</button>'
+      + '<button class="action-btn' + (r.checkedIn ? ' checked' : '') + '" data-action="' + (r.checkedIn ? '' : 'checkin') + '" data-rn="' + rn + '">' + (r.checkedIn ? '✓입장완료' : '입장처리') + '</button>'
       + '</div>';
   }
 
@@ -469,10 +460,10 @@ function buildResCard(r) {
       + '<div style="color:var(--gray);margin-bottom:8px;">' + reqDesc + '</div>'
       + '<div style="display:flex;gap:8px;">'
       + (reqType === '변경신청'
-        ? mkBtn('warn', '변경 처리', 'processChangeRequest("' + r.resNum + '")')
-        : mkBtn('danger', '취소 처리', 'processCancelRequest("' + r.resNum + '")')
+        ? '<button class="action-btn warn" data-action="process-change" data-rn="' + r.resNum + '">변경 처리</button>'
+        : '<button class="action-btn danger" data-action="process-cancel" data-rn="' + r.resNum + '">취소 처리</button>'
       )
-      + mkBtn('', '신청 무시', 'dismissRequest("' + r.resNum + '")')
+      + '<button class="action-btn" data-action="dismiss" data-rn="' + r.resNum + '">신청 무시</button>'
       + '</div></div>';
   }
 
@@ -505,9 +496,43 @@ function mkBtn(cls, label, onclick) {
   return '<button class="action-btn' + (cls?' '+cls:'') + '" onclick="' + onclick + '">' + label + '</button>';
 }
 
-function openTicket(encodedUrl) {
-  window.open(decodeURIComponent(encodedUrl), '_blank');
-}
+// ── 예약 목록 버튼 이벤트 위임 ──
+document.addEventListener('click', function(e) {
+  const btn = e.target.closest('[data-action]');
+  if (!btn) return;
+  const action = btn.dataset.action;
+  const rn     = btn.dataset.rn;
+  if (!action || !rn) return;
+
+  if (action === 'pay')     confirmPay(rn);
+  if (action === 'change')  changeSession(rn);
+  if (action === 'cancel')  cancelRes(rn);
+  if (action === 'resend')  resendTicket(rn);
+  if (action === 'checkin') doCheckInById(rn);
+  if (action === 'ticket') {
+    const r = reservations.find(x => x.resNum === rn);
+    if (!r) return;
+    const p = performance || {};
+    const url = '/ticket.html?res=' + encodeURIComponent(r.resNum||'')
+      + '&name='    + encodeURIComponent(r.name||'')
+      + '&perf='    + encodeURIComponent(p.name||'')
+      + '&agency='  + encodeURIComponent(p.agency||'')
+      + '&tel='     + encodeURIComponent(p.tel||'')
+      + '&sub='     + encodeURIComponent(p.subtitle||'')
+      + '&host='    + encodeURIComponent(p.host||'')
+      + '&organizer='+ encodeURIComponent(p.organizer||'')
+      + '&sponsor=' + encodeURIComponent(p.sponsor||'')
+      + '&session=' + encodeURIComponent(r.session||'')
+      + '&type='    + encodeURIComponent(r.ticketType||'')
+      + '&qty='     + (r.quantity||1)
+      + '&proof='   + (r.needProof?'true':'false');
+    window.open(url, '_blank');
+  }
+  // 신청 처리 버튼
+  if (action === 'process-change')  processChangeRequest(rn);
+  if (action === 'process-cancel')  processCancelRequest(rn);
+  if (action === 'dismiss')         dismissRequest(rn);
+});
 
 function toggleCard(rn) { document.getElementById('body-'+rn).classList.toggle('open'); }
 function setFilter(f,b) {
