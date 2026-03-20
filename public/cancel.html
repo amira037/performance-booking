@@ -89,7 +89,7 @@ input.error{border-color:var(--red);}
     </div>
     <div class="form-group">
       <label>예약번호</label>
-      <input type="text" id="res-num" placeholder="예: DQ-0416-001" style="text-transform:uppercase">
+      <input type="text" id="res-num" placeholder="DQ-0320-" maxlength="12" oninput="fmtResNum(this)" style="text-transform:uppercase;letter-spacing:.1em">
       <div class="err-msg" id="err-resnum">예약번호를 입력해 주세요.</div>
     </div>
     <div class="form-group">
@@ -174,6 +174,18 @@ async function init() {
   } catch(e) {}
 }
 
+function fmtResNum(input) {
+  let v = input.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+  // 앞 2자리 영문 고정
+  let alpha = v.slice(0, 2).replace(/[^A-Z]/g, '');
+  let nums  = v.slice(2).replace(/[^0-9]/g, '');
+  // 숫자 부분 하이픈 자동 삽입: MMDD-NNNN
+  let result = alpha;
+  if (nums.length > 0) result += '-' + nums.slice(0, 4);
+  if (nums.length > 4) result += '-' + nums.slice(4, 8);
+  input.value = result;
+}
+
 function fmtPhone(input) {
   let v=input.value.replace(/\D/g,'');
   if(v.length>11)v=v.slice(0,11);
@@ -250,18 +262,28 @@ function showActionStep(data) {
   // 당일 여부
   const isToday = currentSession && isSameDay(currentSession.date);
 
+  // 당일이면 취소/변경 모두 불가
+  if (isToday) {
+    document.getElementById('step-action').style.display = 'none';
+    document.getElementById('loading').classList.remove('show');
+    const p = CFG.performance || {};
+    showResult('blocked', {});
+    document.getElementById('result-title').textContent = '공연 당일은 취소/변경이 불가합니다';
+    document.getElementById('result-desc').innerHTML =
+      '공연 당일은 예매 취소 및 날짜 변경 신청이 불가합니다.<br>'
+      + '문의: <span style="color:var(--white)">' + (p.tel||'—') + '</span>';
+    document.getElementById('result-icon').className = 'result-icon cancel';
+    document.getElementById('result-svg').setAttribute('stroke','#e07b7b');
+    document.getElementById('result-svg').innerHTML = '<path d="M18 6L6 18M6 6l12 12"/>';
+    document.getElementById('result-screen').classList.add('show');
+    return;
+  }
+
   // 취소 패널 안내 설정
   const cancelNotice = document.getElementById('cancel-notice');
   const cancelBtn    = document.getElementById('cancel-btn');
-  if (isToday) {
-    cancelNotice.innerHTML = '<div class="notice-box danger">공연 당일은 예매 취소가 불가합니다.</div>';
-    cancelBtn.disabled = true;
-    cancelBtn.style.opacity = '0.4';
-    cancelBtn.style.cursor  = 'not-allowed';
-  } else {
-    cancelNotice.innerHTML = '<div class="notice-box">취소 신청 후 담당자 확인을 통해 처리됩니다.<br>입금 완료 건은 환불까지 1~3 영업일 소요될 수 있습니다.</div>';
-    cancelBtn.disabled = false;
-  }
+  cancelNotice.innerHTML = '<div class="notice-box">취소 신청 후 담당자 확인을 통해 처리됩니다.<br>입금 완료 건은 환불까지 1~3 영업일 소요될 수 있습니다.</div>';
+  cancelBtn.disabled = false;
 
   // 날짜 변경 회차 목록
   renderSessList(data.session, isToday);
