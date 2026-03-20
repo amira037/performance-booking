@@ -46,6 +46,39 @@ export default async function handler(req, res) {
     });
   }
 
+  // ── 날짜 변경 신청 ──
+  if (req.body.requestType === 'change') {
+    const { newSessionId, newSessionLabel } = req.body;
+    if (!newSessionId || !newSessionLabel)
+      return res.status(400).json({ success: false, message: '변경할 회차 정보가 없습니다.' });
+
+    await addLog({
+      resNum,
+      name:   reservation.name,
+      phone:  reservation.phone,
+      type:   '날짜변경신청',
+      result: '접수',
+      error:  newSessionLabel,
+    });
+
+    // 관리자 알림
+    const perf2 = await getPerformance();
+    if (perf2.tel) {
+      try {
+        const { sendCancelRequestAlimtalk } = await import('../lib/alimtalk.js');
+        await sendCancelRequestAlimtalk({
+          adminPhone: perf2.tel,
+          resNum, name: reservation.name,
+          session: reservation.session,
+          total:   reservation.total,
+          reason:  '날짜변경 신청 → ' + newSessionLabel,
+          perfName: perf2.name || '공연',
+        });
+      } catch(e) {}
+    }
+    return res.status(200).json({ success: true, resNum, name: reservation.name });
+  }
+
   // 취소 신청 로그 저장
   await addLog({
     resNum,
