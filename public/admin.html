@@ -57,14 +57,16 @@ body{background:var(--bg);color:var(--white);font-family:'Noto Sans KR',sans-ser
 .search-input{width:100%;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);color:var(--white);font-family:inherit;font-size:13px;padding:10px 14px;margin-bottom:12px;}
 .search-input:focus{outline:none;border-color:var(--gold);}
 .res-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:8px;overflow:hidden;}
-.res-card-header{padding:12px 14px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;}
-.res-num-badge{font-size:10px;color:var(--gold);background:#1e1c0f;border:1px solid #3a3010;border-radius:3px;padding:3px 7px;}
+.res-card.has-request{border-color:#854f0b;}
+.res-card-header{padding:12px 14px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;gap:8px;}
+.res-num-badge{font-size:10px;color:var(--gold);background:#1e1c0f;border:1px solid #3a3010;border-radius:3px;padding:3px 7px;white-space:nowrap;}
 .res-name{font-size:14px;font-weight:500;margin-left:8px;}
 .res-session{font-size:11px;color:var(--gray);margin-top:2px;}
-.pay-badge{font-size:10px;padding:4px 10px;border-radius:3px;flex-shrink:0;}
+.pay-badge{font-size:10px;padding:4px 8px;border-radius:3px;flex-shrink:0;white-space:nowrap;}
 .pay-pending{background:#2a2010;color:#e07b39;}
 .pay-confirmed{background:#1a2e1e;color:#4caf7d;}
 .pay-cancelled{background:#2a1a1a;color:#e07b7b;}
+.request-badge{font-size:10px;padding:3px 8px;border-radius:3px;background:#2a1a00;color:#e07b39;border:1px solid #854f0b;flex-shrink:0;white-space:nowrap;}
 .res-card-body{padding:0 14px 14px;border-top:1px solid var(--border);display:none;}
 .res-card-body.open{display:block;}
 .res-detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px 16px;margin:12px 0;}
@@ -72,12 +74,14 @@ body{background:var(--bg);color:var(--white);font-family:'Noto Sans KR',sans-ser
 .res-detail-value{font-size:13px;}
 .res-detail-value.gold{color:var(--gold);font-weight:500;}
 .res-detail-value.proof{color:var(--orange);font-size:11px;}
-.res-actions{display:flex;gap:6px;margin-top:12px;flex-wrap:wrap;}
-.action-btn{flex:1;min-width:60px;background:none;border:1px solid var(--border);border-radius:var(--radius);color:var(--gray);font-family:inherit;font-size:11px;padding:8px 6px;cursor:pointer;text-align:center;}
+.res-detail-value.request{color:var(--orange);}
+.res-actions{display:flex;gap:6px;margin-top:10px;flex-wrap:wrap;}
+.action-btn{background:none;border:1px solid var(--border);border-radius:var(--radius);color:var(--gray);font-family:inherit;font-size:11px;padding:8px 10px;cursor:pointer;white-space:nowrap;}
 .action-btn:hover{border-color:var(--white);color:var(--white);}
 .action-btn.confirm{border-color:#2d5a3d;color:#4caf7d;background:#111e15;}
 .action-btn.danger{border-color:#5a2d2d;color:#e07b7b;}
 .action-btn.info{border-color:#1a3a5a;color:#7aabee;background:#0f1a2e;}
+.action-btn.warn{border-color:#854f0b;color:#e07b39;background:#1a1000;}
 .action-btn.checked{border-color:#444;color:#666;cursor:default;}
 .section-box{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:12px;}
 .section-title{font-size:10px;letter-spacing:.2em;color:var(--gold);text-transform:uppercase;margin-bottom:14px;}
@@ -115,11 +119,10 @@ body{background:var(--bg);color:var(--white);font-family:'Noto Sans KR',sans-ser
 .edit-row{display:flex;gap:8px;margin-top:10px;}
 .edit-save{flex:1;background:var(--gold);color:#0f0f0f;border:none;border-radius:var(--radius);font-family:inherit;font-size:12px;font-weight:700;padding:10px;cursor:pointer;}
 .edit-cancel{flex:1;background:none;border:1px solid var(--border);border-radius:var(--radius);color:var(--gray);font-family:inherit;font-size:12px;padding:10px;cursor:pointer;}
-/* 회차 변경 모달 */
-.modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:200;align-items:center;justify-content:center;padding:20px;}
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:200;align-items:center;justify-content:center;padding:20px;}
 .modal-bg.show{display:flex;}
-.modal{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:24px;width:100%;max-width:400px;}
-.modal-title{font-size:13px;font-weight:500;color:var(--gold);letter-spacing:.1em;margin-bottom:16px;}
+.modal{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:24px;width:100%;max-width:400px;max-height:80vh;overflow-y:auto;}
+.modal-title{font-size:13px;font-weight:500;color:var(--gold);letter-spacing:.1em;margin-bottom:14px;}
 .modal-sub{font-size:12px;color:var(--gray);margin-bottom:14px;line-height:1.8;}
 .modal-sess-list{margin-bottom:16px;}
 .modal-sess-item{background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);padding:12px 14px;margin-bottom:8px;cursor:pointer;transition:border-color .15s;}
@@ -213,7 +216,8 @@ body{background:var(--bg);color:var(--white);font-family:'Noto Sans KR',sans-ser
         <button class="filter-btn active" onclick="setFilter('all',this)">전체</button>
         <button class="filter-btn" onclick="setFilter('미입금',this)">미입금</button>
         <button class="filter-btn" onclick="setFilter('입금확인',this)">입금확인</button>
-        <button class="filter-btn" onclick="setFilter('취소',this)">취소</button>
+        <button class="filter-btn" onclick="setFilter('신청',this)">변경/취소신청</button>
+        <button class="filter-btn" onclick="setFilter('취소',this)">취소완료</button>
       </div>
       <div id="res-list"></div>
     </div>
@@ -222,7 +226,7 @@ body{background:var(--bg);color:var(--white);font-family:'Noto Sans KR',sans-ser
     <div class="tab-content" id="tab-sessions">
       <div id="session-list" style="margin-bottom:16px;"></div>
       <div class="section-box">
-        <div class="mode-label" id="session-mode-label">— 수정 모드: 클릭한 회차를 수정합니다 —</div>
+        <div class="mode-label" id="session-mode-label">— 수정 모드 —</div>
         <div class="section-title" id="session-form-title">회차 추가</div>
         <div class="form-row">
           <div class="form-group"><label>날짜</label><input type="date" class="form-input" id="sess-date"></div>
@@ -272,7 +276,7 @@ body{background:var(--bg);color:var(--white);font-family:'Noto Sans KR',sans-ser
           <div class="form-group"><label>문의 전화</label><input type="tel" class="form-input" id="agency-tel" placeholder="예: 02-741-5332"></div>
           <div class="form-group"><label>문의 이메일</label><input type="email" class="form-input" id="agency-email" placeholder="예: info@example.com"></div>
         </div>
-        <div class="form-row"><div class="form-group full"><label>카카오페이 송금 링크</label><input type="url" class="form-input" id="kakaopay-link" placeholder="https://qr.kakaopay.com/..."><div class="hint">카카오페이 앱 → 송금 → 송금링크 만들기 → 금액 자유입력</div></div></div>
+        <div class="form-row"><div class="form-group full"><label>카카오페이 송금 링크</label><input type="url" class="form-input" id="kakaopay-link" placeholder="https://qr.kakaopay.com/..."></div></div>
       </div>
       <div class="section-box">
         <div class="section-title">공연 정보</div>
@@ -338,7 +342,7 @@ function toast(msg) {
   t.textContent = msg; t.classList.add('show');
   setTimeout(() => t.classList.remove('show'), 2500);
 }
-function sessionLabel(s) {
+function sessLabel(s) {
   const d = new Date(s.date + 'T00:00:00');
   return (d.getMonth()+1) + '월 ' + d.getDate() + '일 (' + DAYS[d.getDay()] + ') ' + s.time;
 }
@@ -401,15 +405,22 @@ function renderDashboard() {
     const isLow  = !isFull&&remain<=3;
     const bc = isFull?'badge-sold':isLow?'badge-low':'badge-open';
     const bt = isFull?'마감':isLow?'마감임박':'예매중';
-    return '<div class="session-row"><div class="session-bar-wrap"><div class="session-bar-label"><span>' + sessionLabel(s) + '</span><span style="color:var(--gray)">' + booked + '/' + s.seats + '석</span></div><div class="session-bar-bg"><div class="session-bar-fill' + (isFull?' full':'') + '" style="width:' + pct + '%"></div></div></div><span class="badge ' + bc + '">' + bt + '</span></div>';
+    return '<div class="session-row"><div class="session-bar-wrap"><div class="session-bar-label"><span>' + sessLabel(s) + '</span><span style="color:var(--gray)">' + booked + '/' + s.seats + '석</span></div><div class="session-bar-bg"><div class="session-bar-fill' + (isFull?' full':'') + '" style="width:' + pct + '%"></div></div></div><span class="badge ' + bc + '">' + bt + '</span></div>';
   }).join('');
 }
 
 // ── 예약 목록 ──
 function renderReservations() {
   let list = reservations;
-  if (currentFilter !== 'all') list = list.filter(r => currentFilter==='취소' ? r.payStatus.includes('취소') : r.payStatus===currentFilter);
-  if (currentSearch) { const q=currentSearch.toLowerCase(); list=list.filter(r=>r.name.includes(q)||(r.resNum||'').toLowerCase().includes(q)); }
+  if (currentFilter === '신청') {
+    list = list.filter(r => r.changeRequest);
+  } else if (currentFilter !== 'all') {
+    list = list.filter(r => currentFilter==='취소' ? r.payStatus.includes('취소') : r.payStatus===currentFilter);
+  }
+  if (currentSearch) {
+    const q = currentSearch.toLowerCase();
+    list = list.filter(r => r.name.includes(q) || (r.resNum||'').toLowerCase().includes(q));
+  }
   const el = document.getElementById('res-list');
   if (!list.length) { el.innerHTML = '<div class="empty-state">해당하는 예약이 없습니다.</div>'; return; }
   el.innerHTML = list.map(r => buildResCard(r)).join('');
@@ -417,8 +428,15 @@ function renderReservations() {
 
 function buildResCard(r) {
   const bc = r.payStatus==='입금확인'?'pay-confirmed':r.payStatus==='미입금'?'pay-pending':'pay-cancelled';
-  const ticketUrl = '/ticket.html?res=' + encodeURIComponent(r.resNum||'')
+  const hasRequest = r.changeRequest;
+  const reqType    = hasRequest ? (r.changeRequest.type === 'cancel' ? '취소신청' : '변경신청') : '';
+
+  // 티켓 URL 생성
+  const tUrl = '/ticket.html?res=' + encodeURIComponent(r.resNum||'')
     + '&name=' + encodeURIComponent(r.name||'')
+    + '&perf=' + encodeURIComponent(performance.name||'')
+    + '&agency=' + encodeURIComponent(performance.agency||'')
+    + '&tel=' + encodeURIComponent(performance.tel||'')
     + '&session=' + encodeURIComponent(r.session||'')
     + '&type=' + encodeURIComponent(r.ticketType||'')
     + '&qty=' + (r.quantity||1);
@@ -426,27 +444,48 @@ function buildResCard(r) {
   let actions = '';
   if (r.payStatus === '미입금') {
     actions = '<div class="res-actions">'
-      + btn('confirm', '입금 확인', 'confirmPay("' + r.resNum + '")')
-      + btn('', '회차 변경', 'changeSession("' + r.resNum + '")')
-      + btn('danger', '예약 취소', 'cancelRes("' + r.resNum + '")')
+      + mkBtn('confirm', '입금 확인', 'confirmPay("' + r.resNum + '")')
+      + mkBtn('', '회차 변경', 'changeSession("' + r.resNum + '")')
+      + mkBtn('danger', '예약 취소', 'cancelRes("' + r.resNum + '")')
       + '</div>';
   } else if (r.payStatus === '입금확인') {
     actions = '<div class="res-actions">'
-      + btn('info', '티켓 확인', 'window.open("' + ticketUrl + '","_blank")')
-      + btn('', '티켓 재발송', 'resendTicket("' + r.resNum + '")')
-      + btn('', '회차 변경', 'changeSession("' + r.resNum + '")')
-      + btn('danger', '예약 취소', 'cancelRes("' + r.resNum + '")')
-      + btn(r.checkedIn ? 'checked' : '', r.checkedIn ? '✓입장완료' : '입장처리', r.checkedIn ? '' : 'doCheckInById("' + r.resNum + '")')
+      + mkBtn('info', '티켓 확인', 'openTicket("' + encodeURIComponent(tUrl) + '")')
+      + mkBtn('', '티켓 재발송', 'resendTicket("' + r.resNum + '")')
+      + mkBtn('', '회차 변경', 'changeSession("' + r.resNum + '")')
+      + mkBtn('danger', '예약 취소', 'cancelRes("' + r.resNum + '")')
+      + mkBtn(r.checkedIn ? 'checked' : '', r.checkedIn ? '✓입장완료' : '입장처리', r.checkedIn ? '' : 'doCheckInById("' + r.resNum + '")')
       + '</div>';
   }
 
-  return '<div class="res-card">'
+  // 변경/취소 신청 처리 버튼
+  if (hasRequest) {
+    const reqInfo = r.changeRequest;
+    const reqDesc = reqType === '변경신청'
+      ? ('→ ' + (reqInfo.newSessionLabel||''))
+      : ('사유: ' + (reqInfo.reason||'없음'));
+    actions += '<div style="background:#1a1000;border:1px solid #854f0b;border-radius:4px;padding:10px 12px;margin-top:8px;font-size:12px;">'
+      + '<div style="color:#e07b39;font-weight:500;margin-bottom:6px;">' + reqType + ' 접수됨</div>'
+      + '<div style="color:var(--gray);margin-bottom:8px;">' + reqDesc + '</div>'
+      + '<div style="display:flex;gap:8px;">'
+      + (reqType === '변경신청'
+        ? mkBtn('warn', '변경 처리', 'processChangeRequest("' + r.resNum + '")')
+        : mkBtn('danger', '취소 처리', 'processCancelRequest("' + r.resNum + '")')
+      )
+      + mkBtn('', '신청 무시', 'dismissRequest("' + r.resNum + '")')
+      + '</div></div>';
+  }
+
+  return '<div class="res-card' + (hasRequest?' has-request':'') + '">'
     + '<div class="res-card-header" onclick="toggleCard(\'' + r.resNum + '\')">'
-    +   '<div><div style="display:flex;align-items:center">'
-    +     '<span class="res-num-badge">' + (r.resNum||'') + '</span>'
-    +     '<span class="res-name">' + (r.name||'') + '</span>'
+    +   '<div style="flex:1;min-width:0">'
+    +     '<div style="display:flex;align-items:center;flex-wrap:wrap;gap:4px">'
+    +       '<span class="res-num-badge">' + (r.resNum||'') + '</span>'
+    +       '<span class="res-name">' + (r.name||'') + '</span>'
+    +       (hasRequest ? '<span class="request-badge">' + reqType + '</span>' : '')
+    +     '</div>'
+    +     '<div class="res-session">' + (r.session||'') + ' · ' + (r.ticketType||'') + ' ' + (r.quantity||0) + '매</div>'
     +   '</div>'
-    +   '<div class="res-session">' + (r.session||'') + ' · ' + (r.ticketType||'') + ' ' + (r.quantity||0) + '매</div></div>'
     +   '<span class="pay-badge ' + bc + '">' + r.payStatus + '</span>'
     + '</div>'
     + '<div class="res-card-body" id="body-' + r.resNum + '">'
@@ -461,275 +500,279 @@ function buildResCard(r) {
     + '</div>';
 }
 
-function btn(cls, label, onclick) {
-  const disabled = !onclick ? ' style="pointer-events:none"' : '';
-  return '<button class="action-btn' + (cls?' '+cls:'') + '" onclick="' + onclick + '"' + disabled + '>' + label + '</button>';
+function mkBtn(cls, label, onclick) {
+  if (!onclick) return '<button class="action-btn ' + cls + '" style="pointer-events:none">' + label + '</button>';
+  return '<button class="action-btn' + (cls?' '+cls:'') + '" onclick="' + onclick + '">' + label + '</button>';
+}
+
+function openTicket(encodedUrl) {
+  window.open(decodeURIComponent(encodedUrl), '_blank');
 }
 
 function toggleCard(rn) { document.getElementById('body-'+rn).classList.toggle('open'); }
-function setFilter(f,b) { currentFilter=f; document.querySelectorAll('.filter-btn').forEach(x=>x.classList.remove('active')); b.classList.add('active'); renderReservations(); }
+function setFilter(f,b) {
+  currentFilter=f;
+  document.querySelectorAll('.filter-btn').forEach(x=>x.classList.remove('active'));
+  b.classList.add('active');
+  renderReservations();
+}
 function filterRes(q) { currentSearch=q.trim(); renderReservations(); }
 
 async function confirmPay(rn) {
   if (!confirm(rn + ' 입금 확인 처리하시겠습니까?')) return;
-  const r = await callAPI({action:'confirmPayment',resNum:rn});
-  if (r.success) { toast('티켓이 발송됩니다.'); await loadData(); } else toast('오류: '+(r.message||'실패'));
+  const r = await callAPI({action:'confirmPayment', resNum:rn});
+  if (r.success) { toast('티켓이 발송됩니다.'); await loadData(); }
+  else toast('오류: '+(r.message||'실패'));
 }
 async function cancelRes(rn) {
   if (!confirm(rn + ' 예약을 취소하시겠습니까?')) return;
-  const r = await callAPI({action:'cancel',resNum:rn});
+  const r = await callAPI({action:'cancel', resNum:rn});
   if (r.success) { toast('취소됐습니다.'); await loadData(); }
 }
 async function resendTicket(rn) {
-  const r = await callAPI({action:'resendTicket',resNum:rn});
+  const r = await callAPI({action:'resendTicket', resNum:rn});
   toast(r.success ? '티켓이 재발송됐습니다.' : '재발송 실패');
 }
 async function doCheckInById(rn) {
-  const r = await callAPI({action:'checkIn',resNum:rn});
+  const r = await callAPI({action:'checkIn', resNum:rn});
   if (r.success) { toast('입장 처리됐습니다.'); await loadData(); }
+}
+
+// ── 신청 처리 ──
+async function processChangeRequest(rn) {
+  const reservation = reservations.find(r => r.resNum === rn);
+  if (!reservation || !reservation.changeRequest) return;
+  const req = reservation.changeRequest;
+  if (!confirm('회차를 변경하시겠습니까?\n→ ' + req.newSessionLabel)) return;
+  const r = await callAPI({
+    action: 'changeSession',
+    resNum: rn,
+    newSessionId: req.newSessionId,
+    newSessionLabel: req.newSessionLabel,
+  });
+  if (r.success) {
+    await callAPI({action:'dismissRequest', resNum:rn});
+    toast('회차가 변경됐습니다.'); await loadData();
+  }
+}
+async function processCancelRequest(rn) {
+  if (!confirm('예약을 취소 처리하시겠습니까?')) return;
+  const r = await callAPI({action:'cancel', resNum:rn});
+  if (r.success) { toast('취소됐습니다.'); await loadData(); }
+}
+async function dismissRequest(rn) {
+  if (!confirm('신청을 무시하시겠습니까?')) return;
+  await callAPI({action:'dismissRequest', resNum:rn});
+  toast('신청이 무시됐습니다.'); await loadData();
 }
 
 // ── 회차 변경 모달 ──
 function changeSession(resNum) {
   const reservation = reservations.find(r => r.resNum === resNum);
   if (!reservation) return;
-  modalResNum = resNum;
-  modalNewSessionId = null;
-
+  modalResNum = resNum; modalNewSessionId = null;
   document.getElementById('modal-sub').innerHTML =
-    '<strong style="color:var(--white)">' + reservation.name + '</strong> 님의 현재 회차:<br>'
-    + '<span style="color:var(--gold)">' + reservation.session + '</span><br>'
-    + '<span style="font-size:11px">변경할 회차를 선택해 주세요.</span>';
-
+    '<strong style="color:var(--white)">' + reservation.name + '</strong> 현재 회차:<br>'
+    + '<span style="color:var(--gold)">' + reservation.session + '</span>';
   document.getElementById('modal-sess-list').innerHTML = sessions.map(s => {
-    const isCurrent = reservation.session === sessionLabel(s);
-    const isFull = s.status === 'closed';
+    const isCurrent = reservation.session === sessLabel(s);
+    const isFull    = s.status === 'closed';
     return '<div class="modal-sess-item' + (isCurrent?' sel':'') + (isFull?' disabled':'') + '" '
       + (isFull ? '' : 'onclick="selectModalSession(\'' + s.id + '\', this)"') + '>'
-      + '<div style="font-size:13px;font-weight:500">' + sessionLabel(s) + '</div>'
-      + '<div style="font-size:11px;color:var(--gray);margin-top:2px">' + s.seats + '석 ' + (isFull?'· 마감':'') + (isCurrent?' · 현재 회차':'') + '</div>'
+      + '<div style="font-size:13px;font-weight:500">' + sessLabel(s) + '</div>'
+      + '<div style="font-size:11px;color:var(--gray);margin-top:2px">' + s.seats + '석'
+      + (isFull?' · 마감':'') + (isCurrent?' · 현재':'') + '</div>'
       + '</div>';
   }).join('');
-
   document.getElementById('modal-bg').classList.add('show');
 }
-
 function selectModalSession(id, el) {
   modalNewSessionId = id;
-  document.querySelectorAll('.modal-sess-item').forEach(x => x.classList.remove('sel'));
+  document.querySelectorAll('.modal-sess-item').forEach(x=>x.classList.remove('sel'));
   el.classList.add('sel');
 }
-
 function closeModal() {
   document.getElementById('modal-bg').classList.remove('show');
   modalResNum = null; modalNewSessionId = null;
 }
-
 async function confirmSessionChange() {
   if (!modalNewSessionId) { toast('변경할 회차를 선택해 주세요.'); return; }
-  const newSession = sessions.find(s => s.id === modalNewSessionId);
+  const newSession = sessions.find(s=>s.id===modalNewSessionId);
   if (!newSession) return;
-  const r = await callAPI({
-    action: 'changeSession',
-    resNum: modalResNum,
-    newSessionId: modalNewSessionId,
-    newSessionLabel: sessionLabel(newSession),
-  });
-  if (r.success) {
-    toast('회차가 변경됐습니다.');
-    closeModal();
-    await loadData();
-  } else {
-    toast('변경 실패: ' + (r.message || '오류'));
-  }
+  const r = await callAPI({action:'changeSession', resNum:modalResNum, newSessionId:modalNewSessionId, newSessionLabel:sessLabel(newSession)});
+  if (r.success) { toast('회차가 변경됐습니다.'); closeModal(); await loadData(); }
+  else toast('변경 실패: '+(r.message||'오류'));
 }
 
 // ── 회차 관리 ──
 function renderSessionList() {
   const el = document.getElementById('session-list');
-  if (!sessions.length) { el.innerHTML = '<div class="empty-state">등록된 회차가 없습니다.<br>아래 폼에서 추가해 주세요.</div>'; return; }
+  if (!sessions.length) { el.innerHTML = '<div class="empty-state">등록된 회차가 없습니다.</div>'; return; }
   el.innerHTML = sessions.map(s => {
     const st = s.status==='open'?'예매중':s.status==='closed'?'마감':'오픈예정';
-    const isSelected = editingSessionId === s.id;
-    return '<div class="session-item' + (isSelected?' selected':'') + '" id="si-'+s.id+'" onclick="selectSession(\'' + s.id + '\')">'
-      + '<div><div class="session-item-date">' + sessionLabel(s) + '</div><div class="session-item-info">' + s.seats + '석 · ' + st + '</div></div>'
+    return '<div class="session-item' + (editingSessionId===s.id?' selected':'') + '" onclick="selectSession(\'' + s.id + '\')">'
+      + '<div><div class="session-item-date">' + sessLabel(s) + '</div><div class="session-item-info">' + s.seats + '석 · ' + st + '</div></div>'
       + '<div class="item-btns"><button class="icon-btn danger" onclick="event.stopPropagation();deleteSession(\'' + s.id + '\')">삭제</button></div>'
       + '</div>';
   }).join('');
 }
-
 function selectSession(id) {
-  const s = sessions.find(s=>s.id===id);
-  if (!s) return;
-  editingSessionId = id;
-  document.getElementById('sess-date').value   = s.date;
-  document.getElementById('sess-time').value   = s.time;
-  document.getElementById('sess-seats').value  = s.seats;
-  document.getElementById('sess-status').value = s.status;
-  document.getElementById('session-form-title').textContent = '회차 수정 / 복사 추가';
+  const s=sessions.find(s=>s.id===id); if(!s) return;
+  editingSessionId=id;
+  document.getElementById('sess-date').value=s.date;
+  document.getElementById('sess-time').value=s.time;
+  document.getElementById('sess-seats').value=s.seats;
+  document.getElementById('sess-status').value=s.status;
+  document.getElementById('session-form-title').textContent='회차 수정 / 복사 추가';
   document.getElementById('session-mode-label').classList.add('show');
-  document.getElementById('sess-add-btn').style.display    = 'flex';
-  document.getElementById('sess-update-btn').style.display = 'flex';
-  document.getElementById('sess-cancel-btn').style.display = 'flex';
+  document.getElementById('sess-add-btn').style.display='flex';
+  document.getElementById('sess-update-btn').style.display='flex';
+  document.getElementById('sess-cancel-btn').style.display='flex';
   renderSessionList();
-  document.getElementById('sess-date').focus();
 }
-
 function resetSessionForm() {
-  editingSessionId = null;
-  document.getElementById('sess-date').value   = '';
-  document.getElementById('sess-time').value   = '';
-  document.getElementById('sess-seats').value  = '';
-  document.getElementById('sess-status').value = 'open';
-  document.getElementById('session-form-title').textContent = '회차 추가';
+  editingSessionId=null;
+  document.getElementById('sess-date').value='';
+  document.getElementById('sess-time').value='';
+  document.getElementById('sess-seats').value='';
+  document.getElementById('sess-status').value='open';
+  document.getElementById('session-form-title').textContent='회차 추가';
   document.getElementById('session-mode-label').classList.remove('show');
-  document.getElementById('sess-add-btn').style.display    = 'flex';
-  document.getElementById('sess-update-btn').style.display = 'none';
-  document.getElementById('sess-cancel-btn').style.display = 'none';
+  document.getElementById('sess-add-btn').style.display='flex';
+  document.getElementById('sess-update-btn').style.display='none';
+  document.getElementById('sess-cancel-btn').style.display='none';
   renderSessionList();
 }
-
 async function addSession() {
   const date=document.getElementById('sess-date').value, time=document.getElementById('sess-time').value;
   const seats=parseInt(document.getElementById('sess-seats').value), status=document.getElementById('sess-status').value;
   if (!date||!time||!seats) { toast('날짜, 시간, 좌석 수를 모두 입력해 주세요.'); return; }
-  const session = {id:'S'+Date.now(), date, time, seats, booked:0, status};
-  const r = await callAPI({action:'addSession',session});
-  if (r.success) { sessions.push(session); sessions=sortSessions(sessions); resetSessionForm(); renderDashboard(); toast('회차가 추가됐습니다.'); }
+  const session={id:'S'+Date.now(), date, time, seats, booked:0, status};
+  const r=await callAPI({action:'addSession', session});
+  if(r.success){sessions.push(session);sessions=sortSessions(sessions);resetSessionForm();renderDashboard();toast('회차가 추가됐습니다.');}
 }
-
 async function updateSession() {
   if (!editingSessionId) return;
   const date=document.getElementById('sess-date').value, time=document.getElementById('sess-time').value;
   const seats=parseInt(document.getElementById('sess-seats').value), status=document.getElementById('sess-status').value;
   if (!date||!time||!seats) { toast('날짜, 시간, 좌석 수를 모두 입력해 주세요.'); return; }
-  const session = {id:editingSessionId, date, time, seats, status};
-  const r = await callAPI({action:'updateSession',session});
-  if (r.success) { const idx=sessions.findIndex(s=>s.id===editingSessionId); if(idx!==-1) sessions[idx]={...sessions[idx],...session}; sessions=sortSessions(sessions); resetSessionForm(); renderDashboard(); toast('회차가 수정됐습니다.'); }
+  const session={id:editingSessionId, date, time, seats, status};
+  const r=await callAPI({action:'updateSession', session});
+  if(r.success){const idx=sessions.findIndex(s=>s.id===editingSessionId);if(idx!==-1)sessions[idx]={...sessions[idx],...session};sessions=sortSessions(sessions);resetSessionForm();renderDashboard();toast('수정됐습니다.');}
 }
-
 async function deleteSession(id) {
   const s=sessions.find(s=>s.id===id); if(!s) return;
-  if (!confirm(sessionLabel(s)+' 회차를 삭제하시겠습니까?')) return;
-  const r = await callAPI({action:'deleteSession',id});
-  if (r.success) { sessions=sessions.filter(s=>s.id!==id); if(editingSessionId===id) resetSessionForm(); else renderSessionList(); renderDashboard(); toast('삭제됐습니다.'); }
+  if(!confirm(sessLabel(s)+' 회차를 삭제하시겠습니까?')) return;
+  const r=await callAPI({action:'deleteSession',id});
+  if(r.success){sessions=sessions.filter(s=>s.id!==id);if(editingSessionId===id)resetSessionForm();else renderSessionList();renderDashboard();toast('삭제됐습니다.');}
 }
 
 // ── 할인 프리셋 ──
 function renderPresets() {
-  const el = document.getElementById('preset-list');
-  if (!presets.length) { el.innerHTML = '<div class="empty-state">등록된 프리셋이 없습니다.</div>'; return; }
-  el.innerHTML = presets.map((p,i) => {
-    if (editingPresetName === p.name) {
+  const el=document.getElementById('preset-list');
+  if(!presets.length){el.innerHTML='<div class="empty-state">등록된 프리셋이 없습니다.</div>';return;}
+  el.innerHTML=presets.map((p,i)=>{
+    if(editingPresetName===p.name){
       return '<div class="edit-panel">'
-        + '<div class="edit-panel-title">할인 수정</div>'
-        + '<div class="form-row">'
-        +   '<div class="form-group"><label>할인명</label><input type="text" class="form-input" id="ep-name-'+i+'" value="'+p.name+'"></div>'
-        +   '<div class="form-group"><label>판매가격 (원)</label><input type="number" class="form-input" id="ep-price-'+i+'" value="'+p.price+'"></div>'
-        + '</div>'
-        + '<label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--gray);cursor:pointer;margin-bottom:10px;">'
-        +   '<input type="checkbox" id="ep-proof-'+i+'" '+(p.needProof?'checked':'')+' style="width:14px;height:14px;accent-color:var(--gold);"> 현장 증빙 필요'
-        + '</label>'
-        + '<div class="edit-row">'
-        +   '<button class="edit-save" onclick="saveEditPreset(\''+p.name+'\','+i+')">저장</button>'
-        +   '<button class="edit-cancel" onclick="cancelEditPreset()">취소</button>'
-        + '</div></div>';
+        +'<div class="edit-panel-title">할인 수정</div>'
+        +'<div class="form-row">'
+        +'<div class="form-group"><label>할인명</label><input type="text" class="form-input" id="ep-name-'+i+'" value="'+p.name+'"></div>'
+        +'<div class="form-group"><label>판매가격 (원)</label><input type="number" class="form-input" id="ep-price-'+i+'" value="'+p.price+'"></div>'
+        +'</div>'
+        +'<label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--gray);cursor:pointer;margin-bottom:10px;">'
+        +'<input type="checkbox" id="ep-proof-'+i+'" '+(p.needProof?'checked':'')+' style="width:14px;height:14px;accent-color:var(--gold);"> 현장 증빙 필요</label>'
+        +'<div class="edit-row"><button class="edit-save" onclick="saveEditPreset(\''+p.name+'\','+i+')">저장</button>'
+        +'<button class="edit-cancel" onclick="cancelEditPreset()">취소</button></div></div>';
     }
     return '<div class="preset-item" draggable="true" data-index="'+i+'" ondragstart="onDragStart(event,'+i+')" ondragover="onDragOver(event,'+i+')" ondrop="onDrop(event,'+i+')" ondragend="onDragEnd()">'
-      + '<span class="drag-handle">⠿</span>'
-      + '<div class="preset-info">'
-      +   '<div class="preset-name-edit">'+p.name+'</div>'
-      +   '<div class="preset-price-edit">'+(p.price===0?'무료':p.price.toLocaleString()+'원')+'</div>'
-      +   (p.needProof?'<div class="preset-proof-label">현장 증빙 필요</div>':'')
-      + '</div>'
-      + '<div class="preset-actions">'
-      +   '<button class="toggle-btn '+(p.active?'on':'off')+'" onclick="togglePreset(\''+p.name+'\')">'+( p.active?'활성':'비활성')+'</button>'
-      +   '<button class="icon-btn" onclick="startEditPreset(\''+p.name+'\')">수정</button>'
-      +   '<button class="icon-btn danger" onclick="deletePreset(\''+p.name+'\')">삭제</button>'
-      + '</div></div>';
+      +'<span class="drag-handle">⠿</span>'
+      +'<div class="preset-info"><div class="preset-name-edit">'+p.name+'</div>'
+      +'<div class="preset-price-edit">'+(p.price===0?'무료':p.price.toLocaleString()+'원')+'</div>'
+      +(p.needProof?'<div class="preset-proof-label">현장 증빙 필요</div>':'')+'</div>'
+      +'<div class="preset-actions">'
+      +'<button class="toggle-btn '+(p.active?'on':'off')+'" onclick="togglePreset(\''+p.name+'\')">'+( p.active?'활성':'비활성')+'</button>'
+      +'<button class="icon-btn" onclick="startEditPreset(\''+p.name+'\')">수정</button>'
+      +'<button class="icon-btn danger" onclick="deletePreset(\''+p.name+'\')">삭제</button>'
+      +'</div></div>';
   }).join('');
 }
-
-function startEditPreset(name) { editingPresetName=name; renderPresets(); }
-function cancelEditPreset() { editingPresetName=null; renderPresets(); }
-
-async function saveEditPreset(originalName, i) {
-  const newName=document.getElementById('ep-name-'+i).value.trim();
-  const newPrice=parseInt(document.getElementById('ep-price-'+i).value)||0;
-  const newProof=document.getElementById('ep-proof-'+i).checked;
-  if (!newName) { toast('할인명을 입력해 주세요.'); return; }
-  const idx=presets.findIndex(p=>p.name===originalName); if(idx===-1) return;
-  const updated={...presets[idx],name:newName,price:newPrice,needProof:newProof};
-  await callAPI({action:'deletePreset',name:originalName});
+function startEditPreset(name){editingPresetName=name;renderPresets();}
+function cancelEditPreset(){editingPresetName=null;renderPresets();}
+async function saveEditPreset(orig,i){
+  const nn=document.getElementById('ep-name-'+i).value.trim();
+  const np=parseInt(document.getElementById('ep-price-'+i).value)||0;
+  const nf=document.getElementById('ep-proof-'+i).checked;
+  if(!nn){toast('할인명을 입력해 주세요.');return;}
+  const idx=presets.findIndex(p=>p.name===orig);if(idx===-1)return;
+  const updated={...presets[idx],name:nn,price:np,needProof:nf};
+  await callAPI({action:'deletePreset',name:orig});
   await callAPI({action:'savePreset',preset:updated});
-  presets[idx]=updated; editingPresetName=null; renderPresets(); toast('수정됐습니다.');
+  presets[idx]=updated;editingPresetName=null;renderPresets();toast('수정됐습니다.');
 }
-
-async function deletePreset(name) {
-  if (!confirm('"'+name+'" 할인을 삭제하시겠습니까?')) return;
+async function deletePreset(name){
+  if(!confirm('"'+name+'" 할인을 삭제하시겠습니까?'))return;
   const r=await callAPI({action:'deletePreset',name});
   if(r.success){presets=presets.filter(p=>p.name!==name);renderPresets();toast('삭제됐습니다.');}
 }
-async function togglePreset(name) {
-  const p=presets.find(p=>p.name===name); if(!p) return;
+async function togglePreset(name){
+  const p=presets.find(p=>p.name===name);if(!p)return;
   p.active=!p.active;
-  await callAPI({action:'togglePreset',name,active:p.active}); renderPresets();
+  await callAPI({action:'togglePreset',name,active:p.active});renderPresets();
 }
 function onDragStart(e,i){dragSrcIndex=i;e.currentTarget.classList.add('dragging');e.dataTransfer.effectAllowed='move';}
 function onDragOver(e,i){e.preventDefault();document.querySelectorAll('.preset-item').forEach(el=>el.classList.remove('drag-over'));const items=document.querySelectorAll('.preset-item');if(items[i])items[i].classList.add('drag-over');}
 function onDrop(e,i){e.preventDefault();if(dragSrcIndex===null||dragSrcIndex===i)return;const moved=presets.splice(dragSrcIndex,1)[0];presets.splice(i,0,moved);callAPI({action:'reorderPresets',presets});dragSrcIndex=null;renderPresets();toast('순서 변경됐습니다.');}
 function onDragEnd(){document.querySelectorAll('.preset-item').forEach(el=>{el.classList.remove('dragging');el.classList.remove('drag-over');});dragSrcIndex=null;}
-
-async function addPreset() {
+async function addPreset(){
   const name=document.getElementById('new-preset-name').value.trim();
   const price=parseInt(document.getElementById('new-preset-price').value);
   const proof=document.getElementById('new-preset-proof').checked;
-  if (!name){toast('할인명을 입력해 주세요.');return;}
-  if (isNaN(price)||price<0){toast('판매가격을 입력해 주세요.');return;}
-  if (presets.find(p=>p.name===name)){toast('이미 존재하는 할인명입니다.');return;}
+  if(!name){toast('할인명을 입력해 주세요.');return;}
+  if(isNaN(price)||price<0){toast('판매가격을 입력해 주세요.');return;}
+  if(presets.find(p=>p.name===name)){toast('이미 존재하는 할인명입니다.');return;}
   const preset={name,price,needProof:proof,active:true};
   const r=await callAPI({action:'savePreset',preset});
   if(r.success){presets.push(preset);document.getElementById('new-preset-name').value='';document.getElementById('new-preset-price').value='';document.getElementById('new-preset-proof').checked=false;renderPresets();toast('저장됐습니다.');}
 }
 
 // ── 공연 설정 ──
-function syncPerfForm() {
-  document.getElementById('agency-name').value         = performance.agency        ||'';
-  document.getElementById('agency-tel').value          = performance.tel           ||'';
-  document.getElementById('agency-email').value        = performance.email         ||'';
-  document.getElementById('kakaopay-link').value       = performance.kakaopayLink  ||'';
-  document.getElementById('perf-name').value           = performance.name          ||'';
-  document.getElementById('perf-subtitle').value       = performance.subtitle      ||'';
-  document.getElementById('perf-host').value           = performance.host          ||'';
-  document.getElementById('perf-organizer').value      = performance.organizer     ||'';
-  document.getElementById('perf-sponsor').value        = performance.sponsor       ||'';
-  document.getElementById('perf-account').value        = performance.account       ||'';
-  document.getElementById('perf-account-holder').value = performance.accountHolder ||'';
-  document.getElementById('perf-open').value           = performance.open          ||'open';
-  document.getElementById('perf-max-qty').value        = performance.maxQty        ||4;
+function syncPerfForm(){
+  document.getElementById('agency-name').value         =performance.agency       ||'';
+  document.getElementById('agency-tel').value          =performance.tel          ||'';
+  document.getElementById('agency-email').value        =performance.email        ||'';
+  document.getElementById('kakaopay-link').value       =performance.kakaopayLink ||'';
+  document.getElementById('perf-name').value           =performance.name         ||'';
+  document.getElementById('perf-subtitle').value       =performance.subtitle     ||'';
+  document.getElementById('perf-host').value           =performance.host         ||'';
+  document.getElementById('perf-organizer').value      =performance.organizer    ||'';
+  document.getElementById('perf-sponsor').value        =performance.sponsor      ||'';
+  document.getElementById('perf-account').value        =performance.account      ||'';
+  document.getElementById('perf-account-holder').value =performance.accountHolder||'';
+  document.getElementById('perf-open').value           =performance.open         ||'open';
+  document.getElementById('perf-max-qty').value        =performance.maxQty       ||4;
 }
-async function savePerf() {
-  const data = {
-    agency:        document.getElementById('agency-name').value.trim(),
-    tel:           document.getElementById('agency-tel').value.trim(),
-    email:         document.getElementById('agency-email').value.trim(),
-    kakaopayLink:  document.getElementById('kakaopay-link').value.trim(),
-    name:          document.getElementById('perf-name').value.trim(),
-    subtitle:      document.getElementById('perf-subtitle').value.trim(),
-    host:          document.getElementById('perf-host').value.trim(),
-    organizer:     document.getElementById('perf-organizer').value.trim(),
-    sponsor:       document.getElementById('perf-sponsor').value.trim(),
-    account:       document.getElementById('perf-account').value.trim(),
-    accountHolder: document.getElementById('perf-account-holder').value.trim(),
-    open:          document.getElementById('perf-open').value,
-    maxQty:        parseInt(document.getElementById('perf-max-qty').value)||4,
+async function savePerf(){
+  const data={
+    agency:document.getElementById('agency-name').value.trim(),
+    tel:document.getElementById('agency-tel').value.trim(),
+    email:document.getElementById('agency-email').value.trim(),
+    kakaopayLink:document.getElementById('kakaopay-link').value.trim(),
+    name:document.getElementById('perf-name').value.trim(),
+    subtitle:document.getElementById('perf-subtitle').value.trim(),
+    host:document.getElementById('perf-host').value.trim(),
+    organizer:document.getElementById('perf-organizer').value.trim(),
+    sponsor:document.getElementById('perf-sponsor').value.trim(),
+    account:document.getElementById('perf-account').value.trim(),
+    accountHolder:document.getElementById('perf-account-holder').value.trim(),
+    open:document.getElementById('perf-open').value,
+    maxQty:parseInt(document.getElementById('perf-max-qty').value)||4,
   };
   const r=await callAPI({action:'savePerformance',data});
   if(r.success){performance=data;toast('저장됐습니다.');renderDashboard();}else toast('저장 실패');
 }
 
 // ── 입장 확인 ──
-function doCheckIn() {
+function doCheckIn(){
   const input=document.getElementById('qr-input').value.trim().toUpperCase();
   const result=document.getElementById('check-result'),status=document.getElementById('check-status'),detail=document.getElementById('check-detail');
   if(!input)return;
@@ -743,27 +786,25 @@ function doCheckIn() {
     +'<div style="display:flex;justify-content:space-between"><span style="color:var(--gray)">예매자</span><span>'+r.name+'</span></div>'
     +'<div style="display:flex;justify-content:space-between"><span style="color:var(--gray)">회차</span><span>'+r.session+'</span></div>'
     +'<div style="display:flex;justify-content:space-between"><span style="color:var(--gray)">좌석</span><span>'+r.ticketType+' '+r.quantity+'매</span></div>'
-    +(r.needProof?'<div style="color:var(--orange);font-size:12px;margin-top:4px">⚠ 증빙 서류 확인 필요</div>':'')
-    +'</div>';
+    +(r.needProof?'<div style="color:var(--orange);font-size:12px;margin-top:4px">⚠ 증빙 서류 확인 필요</div>':'')+'</div>';
   if(!r.checkedIn){r.checkedIn=true;callAPI({action:'checkIn',resNum:r.resNum});}
   document.getElementById('qr-input').value='';
 }
 
 // ── 엑셀 내보내기 ──
-async function exportExcel() {
-  try {
+async function exportExcel(){
+  try{
     const res=await fetch('/api/export',{headers:{'x-admin-key':ADMIN_PW}});
     if(!res.ok){toast('내보내기 실패');return;}
-    const blob=await res.blob(), url=URL.createObjectURL(blob), a=document.createElement('a');
+    const blob=await res.blob(),url=URL.createObjectURL(blob),a=document.createElement('a');
     const date=new Date().toLocaleDateString('ko-KR').replace(/\. /g,'-').replace('.','');
     a.href=url;a.download='예약목록_'+date+'.csv';
-    document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url);
-    toast('다운로드됩니다.');
-  } catch(e){toast('내보내기 오류');}
+    document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url);toast('다운로드됩니다.');
+  }catch(e){toast('내보내기 오류');}
 }
 
 // ── 탭 ──
-function switchTab(tab,el) {
+function switchTab(tab,el){
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
   document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));
   el.classList.add('active');
@@ -771,11 +812,11 @@ function switchTab(tab,el) {
 }
 
 // ── API ──
-async function callAPI(payload) {
-  try {
+async function callAPI(payload){
+  try{
     const res=await fetch(API_BASE,{method:'POST',headers:{'Content-Type':'application/json','x-admin-key':ADMIN_PW},body:JSON.stringify(payload)});
     return await res.json();
-  } catch(e){return{success:false,message:e.message};}
+  }catch(e){return{success:false,message:e.message};}
 }
 </script>
 </body>
