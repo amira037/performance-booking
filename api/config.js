@@ -44,6 +44,13 @@ export default async function handler(req, res) {
     })
   );
 
+  // 날짜/시간 순으로 정렬
+  sessionsWithRemain.sort((a, b) => {
+    const at = new Date(a.date + 'T' + (a.time||'00:00'));
+    const bt = new Date(b.date + 'T' + (b.time||'00:00'));
+    return at - bt;
+  });
+
   return res.status(200).json({
     performance,
     sessions: sessionsWithRemain,
