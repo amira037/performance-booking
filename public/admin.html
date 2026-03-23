@@ -666,7 +666,9 @@ document.addEventListener('click', function(e) {
   if (!btn) return;
   const action = btn.dataset.action;
   const rn     = btn.dataset.rn;
-  if (!action || !rn) return;
+  console.log('[BTN DEBUG] action:', action, '/ rn:', rn);
+  if (!action) { console.warn('[BTN DEBUG] action 없음'); return; }
+  if (!rn)     { console.warn('[BTN DEBUG] rn 없음'); return; }
 
   if (action === 'pay')     confirmPay(rn);
   if (action === 'change')  changeSession(rn);
@@ -1072,10 +1074,16 @@ function switchTab(tab,el){
 
 // ── API ──
 async function callAPI(payload){
+  console.log('[API DEBUG] 호출:', payload.action, payload);
   try{
     const res=await fetch(API_BASE,{method:'POST',headers:{'Content-Type':'application/json','x-admin-key':ADMIN_PW},body:JSON.stringify(payload)});
-    return await res.json();
-  }catch(e){return{success:false,message:e.message};}
+    const data = await res.json();
+    console.log('[API DEBUG] 응답:', payload.action, data);
+    return data;
+  }catch(e){
+    console.error('[API DEBUG] 오류:', e.message);
+    return{success:false,message:e.message};
+  }
 }
 </script>
 </body>
