@@ -91,14 +91,20 @@ export default async function handler(req, res) {
   // ── 티켓 재발송 ──────────────────────────────────────────
   if (action === 'resendTicket') {
     const { resNum } = payload;
+    console.log('[RESEND DEBUG] 재발송 시작:', resNum);
+
     const reservation = await findReservation(resNum);
+    console.log('[RESEND DEBUG] 예약 조회:', reservation ? '✅ 있음' : '❌ 없음');
+    console.log('[RESEND DEBUG] phone:', reservation?.phone || '❌ 없음');
     if (!reservation) return res.status(404).json({ success: false });
 
     const perf      = await getPerformance();
     const ticketUrl = generateTicketUrl(resNum, reservation, perf);
+    console.log('[RESEND DEBUG] ticketUrl:', ticketUrl);
+    console.log('[RESEND DEBUG] sendTicketAlimtalk 타입:', typeof sendTicketAlimtalk);
 
     try {
-      await sendTicketAlimtalk({
+      const result = await sendTicketAlimtalk({
         name:      reservation.name,
         phone:     reservation.phone,
         resNum,
@@ -108,10 +114,12 @@ export default async function handler(req, res) {
         perfName:  perf.name || '공연',
         ticketUrl,
       });
+      console.log('[RESEND DEBUG] 발송 결과:', result);
     } catch(alimErr) {
-      console.error('티켓 재발송 오류:', alimErr.message);
+      console.error('[RESEND DEBUG] ❌ 예외:', alimErr.message);
+      console.error('[RESEND DEBUG] 스택:', alimErr.stack);
     }
-    try { await addLog({ resNum, name: reservation.name, phone: reservation.phone, type: '티켓재발송', result: '성공' }); } catch(e) {}
+    try { await addLog({ resNum, name: reservation.name, phone: reservation.phone, type: '티켓재발송', result: '완료' }); } catch(e) {}
     return res.status(200).json({ success: true });
   }
 
@@ -173,6 +181,52 @@ export default async function handler(req, res) {
     return res.status(200).json({ success: true });
   }
 
+  // ── 직권 예약 추가 ──────────────────────────────────────────
+  if (action === 'addManualReservation') {
+    const { name, phone, email, sessionId, sessionLabel, ticketType, quantity, unitPrice, total, needProof, sendAlim } = payload;
+    if (!name || !sessionId)
+      return res.status(400).json({ success: false, message: '이름과 회차는 필수입니다.' });
+
+    const now      = new Date();
+    const mmdd     = String(now.getMonth()+1).padStart(2,'0') + String(now.getDate()).padStart(2,'0');
+    const seq      = String(Date.now()).slice(-4);
+    const resNum   = 'DQ-' + mmdd + '-' + seq;
+
+    const reservation = {
+      resNum, name, phone: phone||'', email: email||'',
+      sessionId, session: sessionLabel,
+      ticketType: ticketType||'초대권', quantity: quantity||1,
+      unitPrice: unitPrice||0, total: total||0,
+      needProof: needProof||false,
+      payStatus:  '입금확인',
+      ticketSent: false, checkedIn: false,
+      createdAt:  now.toISOString(),
+      processedAt: now.toISOString(),
+      note: '관리자 직권 등록',
+    };
+
+    await addReservation(reservation);
+    await incrementBooked(sessionId, quantity||1);
+
+    // 알림톡 발송 여부
+    if (sendAlim && phone) {
+      try {
+        const perf = await getPerformance();
+        const ticketUrl = generateTicketUrl(resNum, reservation, perf);
+        await sendTicketAlimtalk({
+          name, phone, resNum,
+          session: sessionLabel,
+          quantity: quantity||1,
+          needProof: needProof||false,
+          perfName: perf.name||'공연',
+          ticketUrl,
+        });
+      } catch(e) { console.error('직권 등록 알림톡 오류:', e.message); }
+    }
+
+    return res.status(200).json({ success: true, resNum });
+  }
+
   // ── 신청 무시 ────────────────────────────────────────────
   if (action === 'dismissRequest') {
     const { resNum } = payload;
@@ -217,21 +271,7 @@ export default async function handler(req, res) {
 // ── 티켓 URL 생성 ─────────────────────────────────────────
 
 function generateTicketUrl(resNum, r, perf) {
-  const base   = process.env.TICKET_BASE_URL || '';
-  const params = new URLSearchParams({
-    res:       resNum,
-    name:      r.name,
-    perf:      perf.name       || '',
-    agency:    perf.agency     || '',
-    tel:       perf.tel        || '',
-    sub:       perf.subtitle   || '',
-    host:      perf.host       || '',
-    organizer: perf.organizer  || '',
-    sponsor:   perf.sponsor    || '',
-    session:   r.session,
-    type:      r.ticketType,
-    qty:       r.quantity,
-    proof:     r.needProof ? 'true' : 'false',
-  });
-  return `${base}?${params.toString()}`;
+  // 버튼 URL 300자 제한으로 예약번호만 파라미터로 전달
+  const base = (process.env.TICKET_BASE_URL || '').replace('/ticket.html', '');
+  return `${base}/ticket.html?res=${encodeURIComponent(resNum)}`;
 }
