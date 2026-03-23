@@ -230,8 +230,31 @@ body{background:var(--bg);color:var(--white);font-family:'Noto Sans KR',sans-ser
         <div class="mode-label" id="session-mode-label">— 수정 모드 —</div>
         <div class="section-title" id="session-form-title">회차 추가</div>
         <div class="form-row">
-          <div class="form-group"><label>날짜</label><input type="date" class="form-input" id="sess-date"></div>
-          <div class="form-group"><label>시간</label><input type="time" class="form-input" id="sess-time"></div>
+          <div class="form-group">
+            <label>날짜</label>
+            <input type="date" class="form-input" id="sess-date"
+                   style="color-scheme:dark;cursor:pointer;">
+          </div>
+          <div class="form-group">
+            <label>시간 (24시간제)</label>
+            <select class="form-select" id="sess-time">
+              <option value="">선택</option>
+              <option value="10:00">10:00</option>
+              <option value="11:00">11:00</option>
+              <option value="12:00">12:00</option>
+              <option value="13:00">13:00</option>
+              <option value="14:00">14:00</option>
+              <option value="15:00">15:00</option>
+              <option value="16:00">16:00</option>
+              <option value="17:00">17:00</option>
+              <option value="18:00">18:00</option>
+              <option value="19:00">19:00</option>
+              <option value="19:30">19:30</option>
+              <option value="20:00">20:00</option>
+              <option value="20:30">20:30</option>
+              <option value="21:00">21:00</option>
+            </select>
+          </div>
         </div>
         <div class="form-row">
           <div class="form-group"><label>좌석 수</label><input type="number" class="form-input" id="sess-seats" placeholder="10" min="1"></div>
@@ -785,8 +808,15 @@ function renderSessionList() {
 function selectSession(id) {
   const s=sessions.find(s=>s.id===id); if(!s) return;
   editingSessionId=id;
-  document.getElementById('sess-date').value=s.date;
-  document.getElementById('sess-time').value=s.time;
+  document.getElementById('sess-date').value = s.date;
+  // 시간 셀렉트에 없는 값이면 동적으로 추가
+  const timeEl = document.getElementById('sess-time');
+  if (s.time && !Array.from(timeEl.options).find(o => o.value === s.time)) {
+    const opt = document.createElement('option');
+    opt.value = s.time; opt.textContent = s.time;
+    timeEl.appendChild(opt);
+  }
+  timeEl.value = s.time;
   document.getElementById('sess-seats').value=s.seats;
   document.getElementById('sess-status').value=s.status;
   document.getElementById('session-form-title').textContent='회차 수정 / 복사 추가';
