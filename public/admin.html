@@ -191,6 +191,7 @@ body{background:var(--bg);color:var(--white);font-family:'Noto Sans KR',sans-ser
     <div class="tab" onclick="switchTab('reservations',this)">예약 목록</div>
     <div class="tab" onclick="switchTab('sessions',this)">회차 관리</div>
     <div class="tab" onclick="switchTab('presets',this)">할인 설정</div>
+    <div class="tab" onclick="switchTab('manual',this)">직권 예약</div>
     <div class="tab" onclick="switchTab('performance',this)">공연 설정</div>
   </div>
   <div class="content">
@@ -267,8 +268,90 @@ body{background:var(--bg);color:var(--white);font-family:'Noto Sans KR',sans-ser
       </div>
     </div>
 
+    <!-- 직권 예약 -->
+    <div class="tab-content" id="tab-manual">
+      <div class="section-box">
+        <div class="section-title">관리자 직권 예약 추가</div>
+        <div style="font-size:12px;color:var(--gray);margin-bottom:14px;line-height:1.8;">
+          초대권, 관계자 등 직접 예약을 등록합니다.<br>
+          등록 즉시 <span style="color:var(--gold)">입금확인</span> 상태로 처리됩니다.
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label>이름 *</label><input type="text" class="form-input" id="m-name" placeholder="홍길동"></div>
+          <div class="form-group"><label>연락처</label><input type="tel" class="form-input" id="m-phone" placeholder="010-0000-0000"></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label>이메일</label><input type="email" class="form-input" id="m-email" placeholder="example@email.com"></div>
+          <div class="form-group"><label>매수</label>
+            <select class="form-select" id="m-qty">
+              <option value="1">1매</option>
+              <option value="2">2매</option>
+              <option value="3">3매</option>
+              <option value="4">4매</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label>회차 *</label>
+            <select class="form-select" id="m-session">
+              <option value="">회차 선택</option>
+            </select>
+          </div>
+          <div class="form-group"><label>유형</label>
+            <select class="form-select" id="m-type">
+              <option value="초대권">초대권 (무료)</option>
+              <option value="일반">일반</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label>결제금액 (원)</label><input type="number" class="form-input" id="m-price" placeholder="0" value="0" min="0"></div>
+          <div class="form-group" style="display:flex;align-items:flex-end;">
+            <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--gray);cursor:pointer;padding-bottom:2px;">
+              <input type="checkbox" id="m-proof" style="width:14px;height:14px;accent-color:var(--gold);"> 현장 증빙 필요
+            </label>
+          </div>
+        </div>
+        <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--gray);margin-bottom:14px;cursor:pointer;">
+          <input type="checkbox" id="m-alim" checked style="width:14px;height:14px;accent-color:var(--gold);">
+          카카오 알림톡으로 티켓 발송
+        </label>
+        <button class="save-btn" onclick="addManualReservation()">직권 예약 등록</button>
+      </div>
+    </div>
+
     <!-- 공연 설정 -->
     <div class="tab-content" id="tab-performance">
+      <!-- 검표 코드 + 포스터 -->
+      <div class="section-box">
+        <div class="section-title">입장 / 포스터 설정</div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>검표 코드</label>
+            <input type="text" class="form-input" id="checkin-code-input" placeholder="예: 1234"
+                   style="letter-spacing:.2em;font-size:16px;">
+            <div class="hint">공연 당일 검표원이 관객에게 알려주는 코드예요.<br>관객이 모바일 티켓에 입력하면 자동 입장 처리됩니다.</div>
+          </div>
+          <div class="form-group">
+            <label>포스터 이미지</label>
+            <div id="poster-upload-area" style="background:var(--bg);border:1px dashed var(--border);border-radius:var(--radius);padding:14px;text-align:center;cursor:pointer;transition:border-color .2s;" onclick="document.getElementById('poster-file').click()">
+              <div id="poster-preview-wrap" style="display:none;margin-bottom:10px;">
+                <img id="poster-preview" src="" style="max-width:100%;max-height:160px;border-radius:4px;object-fit:contain;">
+              </div>
+              <div id="poster-placeholder" style="color:var(--gray);font-size:12px;line-height:2;">
+                클릭하여 이미지 선택<br>
+                <span style="font-size:11px;color:var(--gray2)">JPG, PNG, WEBP · 최대 10MB</span>
+              </div>
+              <div id="poster-upload-status" style="font-size:12px;margin-top:6px;display:none;"></div>
+            </div>
+            <input type="file" id="poster-file" accept="image/*" style="display:none" onchange="uploadPoster(this)">
+            <input type="url" class="form-input" id="poster-url-input" placeholder="또는 이미지 URL 직접 입력"
+                   style="margin-top:8px;font-size:12px;" oninput="onPosterUrlInput(this.value)">
+            <div class="hint">Vercel Blob에 자동 업로드됩니다.</div>
+          </div>
+        </div>
+      </div>
+
       <div class="section-box">
         <div class="section-title">기획사 정보</div>
         <div class="form-row"><div class="form-group full"><label>기획사 이름</label><input type="text" class="form-input" id="agency-name" placeholder="예: 주식회사 극단아리랑"></div></div>
@@ -382,7 +465,65 @@ async function loadData() {
 }
 function renderAll() {
   renderDashboard(); renderReservations(); renderSessionList(); renderPresets(); syncPerfForm();
+  renderManualSessions();
   document.getElementById('topbar-title').textContent = performance.name || '공연 관리자';
+}
+
+// 직권 예약 탭 회차 셀렉트 업데이트
+function renderManualSessions() {
+  const sel = document.getElementById('m-session');
+  const cur = sel.value;
+  sel.innerHTML = '<option value="">회차 선택</option>';
+  sessions.forEach(s => {
+    const opt = document.createElement('option');
+    opt.value = s.id;
+    opt.textContent = sessLabel(s);
+    if (s.id === cur) opt.selected = true;
+    sel.appendChild(opt);
+  });
+}
+
+async function addManualReservation() {
+  const name     = document.getElementById('m-name').value.trim();
+  const phone    = document.getElementById('m-phone').value.trim();
+  const email    = document.getElementById('m-email').value.trim();
+  const sessionId= document.getElementById('m-session').value;
+  const qty      = parseInt(document.getElementById('m-qty').value) || 1;
+  const type     = document.getElementById('m-type').value;
+  const price    = parseInt(document.getElementById('m-price').value) || 0;
+  const proof    = document.getElementById('m-proof').checked;
+  const sendAlim = document.getElementById('m-alim').checked;
+
+  if (!name)      { toast('이름을 입력해 주세요.'); return; }
+  if (!sessionId) { toast('회차를 선택해 주세요.'); return; }
+
+  const session = sessions.find(s => s.id === sessionId);
+  if (!session) return;
+
+  const r = await callAPI({
+    action: 'addManualReservation',
+    name, phone, email,
+    sessionId,
+    sessionLabel: sessLabel(session),
+    ticketType: type,
+    quantity: qty,
+    unitPrice: price,
+    total: price * qty,
+    needProof: proof,
+    sendAlim,
+  });
+
+  if (r.success) {
+    toast('직권 예약 완료: ' + r.resNum);
+    document.getElementById('m-name').value  = '';
+    document.getElementById('m-phone').value = '';
+    document.getElementById('m-email').value = '';
+    document.getElementById('m-price').value = '0';
+    document.getElementById('m-proof').checked = false;
+    await loadData();
+  } else {
+    toast('오류: ' + (r.message || '실패'));
+  }
 }
 
 // ── 현황 ──
@@ -760,9 +901,70 @@ async function addPreset(){
   if(r.success){presets.push(preset);document.getElementById('new-preset-name').value='';document.getElementById('new-preset-price').value='';document.getElementById('new-preset-proof').checked=false;renderPresets();toast('저장됐습니다.');}
 }
 
+// ── 포스터 업로드 ──
+async function uploadPoster(input) {
+  const file = input.files[0];
+  if (!file) return;
+
+  const status = document.getElementById('poster-upload-status');
+  const area   = document.getElementById('poster-upload-area');
+  status.style.display = 'block';
+  status.style.color   = 'var(--gray)';
+  status.textContent   = '업로드 중...';
+  area.style.borderColor = 'var(--gold)';
+
+  try {
+    const res = await fetch('/api/upload', {
+      method:  'PUT',
+      headers: {
+        'x-admin-key':    ADMIN_PW,
+        'x-filename':     encodeURIComponent(file.name),
+        'Content-Type':   file.type,
+      },
+      body: file,
+    });
+    const data = await res.json();
+
+    if (data.success) {
+      document.getElementById('poster-url-input').value = data.url;
+      showPosterPreview(data.url);
+      status.style.color   = '#4caf7d';
+      status.textContent   = '업로드 완료!';
+      performance.posterUrl = data.url;
+      toast('포스터 업로드 완료! 저장 버튼을 눌러 반영하세요.');
+    } else {
+      status.style.color   = 'var(--red)';
+      status.textContent   = '실패: ' + (data.message || '오류');
+      area.style.borderColor = 'var(--red)';
+    }
+  } catch(e) {
+    status.style.color   = 'var(--red)';
+    status.textContent   = '네트워크 오류';
+  }
+}
+
+function showPosterPreview(url) {
+  if (!url) return;
+  const wrap = document.getElementById('poster-preview-wrap');
+  const img  = document.getElementById('poster-preview');
+  const ph   = document.getElementById('poster-placeholder');
+  img.src  = url;
+  wrap.style.display = 'block';
+  ph.style.display   = 'none';
+  document.getElementById('poster-upload-area').style.borderColor = 'var(--gold)';
+}
+
+function onPosterUrlInput(url) {
+  if (url) showPosterPreview(url);
+}
+
 // ── 공연 설정 ──
 function syncPerfForm(){
-  document.getElementById('agency-name').value         =performance.agency       ||'';
+  document.getElementById('checkin-code-input').value  = performance.checkinCode || '';
+  const posterUrl = performance.posterUrl || '';
+  document.getElementById('poster-url-input').value = posterUrl;
+  if (posterUrl) showPosterPreview(posterUrl);
+  document.getElementById('agency-name').value         = performance.agency      || '';
   document.getElementById('agency-tel').value          =performance.tel          ||'';
   document.getElementById('agency-email').value        =performance.email        ||'';
   document.getElementById('kakaopay-link').value       =performance.kakaopayLink ||'';
@@ -778,7 +980,9 @@ function syncPerfForm(){
 }
 async function savePerf(){
   const data={
-    agency:document.getElementById('agency-name').value.trim(),
+    checkinCode: document.getElementById('checkin-code-input').value.trim(),
+    posterUrl:   document.getElementById('poster-url-input').value.trim(),
+    agency:      document.getElementById('agency-name').value.trim(),
     tel:document.getElementById('agency-tel').value.trim(),
     email:document.getElementById('agency-email').value.trim(),
     kakaopayLink:document.getElementById('kakaopay-link').value.trim(),
