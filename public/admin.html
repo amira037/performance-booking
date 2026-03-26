@@ -208,6 +208,48 @@ body{background:var(--bg);color:var(--white);font-family:'Noto Sans KR',sans-ser
         <div class="session-status-header">회차별 현황</div>
         <div id="session-status-list"></div>
       </div>
+      <div class="section-box">
+        <div class="section-title">당일 리마인드 일괄 발송</div>
+        <div style="font-size:12px;color:var(--gray);margin-bottom:14px;line-height:1.8;">
+          선택한 회차의 입금확인 예약자 전원에게 알림톡을 발송합니다.
+        </div>
+        <div class="form-row">
+          <div class="form-group full">
+            <label>발송할 회차</label>
+            <select class="form-select" id="reminder-session" onchange="updateReminderCount()">
+              <option value="">회차 선택</option>
+            </select>
+          </div>
+        </div>
+        <div id="reminder-preview" style="font-size:12px;color:var(--gray);margin-bottom:12px;display:none;">
+          대상: <span id="reminder-count" style="color:var(--gold);font-weight:500;">0</span>명
+        </div>
+        <button class="save-btn" onclick="sendReminderAll()" style="background:#1a2e1e;color:#4caf7d;border:1px solid #2d5a3d;">
+          전체 리마인드 발송
+        </button>
+      </div>
+      <div class="section-box">
+        <div class="section-title">당일 리마인드 발송</div>
+        <div style="font-size:12px;color:var(--gray);margin-bottom:14px;line-height:1.8;">
+          선택한 회차의 입금확인 예약자 전원에게<br>
+          공연 당일 안내 알림톡을 발송합니다.
+        </div>
+        <div class="form-row">
+          <div class="form-group full">
+            <label>발송할 회차</label>
+            <select class="form-select" id="reminder-session">
+              <option value="">회차 선택</option>
+            </select>
+          </div>
+        </div>
+        <div id="reminder-preview" style="font-size:12px;color:var(--gray);margin-bottom:12px;display:none;">
+          대상: <span id="reminder-count" style="color:var(--gold);font-weight:500;">0</span>명
+        </div>
+        <button class="save-btn" onclick="sendReminderAll()"
+                style="background:#2d5a3d;color:#4caf7d;">
+          리마인드 알림톡 발송
+        </button>
+      </div>
     </div>
 
     <!-- 예약 목록 -->
@@ -379,8 +421,15 @@ body{background:var(--bg);color:var(--white);font-family:'Noto Sans KR',sans-ser
         <div class="section-title">기획사 정보</div>
         <div class="form-row"><div class="form-group full"><label>기획사 이름</label><input type="text" class="form-input" id="agency-name" placeholder="예: 주식회사 극단아리랑"></div></div>
         <div class="form-row">
-          <div class="form-group"><label>문의 전화</label><input type="tel" class="form-input" id="agency-tel" placeholder="예: 02-741-5332"></div>
+          <div class="form-group"><label>문의 전화 (티켓에 표시)</label><input type="tel" class="form-input" id="agency-tel" placeholder="예: 02-741-5332"></div>
           <div class="form-group"><label>문의 이메일</label><input type="email" class="form-input" id="agency-email" placeholder="예: info@example.com"></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group full">
+            <label>관리자 연락처 (알림톡 수신번호)</label>
+            <input type="tel" class="form-input" id="admin-phone" placeholder="예: 010-0000-0000">
+            <div class="hint">취소/변경 신청 알림을 받을 번호예요. 문의 전화와 다를 수 있어요.</div>
+          </div>
         </div>
         <div class="form-row"><div class="form-group full"><label>카카오페이 송금 링크</label><input type="url" class="form-input" id="kakaopay-link" placeholder="https://qr.kakaopay.com/..."></div></div>
       </div>
@@ -489,7 +538,48 @@ async function loadData() {
 function renderAll() {
   renderDashboard(); renderReservations(); renderSessionList(); renderPresets(); syncPerfForm();
   renderManualSessions();
+  renderReminderSessions();
   document.getElementById('topbar-title').textContent = performance.name || '공연 관리자';
+}
+
+function renderReminderSessions() {
+  const sel = document.getElementById('reminder-session');
+  const cur = sel.value;
+  sel.innerHTML = '<option value="">회차 선택</option>';
+  sessions.forEach(s => {
+    const opt = document.createElement('option');
+    opt.value = s.id;
+    opt.textContent = sessLabel(s);
+    if (s.id === cur) opt.selected = true;
+    sel.appendChild(opt);
+  });
+  updateReminderCount();
+}
+
+function updateReminderCount() {
+  const sessionId = document.getElementById('reminder-session').value;
+  const preview   = document.getElementById('reminder-preview');
+  if (!sessionId) { preview.style.display = 'none'; return; }
+  const count = reservations.filter(r => r.sessionId === sessionId && r.payStatus === '입금확인').length;
+  document.getElementById('reminder-count').textContent = count;
+  preview.style.display = 'block';
+}
+
+// 개별 리마인드 발송
+async function sendReminderOne(rn) {
+  const r = await callAPI({ action: 'sendReminder', resNum: rn });
+  toast(r.success ? '리마인드가 발송됐습니다.' : '발송 실패: ' + (r.message || ''));
+}
+
+// 회차 전체 리마인드 발송
+async function sendReminderAll() {
+  const sessionId = document.getElementById('reminder-session').value;
+  if (!sessionId) { toast('회차를 선택해 주세요.'); return; }
+  const targets = reservations.filter(r => r.sessionId === sessionId && r.payStatus === '입금확인');
+  if (!targets.length) { toast('발송 대상이 없습니다.'); return; }
+  if (!confirm(targets.length + '명에게 리마인드를 발송하시겠습니까?')) return;
+  const r = await callAPI({ action: 'sendReminderAll', sessionId });
+  toast(r.success ? targets.length + '명에게 발송됐습니다.' : '발송 실패: ' + (r.message || ''));
 }
 
 // 직권 예약 탭 회차 셀렉트 업데이트
@@ -607,6 +697,7 @@ function buildResCard(r) {
     actions = '<div class="res-actions">'
       + '<button class="action-btn info" data-action="ticket" data-rn="' + rn + '">티켓 확인</button>'
       + '<button class="action-btn" data-action="resend" data-rn="' + rn + '">티켓 재발송</button>'
+      + '<button class="action-btn" data-action="reminder" data-rn="' + rn + '">리마인드</button>'
       + '<button class="action-btn" data-action="change" data-rn="' + rn + '">회차 변경</button>'
       + '<button class="action-btn danger" data-action="cancel" data-rn="' + rn + '">예약 취소</button>'
       + '<button class="action-btn' + (r.checkedIn ? ' checked' : '') + '" data-action="' + (r.checkedIn ? '' : 'checkin') + '" data-rn="' + rn + '">' + (r.checkedIn ? '✓입장완료' : '입장처리') + '</button>'
@@ -673,7 +764,8 @@ document.addEventListener('click', function(e) {
   if (action === 'pay')     confirmPay(rn);
   if (action === 'change')  changeSession(rn);
   if (action === 'cancel')  cancelRes(rn);
-  if (action === 'resend')  resendTicket(rn);
+  if (action === 'resend')   resendTicket(rn);
+  if (action === 'reminder') sendReminderOne(rn);
   if (action === 'checkin') doCheckInById(rn);
   if (action === 'ticket') {
     const r = reservations.find(x => x.resNum === rn);
@@ -996,6 +1088,7 @@ function syncPerfForm(){
   const posterUrl = performance.posterUrl || '';
   document.getElementById('poster-url-input').value = posterUrl;
   if (posterUrl) showPosterPreview(posterUrl);
+  document.getElementById('admin-phone').value         = performance.adminPhone   || '';
   document.getElementById('agency-name').value         = performance.agency      || '';
   document.getElementById('agency-tel').value          =performance.tel          ||'';
   document.getElementById('agency-email').value        =performance.email        ||'';
