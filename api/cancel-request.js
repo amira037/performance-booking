@@ -100,11 +100,12 @@ export default async function handler(req, res) {
 
   // 관리자에게 카카오 알림톡 발송 (선택 — 관리자 번호가 있을 때)
   const perf = await getPerformance();
-  if (perf.tel) {
+  const notifyPhone = perf.adminPhone || perf.tel;
+  if (notifyPhone) {
     try {
       const { sendCancelRequestAlimtalk } = await import('../lib/alimtalk.js');
       await sendCancelRequestAlimtalk({
-        adminPhone: perf.tel,
+        adminPhone: notifyPhone,
         resNum,
         name:    reservation.name,
         session: reservation.session,
