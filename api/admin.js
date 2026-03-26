@@ -8,7 +8,7 @@ import {
   getPerformance, savePerformance,
   decrementBooked, incrementBooked, addLog,
 } from '../lib/db.js';
-import { sendTicketAlimtalk } from '../lib/alimtalk.js';
+import { sendTicketAlimtalk, sendReminderAlimtalk } from '../lib/alimtalk.js';
 
 const ADMIN_KEY = process.env.ADMIN_KEY || 'bluebline2025';
 
@@ -225,6 +225,63 @@ export default async function handler(req, res) {
     }
 
     return res.status(200).json({ success: true, resNum });
+  }
+
+  // ── 개별 리마인드 발송 ───────────────────────────────────────
+  if (action === 'sendReminder') {
+    const { resNum } = payload;
+    const reservation = await findReservation(resNum);
+    if (!reservation) return res.status(404).json({ success: false, message: '예약을 찾을 수 없습니다.' });
+    if (reservation.payStatus !== '입금확인')
+      return res.status(400).json({ success: false, message: '입금확인 상태가 아닙니다.' });
+
+    const perf = await getPerformance();
+    const base = (process.env.TICKET_BASE_URL || 'https://ticket-alarm-manage.vercel.app/ticket.html').replace('/ticket.html', '');
+    const ticketUrl = base + '/ticket.html?res=' + encodeURIComponent(resNum);
+
+    try {
+      await sendReminderAlimtalk({
+        name:     reservation.name,
+        phone:    reservation.phone,
+        resNum,
+        session:  reservation.session,
+        perfName: perf.name || '공연',
+        ticketUrl,
+      });
+    } catch(e) { console.error('리마인드 오류:', e.message); }
+
+    return res.status(200).json({ success: true });
+  }
+
+  // ── 회차 전체 리마인드 발송 ──────────────────────────────────
+  if (action === 'sendReminderAll') {
+    const { sessionId } = payload;
+    const all  = await getReservations();
+    const targets = all.filter(r => r.sessionId === sessionId && r.payStatus === '입금확인');
+    if (!targets.length) return res.status(200).json({ success: true, count: 0 });
+
+    const perf = await getPerformance();
+    const base = (process.env.TICKET_BASE_URL || 'https://ticket-alarm-manage.vercel.app/ticket.html').replace('/ticket.html', '');
+
+    let count = 0;
+    for (const r of targets) {
+      try {
+        const ticketUrl = base + '/ticket.html?res=' + encodeURIComponent(r.resNum);
+        await sendReminderAlimtalk({
+          name:     r.name,
+          phone:    r.phone,
+          resNum:   r.resNum,
+          session:  r.session,
+          perfName: perf.name || '공연',
+          ticketUrl,
+        });
+        count++;
+        // 발송 간격 0.5초 (솔라피 속도 제한)
+        await new Promise(resolve => setTimeout(resolve, 500));
+      } catch(e) { console.error('리마인드 오류:', r.resNum, e.message); }
+    }
+
+    return res.status(200).json({ success: true, count });
   }
 
   // ── 신청 무시 ────────────────────────────────────────────
