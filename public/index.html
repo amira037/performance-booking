@@ -3,7 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>공연 예매</title>
+<title>공연 예약</title>
+<meta property="og:title" content="공연 예약">
+<meta property="og:description" content="예약 페이지">
+<meta property="og:type" content="website">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;600;700&family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
 <style>
@@ -299,7 +302,10 @@ function applyConfig() {
   const p = CFG.performance || {};
 
   // 브라우저 탭 제목
-  document.title = (p.name || '공연') + ' — 예매';
+  document.title = (p.name || '공연') + ' 공연 예약';
+  // OG 메타 동적 업데이트
+  document.querySelector('meta[property="og:title"]').setAttribute('content', (p.name||'공연') + ' 공연 예약');
+  document.querySelector('meta[property="og:description"]').setAttribute('content', (p.name||'공연') + ' 공연 예약 페이지');
 
   // 헤더
   document.getElementById('header-agency').textContent = p.agency || '';

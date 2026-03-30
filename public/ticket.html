@@ -4,6 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>모바일 티켓</title>
+<meta property="og:title" content="모바일 티켓">
+<meta property="og:description" content="공연 모바일 티켓">
+<meta property="og:type" content="website">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;600;700&family=Noto+Sans+KR:wght@300;400;500;700&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
@@ -295,7 +298,9 @@ async function loadFromApi() {
 }
 
 function render() {
-  document.title = T.perfName + ' — 모바일 티켓';
+  document.title = T.perfName + ' 모바일 티켓';
+  const ogTitle = document.querySelector('meta[property="og:title"]');
+  if (ogTitle) ogTitle.setAttribute('content', T.perfName + ' 모바일 티켓');
   text('agency-name',    T.agency);
   text('perf-title',     T.perfName);
   text('perf-subtitle',  T.perfSub);

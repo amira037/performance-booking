@@ -3,7 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>예매 취소 / 날짜 변경</title>
+<title>예약 취소 / 날짜 변경</title>
+<meta property="og:title" content="공연 예약 취소/날짜 변경">
+<meta property="og:description" content="예약 취소 및 날짜 변경 신청 페이지">
+<meta property="og:type" content="website">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
 <style>
 :root{--black:#0d0d0d;--white:#f5f2ea;--gold:#c9a84c;--gray:#888;--gray2:#444;--red:#c0392b;--orange:#e07b39;--border:#222;--surface:#141414;--radius:6px;}
@@ -73,7 +76,7 @@ input.error{border-color:var(--red);}
 
 <header>
   <div class="header-label" id="header-agency">주식회사 극단아리랑</div>
-  <div class="header-title">예매 취소 / 날짜 변경</div>
+  <div class="header-title">예약 취소 / 날짜 변경</div>
   <div class="header-sub">
     취소는 공연 당일 불가합니다.<br>
     날짜 변경은 공연 전까지 신청 가능합니다.
@@ -183,6 +186,11 @@ async function init() {
     CFG = await res.json();
     const p = CFG.performance || {};
     if (p.agency) document.getElementById('header-agency').textContent = p.agency;
+    if (p.name) {
+      document.title = p.name + ' 예약 취소/날짜 변경';
+      const ogTitle = document.querySelector('meta[property="og:title"]');
+      if (ogTitle) ogTitle.setAttribute('content', p.name + ' 예약 취소/날짜 변경');
+    }
     if (p.tel)    document.getElementById('notice-tel').textContent = p.tel;
     // 정책 안내 문구 표시
     if (p.cancelPolicyText) {
