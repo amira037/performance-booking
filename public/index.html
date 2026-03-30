@@ -10,7 +10,15 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;600;700&family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
 <style>
-:root{--black:#0d0d0d;--white:#fafaf7;--cream:#f4f1e8;--gold:#c9a84c;--gold-light:#e8d5a0;--gray:#888;--gray-light:#e8e8e0;--red:#c0392b;--orange:#e07b39;--radius:4px;}
+:root{
+  /* ── 폰트 크기 변수 (여기서 한 번에 조절) ── */
+  --fs-xs:   clamp(11px, 2.8vw, 13px);
+  --fs-sm:   clamp(13px, 3.2vw, 15px);
+  --fs-md:   clamp(14px, 3.5vw, 16px);
+  --fs-lg:   clamp(16px, 4vw,   18px);
+  --fs-xl:   clamp(18px, 4.5vw, 22px);
+  --fs-2xl:  clamp(22px, 5.5vw, 28px);
+--black:#0d0d0d;--white:#fafaf7;--cream:#f4f1e8;--gold:#c9a84c;--gold-light:#e8d5a0;--gray:#888;--gray-light:#e8e8e0;--red:#c0392b;--orange:#e07b39;--radius:4px;}
 *{box-sizing:border-box;margin:0;padding:0;}
 html{scroll-behavior:smooth;}
 body{background:var(--black);color:var(--white);font-family:'Noto Sans KR',sans-serif;font-weight:300;min-height:100vh;}
@@ -18,10 +26,10 @@ body{background:var(--black);color:var(--white);font-family:'Noto Sans KR',sans-
 header{text-align:center;padding:52px 24px 36px;border-bottom:1px solid #222;}
 .header-agency{font-size:10px;letter-spacing:.35em;color:var(--gold);text-transform:uppercase;margin-bottom:16px;}
 .header-title{font-family:'Noto Serif KR',serif;font-size:clamp(28px,6vw,48px);font-weight:700;letter-spacing:-.02em;line-height:1.1;margin-bottom:12px;}
-.header-dates{font-size:12px;color:var(--gray);letter-spacing:.1em;margin-top:4px;}
+.header-dates{font-size:var(--fs-xs);color:var(--gray);letter-spacing:.1em;margin-top:4px;}
 .gold-line{width:36px;height:1px;background:var(--gold);margin:20px auto;}
 /* 타이머 */
-#timer-banner{display:none;background:#1a1a0f;border-bottom:1px solid var(--gold);color:var(--gold);font-size:12px;letter-spacing:.1em;padding:11px;text-align:center;position:sticky;top:0;z-index:99;}
+#timer-banner{display:none;background:#1a1a0f;border-bottom:1px solid var(--gold);color:var(--gold);font-size:var(--fs-xs);letter-spacing:.1em;padding:11px;text-align:center;position:sticky;top:0;z-index:99;}
 #timer-banner.urgent{background:#2a0f0f;border-bottom-color:var(--red);color:var(--red);}
 /* 컨테이너 */
 .container{max-width:540px;margin:0 auto;padding:32px 20px 80px;}
@@ -40,10 +48,10 @@ header{text-align:center;padding:52px 24px 36px;border-bottom:1px solid #222;}
 .session-card:hover:not(.sold-out){border-color:var(--gold);}
 .session-card.selected{border-color:var(--gold);background:#1e1c0f;}
 .session-card.sold-out{opacity:.4;cursor:not-allowed;}
-.sess-date{font-size:12px;color:var(--gray);margin-bottom:3px;}
+.sess-date{font-size:var(--fs-xs);color:var(--gray);margin-bottom:3px;}
 .sess-time{font-size:17px;font-weight:500;letter-spacing:.04em;}
 .sess-right{text-align:right;}
-.sess-remain{font-size:11px;color:var(--gray);}
+.sess-remain{font-size:var(--fs-xs);color:var(--gray);}
 .sess-remain.low{color:var(--orange);}
 .sess-remain.sold{color:var(--red);}
 .check-circle{width:18px;height:18px;background:var(--gold);border-radius:50%;display:none;align-items:center;justify-content:center;margin-top:4px;margin-left:auto;}
@@ -51,47 +59,47 @@ header{text-align:center;padding:52px 24px 36px;border-bottom:1px solid #222;}
 /* 선택 행 */
 .sel-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
 .sel-group label{display:block;font-size:10px;letter-spacing:.15em;color:var(--gray);text-transform:uppercase;margin-bottom:7px;}
-select{width:100%;background:#141414;border:1px solid #2a2a2a;border-radius:var(--radius);color:var(--white);font-family:'Noto Sans KR',sans-serif;font-size:13px;padding:11px 14px;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23888' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:32px;cursor:pointer;}
+select{width:100%;background:#141414;border:1px solid #2a2a2a;border-radius:var(--radius);color:var(--white);font-family:'Noto Sans KR',sans-serif;font-size:var(--fs-sm);padding:11px 14px;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23888' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:32px;cursor:pointer;}
 select:focus{outline:none;border-color:var(--gold);}
 select option{background:#1a1a1a;}
 /* 가격 */
 .price-box{background:#141414;border:1px solid #2a2a2a;border-radius:var(--radius);padding:16px;margin-top:14px;}
-.price-row{display:flex;justify-content:space-between;font-size:12px;color:var(--gray);margin-bottom:7px;}
+.price-row{display:flex;justify-content:space-between;font-size:var(--fs-xs);color:var(--gray);margin-bottom:7px;}
 .price-total-row{display:flex;justify-content:space-between;align-items:center;padding-top:10px;border-top:1px solid #2a2a2a;margin-top:4px;}
 .price-total-label{font-size:10px;letter-spacing:.15em;color:var(--gold);text-transform:uppercase;}
-.price-total-amount{font-size:20px;font-weight:500;}
-.proof-notice{margin-top:10px;font-size:11px;color:var(--orange);display:none;align-items:center;gap:6px;}
+.price-total-amount{font-size:var(--fs-xl);font-weight:500;}
+.proof-notice{margin-top:10px;font-size:var(--fs-xs);color:var(--orange);display:none;align-items:center;gap:6px;}
 /* 입력 */
 .inp-group{margin-bottom:14px;}
 .inp-group label{display:block;font-size:10px;letter-spacing:.15em;color:var(--gray);text-transform:uppercase;margin-bottom:7px;}
-input[type=text],input[type=tel],input[type=email]{width:100%;background:#141414;border:1px solid #2a2a2a;border-radius:var(--radius);color:var(--white);font-family:'Noto Sans KR',sans-serif;font-size:14px;font-weight:300;padding:12px 14px;transition:border-color .2s;}
+input[type=text],input[type=tel],input[type=email]{width:100%;background:#141414;border:1px solid #2a2a2a;border-radius:var(--radius);color:var(--white);font-family:'Noto Sans KR',sans-serif;font-size:var(--fs-md);font-weight:300;padding:12px 14px;transition:border-color .2s;}
 input:focus{outline:none;border-color:var(--gold);}
 input::placeholder{color:#444;}
 input.error{border-color:var(--red);}
-.err-msg{font-size:11px;color:var(--red);margin-top:5px;display:none;}
+.err-msg{font-size:var(--fs-xs);color:var(--red);margin-top:5px;display:none;}
 .err-msg.show{display:block;}
 /* 계좌 */
 .acct-box{background:#141414;border:1px solid #2a2a2a;border-radius:var(--radius);padding:18px;}
-.acct-notice{font-size:12px;color:var(--gray);line-height:1.9;margin-bottom:14px;}
+.acct-notice{font-size:var(--fs-xs);color:var(--gray);line-height:1.9;margin-bottom:14px;}
 .acct-row{display:flex;justify-content:space-between;align-items:center;background:#0f0f0f;border:1px solid #333;border-radius:var(--radius);padding:12px 14px;}
 .acct-bank{font-size:10px;color:var(--gold);letter-spacing:.1em;margin-bottom:3px;}
-.acct-num{font-size:15px;font-weight:500;letter-spacing:.04em;}
-.acct-holder{font-size:11px;color:var(--gray);margin-top:3px;}
+.acct-num{font-size:var(--fs-lg);font-weight:500;letter-spacing:.04em;}
+.acct-holder{font-size:var(--fs-xs);color:var(--gray);margin-top:3px;}
 .copy-btn{background:none;border:1px solid #333;border-radius:var(--radius);color:var(--gray);font-size:10px;padding:6px 10px;cursor:pointer;font-family:inherit;letter-spacing:.08em;transition:all .2s;white-space:nowrap;}
 .copy-btn:hover{border-color:var(--gold);color:var(--gold);}
-.acct-amount{margin-top:10px;font-size:11px;color:var(--orange);text-align:center;}
+.acct-amount{margin-top:10px;font-size:var(--fs-xs);color:var(--orange);text-align:center;}
 /* 카카오페이 */
 .kakao-row{display:flex;align-items:center;gap:10px;background:#1a1a0a;border:1px solid #3a3010;border-radius:var(--radius);padding:12px 14px;margin-top:10px;}
-.kakao-icon{width:24px;height:24px;background:#fee500;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:11px;font-weight:700;color:#000;}
-.kakao-text{font-size:12px;color:var(--gold-light);flex:1;}
-.kakao-link{font-size:11px;color:var(--gold);text-decoration:none;border:1px solid #3a3010;border-radius:var(--radius);padding:5px 10px;white-space:nowrap;}
+.kakao-icon{width:24px;height:24px;background:#fee500;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:var(--fs-xs);font-weight:700;color:#000;}
+.kakao-text{font-size:var(--fs-xs);color:var(--gold-light);flex:1;}
+.kakao-link{font-size:var(--fs-xs);color:var(--gold);text-decoration:none;border:1px solid #3a3010;border-radius:var(--radius);padding:5px 10px;white-space:nowrap;}
 .kakao-link:hover{border-color:var(--gold);}
 /* 제출 버튼 */
-.submit-btn{width:100%;background:var(--gold);color:var(--black);border:none;border-radius:var(--radius);font-family:'Noto Sans KR',sans-serif;font-size:14px;font-weight:700;letter-spacing:.15em;padding:17px;cursor:pointer;transition:background .2s;margin-top:8px;}
+.submit-btn{width:100%;background:var(--gold);color:var(--black);border:none;border-radius:var(--radius);font-family:'Noto Sans KR',sans-serif;font-size:var(--fs-md);font-weight:700;letter-spacing:.15em;padding:17px;cursor:pointer;transition:background .2s;margin-top:8px;}
 .submit-btn:hover:not(:disabled){background:var(--gold-light);}
 .submit-btn:disabled{background:#2a2a2a;color:var(--gray);cursor:not-allowed;}
 /* 로딩 */
-.loading{display:none;text-align:center;padding:40px 0;color:var(--gray);font-size:12px;letter-spacing:.2em;}
+.loading{display:none;text-align:center;padding:40px 0;color:var(--gray);font-size:var(--fs-xs);letter-spacing:.2em;}
 .loading.show{display:block;}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
 .loading span{animation:pulse 1.2s ease-in-out infinite;display:inline-block;margin:0 2px;}
@@ -102,15 +110,15 @@ input.error{border-color:var(--red);}
 .success-screen.show{display:block;}
 .success-icon{width:56px;height:56px;border:1px solid var(--gold);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;}
 .success-resnum{font-family:'Noto Serif KR',serif;font-size:24px;font-weight:600;color:var(--gold);letter-spacing:.1em;margin:14px 0;}
-.success-desc{font-size:12px;color:var(--gray);line-height:2;}
+.success-desc{font-size:var(--fs-xs);color:var(--gray);line-height:2;}
 .success-box{background:#141414;border:1px solid #2a2a2a;border-radius:var(--radius);padding:18px;margin:20px 0;text-align:left;}
 .success-box-label{font-size:10px;letter-spacing:.2em;color:var(--gold);text-transform:uppercase;margin-bottom:12px;}
-.success-row{display:flex;justify-content:space-between;font-size:12px;color:var(--gray);margin-bottom:7px;}
+.success-row{display:flex;justify-content:space-between;font-size:var(--fs-xs);color:var(--gray);margin-bottom:7px;}
 .success-row span:last-child{color:var(--white);}
 .success-row.amount span:last-child{color:var(--gold);font-weight:500;}
 .success-row.deadline span:last-child{color:var(--orange);}
 /* 에러 배너 */
-.err-banner{background:#2a1a1a;border:1px solid #5a2d2d;border-radius:var(--radius);padding:14px 16px;margin-bottom:20px;font-size:13px;color:#e07b7b;display:none;text-align:center;}
+.err-banner{background:#2a1a1a;border:1px solid #5a2d2d;border-radius:var(--radius);padding:14px 16px;margin-bottom:20px;font-size:var(--fs-sm);color:#e07b7b;display:none;text-align:center;}
 .err-banner.show{display:block;}
 </style>
 </head>
@@ -141,7 +149,7 @@ input.error{border-color:var(--red);}
     <div class="section">
       <div class="section-label"><span class="section-num">1</span>회차 선택</div>
       <div class="session-grid" id="session-grid">
-        <div style="text-align:center;padding:20px;color:var(--gray);font-size:13px;">회차 정보를 불러오는 중...</div>
+        <div style="text-align:center;padding:20px;color:var(--gray);font-size:var(--fs-sm);">회차 정보를 불러오는 중...</div>
       </div>
       <div class="err-msg" id="err-session">회차를 선택해 주세요.</div>
     </div>
@@ -217,7 +225,7 @@ input.error{border-color:var(--red);}
         <div id="kakao-pay-row" style="display:none">
           <div class="kakao-row">
             <div class="kakao-icon">K</div>
-            <div class="kakao-text">카카오페이 송금도 가능합니다<br><span style="font-size:11px;color:var(--gray)">금액: <span id="kakao-amount">—</span>원 입력</span></div>
+            <div class="kakao-text">카카오페이 송금도 가능합니다<br><span style="font-size:var(--fs-xs);color:var(--gray)">금액: <span id="kakao-amount">—</span>원 입력</span></div>
             <a id="kakao-link" href="#" class="kakao-link" target="_blank">송금하기</a>
           </div>
         </div>
@@ -230,10 +238,10 @@ input.error{border-color:var(--red);}
         <input type="checkbox" id="privacy-agree"
                style="width:16px;height:16px;accent-color:#c9a84c;flex-shrink:0;margin-top:2px;">
         <div>
-          <div style="font-size:13px;color:#f5f2ea;margin-bottom:6px;">
+          <div style="font-size:var(--fs-sm);color:#f5f2ea;margin-bottom:6px;">
             개인정보 수집 및 이용에 동의합니다. <span style="color:#c0392b;">*</span>
           </div>
-          <div style="font-size:11px;color:#888;line-height:1.8;">
+          <div style="font-size:var(--fs-xs);color:#888;line-height:1.8;">
             수집항목: 이름, 휴대폰 번호, 이메일<br>
             수집목적: 예약 확인 및 모바일 티켓 발송<br>
             보유기간: 공연 종료 후 1개월
@@ -259,7 +267,7 @@ input.error{border-color:var(--red);}
         <path d="M5 12l5 5 9-10"/>
       </svg>
     </div>
-    <div style="font-size:11px;letter-spacing:.2em;color:var(--gray);text-transform:uppercase;">예매 완료</div>
+    <div style="font-size:var(--fs-xs);letter-spacing:.2em;color:var(--gray);text-transform:uppercase;">예매 완료</div>
     <div class="success-resnum" id="s-resnum">—</div>
     <div class="success-desc">카카오톡으로 예약 확인 메시지가 발송됩니다.<br>24시간 이내 입금 후 모바일 티켓이 발송됩니다.</div>
     <div class="success-box">
@@ -272,10 +280,10 @@ input.error{border-color:var(--red);}
     </div>
     <div id="s-notice-wrap" style="display:none;margin-bottom:14px;background:#1a1a0f;border:1px solid #3a3010;border-radius:4px;padding:14px;">
     <div style="font-size:10px;letter-spacing:.2em;color:#c9a84c;margin-bottom:6px;">알립니다</div>
-    <div id="s-notice" style="font-size:12px;color:#f0e4b8;line-height:1.9;white-space:pre-line;"></div>
+    <div id="s-notice" style="font-size:var(--fs-xs);color:#f0e4b8;line-height:1.9;white-space:pre-line;"></div>
   </div>
-  <div id="s-policy" style="display:none;margin-bottom:14px;background:#141414;border:1px solid #2a2a2a;border-radius:4px;padding:12px 14px;font-size:12px;color:var(--gray);line-height:1.8;text-align:left;"></div>
-  <div style="font-size:12px;color:var(--gray)">문의: <span id="s-tel" style="color:var(--white)">—</span></div>
+  <div id="s-policy" style="display:none;margin-bottom:14px;background:#141414;border:1px solid #2a2a2a;border-radius:4px;padding:12px 14px;font-size:var(--fs-xs);color:var(--gray);line-height:1.8;text-align:left;"></div>
+  <div style="font-size:var(--fs-xs);color:var(--gray)">문의: <span id="s-tel" style="color:var(--white)">—</span></div>
   </div>
 </div>
 
@@ -349,12 +357,12 @@ function applyConfig() {
   // 예매 중이 아니면 폼 비활성화
   if (p.open === 'closed') {
     document.getElementById('booking-form').innerHTML =
-      '<div style="text-align:center;padding:40px 0;color:var(--gray);font-size:14px;line-height:2;">예매가 마감되었습니다.<br>' + (p.tel ? '문의: ' + p.tel : '') + '</div>';
+      '<div style="text-align:center;padding:40px 0;color:var(--gray);font-size:var(--fs-md);line-height:2;">예매가 마감되었습니다.<br>' + (p.tel ? '문의: ' + p.tel : '') + '</div>';
     return;
   }
   if (p.open === 'soon') {
     document.getElementById('booking-form').innerHTML =
-      '<div style="text-align:center;padding:40px 0;color:var(--gray);font-size:14px;line-height:2;">예매 오픈 예정입니다.<br>' + (p.tel ? '문의: ' + p.tel : '') + '</div>';
+      '<div style="text-align:center;padding:40px 0;color:var(--gray);font-size:var(--fs-md);line-height:2;">예매 오픈 예정입니다.<br>' + (p.tel ? '문의: ' + p.tel : '') + '</div>';
     return;
   }
 
@@ -378,7 +386,7 @@ function renderSessions() {
   const grid = document.getElementById('session-grid');
   const open = CFG.sessions.filter(s => s.status !== 'soon');
   if (!open.length) {
-    grid.innerHTML = '<div style="text-align:center;padding:20px;color:var(--gray);font-size:13px;">등록된 회차가 없습니다.</div>';
+    grid.innerHTML = '<div style="text-align:center;padding:20px;color:var(--gray);font-size:var(--fs-sm);">등록된 회차가 없습니다.</div>';
     return;
   }
   grid.innerHTML = open.map(s => {

@@ -9,32 +9,40 @@
 <meta property="og:type" content="website">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
 <style>
-:root{--black:#0d0d0d;--white:#f5f2ea;--gold:#c9a84c;--gray:#888;--gray2:#444;--red:#c0392b;--orange:#e07b39;--border:#222;--surface:#141414;--radius:6px;}
+:root{
+  /* ── 폰트 크기 변수 (여기서 한 번에 조절) ── */
+  --fs-xs:   clamp(11px, 2.8vw, 13px);
+  --fs-sm:   clamp(13px, 3.2vw, 15px);
+  --fs-md:   clamp(14px, 3.5vw, 16px);
+  --fs-lg:   clamp(16px, 4vw,   18px);
+  --fs-xl:   clamp(18px, 4.5vw, 22px);
+  --fs-2xl:  clamp(22px, 5.5vw, 28px);
+--black:#0d0d0d;--white:#f5f2ea;--gold:#c9a84c;--gray:#888;--gray2:#444;--red:#c0392b;--orange:#e07b39;--border:#222;--surface:#141414;--radius:6px;}
 *{box-sizing:border-box;margin:0;padding:0;}
 html,body{min-height:100vh;background:var(--black);color:var(--white);font-family:'Noto Sans KR',sans-serif;font-weight:300;}
 header{text-align:center;padding:44px 24px 28px;border-bottom:1px solid var(--border);}
 .header-label{font-size:10px;letter-spacing:.35em;color:var(--gold);text-transform:uppercase;margin-bottom:12px;}
 .header-title{font-size:20px;font-weight:500;letter-spacing:-.01em;}
-.header-sub{font-size:12px;color:var(--gray);margin-top:8px;line-height:1.9;}
+.header-sub{font-size:var(--fs-xs);color:var(--gray);margin-top:8px;line-height:1.9;}
 .container{max-width:480px;margin:0 auto;padding:28px 20px 60px;}
-.notice-box{background:#1a1a0f;border:1px solid #3a3010;border-radius:var(--radius);padding:14px 16px;margin-bottom:24px;font-size:12px;color:#c9a84c;line-height:2;}
+.notice-box{background:#1a1a0f;border:1px solid #3a3010;border-radius:var(--radius);padding:14px 16px;margin-bottom:24px;font-size:var(--fs-xs);color:#c9a84c;line-height:2;}
 .notice-box.danger{background:#1a0f0f;border-color:#5a2020;color:#e07b7b;}
 .form-group{margin-bottom:16px;}
 .form-group label{display:block;font-size:10px;letter-spacing:.2em;color:var(--gray);text-transform:uppercase;margin-bottom:7px;}
-input[type=text],input[type=tel]{width:100%;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);color:var(--white);font-family:inherit;font-size:14px;font-weight:300;padding:12px 14px;transition:border-color .2s;}
+input[type=text],input[type=tel]{width:100%;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);color:var(--white);font-family:inherit;font-size:var(--fs-md);font-weight:300;padding:12px 14px;transition:border-color .2s;}
 input:focus{outline:none;border-color:var(--gold);}
 input::placeholder{color:#444;}
 input.error{border-color:var(--red);}
-.err-msg{font-size:11px;color:var(--red);margin-top:5px;display:none;}
+.err-msg{font-size:var(--fs-xs);color:var(--red);margin-top:5px;display:none;}
 .err-msg.show{display:block;}
 /* 액션 탭 */
 .action-tabs{display:flex;gap:8px;margin-bottom:20px;}
-.action-tab{flex:1;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:12px;text-align:center;cursor:pointer;font-size:13px;color:var(--gray);transition:all .15s;}
+.action-tab{flex:1;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:12px;text-align:center;cursor:pointer;font-size:var(--fs-sm);color:var(--gray);transition:all .15s;}
 .action-tab.active{border-color:var(--gold);color:var(--gold);background:#1e1c0f;}
 /* 예약 확인 카드 */
 .confirm-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:16px;}
 .confirm-title{font-size:10px;letter-spacing:.2em;color:var(--gold);text-transform:uppercase;margin-bottom:12px;}
-.confirm-row{display:flex;justify-content:space-between;font-size:13px;margin-bottom:7px;}
+.confirm-row{display:flex;justify-content:space-between;font-size:var(--fs-sm);margin-bottom:7px;}
 .confirm-label{color:var(--gray);}
 .confirm-value{}
 .confirm-value.warn{color:var(--orange);}
@@ -45,18 +53,18 @@ input.error{border-color:var(--red);}
 .sess-item.sel{border-color:var(--gold);background:#1e1c0f;}
 .sess-item.disabled{opacity:.4;cursor:not-allowed;}
 .sess-item.current{border-color:#555;}
-.sess-date{font-size:13px;font-weight:500;margin-bottom:2px;}
-.sess-info{font-size:11px;color:var(--gray);}
+.sess-date{font-size:var(--fs-sm);font-weight:500;margin-bottom:2px;}
+.sess-info{font-size:var(--fs-xs);color:var(--gray);}
 /* 버튼 */
-.primary-btn{width:100%;background:var(--gold);color:#0d0d0d;border:none;border-radius:var(--radius);font-family:inherit;font-size:14px;font-weight:700;letter-spacing:.1em;padding:15px;cursor:pointer;margin-top:6px;}
+.primary-btn{width:100%;background:var(--gold);color:#0d0d0d;border:none;border-radius:var(--radius);font-family:inherit;font-size:var(--fs-md);font-weight:700;letter-spacing:.1em;padding:15px;cursor:pointer;margin-top:6px;}
 .primary-btn:hover:not(:disabled){filter:brightness(1.1);}
 .primary-btn:disabled{background:#2a2a2a;color:var(--gray);cursor:not-allowed;}
-.danger-btn{width:100%;background:#2a1a1a;color:#e07b7b;border:1px solid #5a2d2d;border-radius:var(--radius);font-family:inherit;font-size:14px;font-weight:500;letter-spacing:.1em;padding:15px;cursor:pointer;margin-top:6px;}
+.danger-btn{width:100%;background:#2a1a1a;color:#e07b7b;border:1px solid #5a2d2d;border-radius:var(--radius);font-family:inherit;font-size:var(--fs-md);font-weight:500;letter-spacing:.1em;padding:15px;cursor:pointer;margin-top:6px;}
 .danger-btn:hover{background:#3a2020;}
-.back-link{display:block;text-align:center;margin-top:20px;font-size:12px;color:var(--gray);text-decoration:none;cursor:pointer;}
+.back-link{display:block;text-align:center;margin-top:20px;font-size:var(--fs-xs);color:var(--gray);text-decoration:none;cursor:pointer;}
 .back-link:hover{color:var(--white);}
 /* 로딩 */
-.loading{display:none;text-align:center;padding:32px;color:var(--gray);font-size:13px;}
+.loading{display:none;text-align:center;padding:32px;color:var(--gray);font-size:var(--fs-sm);}
 .loading.show{display:block;}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
 .loading span{animation:pulse 1.2s ease-in-out infinite;display:inline-block;margin:0 2px;}
@@ -68,8 +76,8 @@ input.error{border-color:var(--red);}
 .result-icon{width:52px;height:52px;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 18px;}
 .result-icon.cancel{border:1px solid #5a2d2d;}
 .result-icon.change{border:1px solid var(--gold);}
-.result-title{font-size:18px;font-weight:500;margin-bottom:10px;}
-.result-desc{font-size:13px;color:var(--gray);line-height:2;}
+.result-title{font-size:var(--fs-xl);font-weight:500;margin-bottom:10px;}
+.result-desc{font-size:var(--fs-sm);color:var(--gray);line-height:2;}
 </style>
 </head>
 <body>
@@ -124,9 +132,9 @@ input.error{border-color:var(--red);}
 
     <!-- 날짜 변경 패널 -->
     <div id="panel-change">
-      <div style="font-size:12px;color:var(--gray);margin-bottom:14px;line-height:1.8;">
+      <div style="font-size:var(--fs-xs);color:var(--gray);margin-bottom:14px;line-height:1.8;">
         변경할 회차를 선택해 주세요.<br>
-        <span style="color:var(--orange);font-size:11px;">공연 당일은 날짜 변경도 불가합니다.</span>
+        <span style="color:var(--orange);font-size:var(--fs-xs);">공연 당일은 날짜 변경도 불가합니다.</span>
       </div>
       <div class="sess-list" id="sess-list"></div>
       <button class="primary-btn" id="change-btn" onclick="submitChange()" disabled>날짜 변경 신청</button>
@@ -146,7 +154,7 @@ input.error{border-color:var(--red);}
         <input type="text" id="refund-account" placeholder="계좌번호 (- 없이 입력)"
                style="margin-bottom:8px;">
         <input type="text" id="refund-holder" placeholder="예금주명">
-        <div style="font-size:11px;color:var(--gray);margin-top:6px;line-height:1.8;">
+        <div style="font-size:var(--fs-xs);color:var(--gray);margin-top:6px;line-height:1.8;">
           입금 완료 건만 환불 처리됩니다.<br>
           초대권 및 무료 티켓은 계좌 입력 불필요합니다.
         </div>
@@ -364,7 +372,7 @@ function showActionStep(data) {
 
 function renderSessList(currentSessionLabel, isToday) {
   const list = document.getElementById('sess-list');
-  if (!CFG.sessions.length) { list.innerHTML = '<div style="color:var(--gray);font-size:13px;text-align:center;padding:20px;">변경 가능한 회차가 없습니다.</div>'; return; }
+  if (!CFG.sessions.length) { list.innerHTML = '<div style="color:var(--gray);font-size:var(--fs-sm);text-align:center;padding:20px;">변경 가능한 회차가 없습니다.</div>'; return; }
 
   list.innerHTML = CFG.sessions.map(s => {
     const label      = sessLabel(s);
