@@ -13,12 +13,12 @@
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
 :root{
   /* ── 폰트 크기 변수 (여기서 한 번에 조절) ── */
-  --fs-xs:   clamp(11px, 2.8vw, 13px);
-  --fs-sm:   clamp(13px, 3.2vw, 15px);
-  --fs-md:   clamp(14px, 3.5vw, 16px);
-  --fs-lg:   clamp(16px, 4vw,   18px);
-  --fs-xl:   clamp(18px, 4.5vw, 22px);
-  --fs-2xl:  clamp(22px, 5.5vw, 28px);
+  --fs-xs:   clamp(13px, 3.8vw, 15px);
+  --fs-sm:   clamp(15px, 4.2vw, 17px);
+  --fs-md:   clamp(16px, 4.8vw, 19px);
+  --fs-lg:   clamp(19px, 5.2vw, 22px);
+  --fs-xl:   clamp(22px, 6vw,   27px);
+  --fs-2xl:  clamp(27px, 7.5vw, 35px);
 --black:#0d0d0d;--paper:#f7f3ea;--paper-dark:#ede8db;--ink:#1a1712;--gold:#b8962e;--gold-light:#d4b04a;--gold-pale:#f0e4b8;--gray:#8a8478;--gray-light:#c8c2b4;--red-stamp:#8b1a1a;}
 html,body{min-height:100vh;background:#1a1814;display:flex;align-items:center;justify-content:center;font-family:'Noto Sans KR',sans-serif;padding:24px 16px 40px;}
 .ticket-wrap{width:100%;max-width:380px;animation:reveal .6s cubic-bezier(.16,1,.3,1) both;}
@@ -28,10 +28,10 @@ html,body{min-height:100vh;background:#1a1814;display:flex;align-items:center;ju
 .ticket-header{background:var(--black);padding:22px 24px 20px;position:relative;overflow:hidden;}
 .ticket-header::before{content:'';position:absolute;inset:0;background-image:repeating-linear-gradient(45deg,transparent,transparent 8px,rgba(255,255,255,.02) 8px,rgba(255,255,255,.02) 9px);}
 .header-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;position:relative;}
-.agency-name{font-size:10px;letter-spacing:.35em;color:var(--gold-light);text-transform:uppercase;font-weight:400;}
-.ticket-label{font-size:9px;letter-spacing:.25em;color:rgba(255,255,255,.3);text-transform:uppercase;border:1px solid rgba(255,255,255,.15);border-radius:3px;padding:3px 8px;}
-.perf-title{font-family:'Noto Serif KR',serif;font-size:28px;font-weight:700;color:#fff;letter-spacing:-.02em;line-height:1.1;position:relative;margin-bottom:4px;}
-.perf-subtitle{font-size:11px;color:rgba(255,255,255,.35);letter-spacing:.15em;position:relative;}
+.agency-name{font-size:var(--fs-xs);letter-spacing:.35em;color:var(--gold-light);text-transform:uppercase;font-weight:400;}
+.ticket-label{font-size:var(--fs-xs);letter-spacing:.25em;color:rgba(255,255,255,.3);text-transform:uppercase;border:1px solid rgba(255,255,255,.15);border-radius:3px;padding:3px 8px;}
+.perf-title{font-family:'Noto Serif KR',serif;font-size:clamp(26px,7vw,34px);font-weight:700;color:#fff;letter-spacing:-.02em;line-height:1.1;position:relative;margin-bottom:4px;}
+.perf-subtitle{font-size:var(--fs-xs);color:rgba(255,255,255,.35);letter-spacing:.15em;position:relative;}
 /* 포스터 */
 .ticket-poster{display:none;width:100%;aspect-ratio:3/4;overflow:hidden;position:relative;max-height:300px;}
 .ticket-poster img{width:100%;height:100%;object-fit:cover;object-position:center top;display:block;}
@@ -43,30 +43,30 @@ html,body{min-height:100vh;background:#1a1814;display:flex;align-items:center;ju
 .main-info{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--paper-dark);border:1px solid var(--paper-dark);border-radius:8px;overflow:hidden;margin-bottom:16px;}
 .info-cell{background:var(--paper);padding:12px 14px;}
 .info-cell.full{grid-column:1/-1;}
-.info-label{font-size:9px;letter-spacing:.25em;color:var(--gray);text-transform:uppercase;margin-bottom:5px;font-family:'DM Mono',monospace;}
-.info-value{font-size:14px;font-weight:500;color:var(--ink);letter-spacing:-.01em;line-height:1.3;}
-.info-value.large{font-family:'Noto Serif KR',serif;font-size:17px;font-weight:600;}
-.info-value.mono{font-family:'DM Mono',monospace;font-size:13px;font-weight:400;letter-spacing:.05em;}
+.info-label{font-size:var(--fs-xs);letter-spacing:.25em;color:var(--gray);text-transform:uppercase;margin-bottom:5px;font-family:'DM Mono',monospace;}
+.info-value{font-size:var(--fs-sm);font-weight:500;color:var(--ink);letter-spacing:-.01em;line-height:1.3;}
+.info-value.large{font-family:'Noto Serif KR',serif;font-size:var(--fs-lg);font-weight:600;}
+.info-value.mono{font-family:'DM Mono',monospace;font-size:var(--fs-sm);font-weight:400;letter-spacing:.05em;}
 .info-value.accent{color:var(--gold);}
 .dashed-divider{border:none;border-top:1.5px dashed var(--gray-light);margin:4px 0 16px;}
 .holder-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
-.holder-label{font-size:9px;letter-spacing:.25em;color:var(--gray);text-transform:uppercase;font-family:'DM Mono',monospace;margin-bottom:3px;}
-.holder-name{font-family:'Noto Serif KR',serif;font-size:20px;font-weight:600;color:var(--ink);letter-spacing:-.02em;}
+.holder-label{font-size:var(--fs-xs);letter-spacing:.25em;color:var(--gray);text-transform:uppercase;font-family:'DM Mono',monospace;margin-bottom:3px;}
+.holder-name{font-family:'Noto Serif KR',serif;font-size:var(--fs-xl);font-weight:600;color:var(--ink);letter-spacing:-.02em;}
 .seat-badge{background:var(--black);color:var(--gold-light);border-radius:6px;padding:8px 14px;text-align:center;}
-.seat-badge-type{font-size:9px;letter-spacing:.2em;color:rgba(255,255,255,.4);text-transform:uppercase;margin-bottom:2px;}
-.seat-badge-value{font-size:13px;font-weight:500;letter-spacing:.05em;}
-.proof-banner{background:#fff8ee;border:1px solid #e8d5a0;border-radius:6px;padding:10px 12px;margin-bottom:14px;display:none;align-items:center;gap:8px;font-size:11px;color:#7a5c1e;line-height:1.5;}
+.seat-badge-type{font-size:var(--fs-xs);letter-spacing:.2em;color:rgba(255,255,255,.4);text-transform:uppercase;margin-bottom:2px;}
+.seat-badge-value{font-size:var(--fs-sm);font-weight:500;letter-spacing:.05em;}
+.proof-banner{background:#fff8ee;border:1px solid #e8d5a0;border-radius:6px;padding:10px 12px;margin-bottom:14px;display:none;align-items:center;gap:8px;font-size:var(--fs-xs);color:#7a5c1e;line-height:1.5;}
 .proof-dot{width:6px;height:6px;background:var(--gold);border-radius:50%;flex-shrink:0;}
 /* 검표 코드 입력 영역 */
 .checkin-section{padding:16px 20px;background:var(--paper-dark);border-top:1px dashed var(--gray-light);}
-.checkin-label{font-size:10px;letter-spacing:.2em;color:var(--gray);text-transform:uppercase;margin-bottom:10px;font-family:'DM Mono',monospace;}
+.checkin-label{font-size:var(--fs-xs);letter-spacing:.2em;color:var(--gray);text-transform:uppercase;margin-bottom:10px;font-family:'DM Mono',monospace;}
 .checkin-input-row{display:flex;gap:8px;}
-.checkin-input{flex:1;background:var(--paper);border:1px solid var(--gray-light);border-radius:6px;font-family:'DM Mono',monospace;font-size:18px;font-weight:500;padding:10px 14px;letter-spacing:.2em;text-align:center;color:var(--ink);}
+.checkin-input{flex:1;background:var(--paper);border:1px solid var(--gray-light);border-radius:6px;font-family:'DM Mono',monospace;font-size:var(--fs-lg);font-weight:500;padding:10px 14px;letter-spacing:.2em;text-align:center;color:var(--ink);}
 .checkin-input:focus{outline:none;border-color:var(--gold);}
-.checkin-input::placeholder{font-size:13px;letter-spacing:.1em;color:var(--gray-light);}
-.checkin-btn{background:var(--black);color:var(--gold-light);border:none;border-radius:6px;font-family:'Noto Sans KR',sans-serif;font-size:13px;font-weight:500;padding:10px 16px;cursor:pointer;white-space:nowrap;}
+.checkin-input::placeholder{font-size:var(--fs-sm);letter-spacing:.1em;color:var(--gray-light);}
+.checkin-btn{background:var(--black);color:var(--gold-light);border:none;border-radius:6px;font-family:'Noto Sans KR',sans-serif;font-size:var(--fs-sm);font-weight:500;padding:10px 16px;cursor:pointer;white-space:nowrap;}
 .checkin-btn:active{opacity:.8;}
-.checkin-result{margin-top:10px;font-size:12px;text-align:center;display:none;}
+.checkin-result{margin-top:10px;font-size:var(--fs-xs);text-align:center;display:none;}
 .checkin-result.ok{color:#2d6a4f;}
 .checkin-result.fail{color:var(--red-stamp);}
 .checkin-result.show{display:block;}
@@ -76,11 +76,11 @@ html,body{min-height:100vh;background:#1a1814;display:flex;align-items:center;ju
 .ticket-tear::before{left:-12px;}
 .ticket-tear::after{right:-12px;}
 .tear-line{flex:1;margin:0 18px;border-top:1.5px dashed var(--gray-light);}
-.tear-label{position:absolute;left:50%;transform:translateX(-50%);font-size:8px;letter-spacing:.3em;color:var(--gray-light);text-transform:uppercase;font-family:'DM Mono',monospace;background:var(--paper);padding:0 8px;white-space:nowrap;}
+.tear-label{position:absolute;left:50%;transform:translateX(-50%);font-size:var(--fs-xs);letter-spacing:.3em;color:var(--gray-light);text-transform:uppercase;font-family:'DM Mono',monospace;background:var(--paper);padding:0 8px;white-space:nowrap;}
 /* 예약번호 영역 (QR 대신) */
 .ticket-resnum-area{background:var(--paper);padding:20px 24px 24px;text-align:center;}
-.res-number{font-family:'DM Mono',monospace;font-size:22px;font-weight:500;color:var(--ink);letter-spacing:.2em;margin-bottom:6px;}
-.res-instruction{font-size:11px;color:var(--gray);letter-spacing:.1em;}
+.res-number{font-family:'DM Mono',monospace;font-size:var(--fs-xl);font-weight:500;color:var(--ink);letter-spacing:.2em;margin-bottom:6px;}
+.res-instruction{font-size:var(--fs-xs);color:var(--gray);letter-spacing:.1em;}
 /* 입장 완료 스탬프 */
 .stamp{display:none;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%) rotate(-15deg);width:120px;height:120px;border:3px solid var(--red-stamp);border-radius:50%;align-items:center;justify-content:center;opacity:.5;}
 .stamp.show{display:flex;}
@@ -88,20 +88,20 @@ html,body{min-height:100vh;background:#1a1814;display:flex;align-items:center;ju
 /* 하단 */
 .ticket-info-bottom{background:var(--paper-dark);padding:14px 20px;display:grid;grid-template-columns:1fr 1fr;gap:10px 20px;}
 .info-bottom-item{}
-.info-bottom-label{font-size:8px;letter-spacing:.3em;color:var(--gray);text-transform:uppercase;font-family:'DM Mono',monospace;margin-bottom:3px;}
-.info-bottom-value{font-size:11px;color:var(--ink);line-height:1.5;font-weight:400;}
+.info-bottom-label{font-size:var(--fs-xs);letter-spacing:.3em;color:var(--gray);text-transform:uppercase;font-family:'DM Mono',monospace;margin-bottom:3px;}
+.info-bottom-value{font-size:var(--fs-xs);color:var(--ink);line-height:1.5;font-weight:400;}
 .info-bottom-item.full{grid-column:1/-1;}
 .contact-row{background:var(--black);padding:12px 20px;display:flex;align-items:center;justify-content:space-between;}
-.contact-label{font-size:9px;letter-spacing:.25em;color:rgba(255,255,255,.35);text-transform:uppercase;font-family:'DM Mono',monospace;}
-.contact-value{font-size:13px;font-weight:500;color:var(--gold-light);letter-spacing:.05em;font-family:'DM Mono',monospace;}
+.contact-label{font-size:var(--fs-xs);letter-spacing:.25em;color:rgba(255,255,255,.35);text-transform:uppercase;font-family:'DM Mono',monospace;}
+.contact-value{font-size:var(--fs-sm);font-weight:500;color:var(--gold-light);letter-spacing:.05em;font-family:'DM Mono',monospace;}
 .ticket-footer{background:var(--black);padding:14px 24px;display:flex;align-items:center;justify-content:space-between;}
-.footer-agency{font-size:9px;letter-spacing:.25em;color:rgba(255,255,255,.3);text-transform:uppercase;}
+.footer-agency{font-size:var(--fs-xs);letter-spacing:.25em;color:rgba(255,255,255,.3);text-transform:uppercase;}
 .footer-dots{display:flex;gap:5px;}
 .footer-dot{width:4px;height:4px;border-radius:50%;background:var(--gold);opacity:.4;}
 .footer-dot:nth-child(2){opacity:.6;}
 .footer-dot:nth-child(3){opacity:1;}
 .ticket-notice{margin-top:16px;text-align:center;}
-.notice-text{font-size:11px;color:rgba(255,255,255,.3);line-height:1.9;letter-spacing:.05em;}
+.notice-text{font-size:var(--fs-xs);color:rgba(255,255,255,.3);line-height:1.9;letter-spacing:.05em;}
 </style>
 </head>
 <body>

@@ -12,19 +12,19 @@
 <style>
 :root{
   /* ── 폰트 크기 변수 (여기서 한 번에 조절) ── */
-  --fs-xs:   clamp(11px, 2.8vw, 13px);
-  --fs-sm:   clamp(13px, 3.2vw, 15px);
-  --fs-md:   clamp(14px, 3.5vw, 16px);
-  --fs-lg:   clamp(16px, 4vw,   18px);
-  --fs-xl:   clamp(18px, 4.5vw, 22px);
-  --fs-2xl:  clamp(22px, 5.5vw, 28px);
+  --fs-xs:   clamp(13px, 3.8vw, 15px);
+  --fs-sm:   clamp(15px, 4.2vw, 17px);
+  --fs-md:   clamp(16px, 4.8vw, 19px);
+  --fs-lg:   clamp(19px, 5.2vw, 22px);
+  --fs-xl:   clamp(22px, 6vw,   27px);
+  --fs-2xl:  clamp(27px, 7.5vw, 35px);
 --black:#0d0d0d;--white:#fafaf7;--cream:#f4f1e8;--gold:#c9a84c;--gold-light:#e8d5a0;--gray:#888;--gray-light:#e8e8e0;--red:#c0392b;--orange:#e07b39;--radius:4px;}
 *{box-sizing:border-box;margin:0;padding:0;}
 html{scroll-behavior:smooth;}
 body{background:var(--black);color:var(--white);font-family:'Noto Sans KR',sans-serif;font-weight:300;min-height:100vh;}
 /* 헤더 */
 header{text-align:center;padding:52px 24px 36px;border-bottom:1px solid #222;}
-.header-agency{font-size:10px;letter-spacing:.35em;color:var(--gold);text-transform:uppercase;margin-bottom:16px;}
+.header-agency{font-size:var(--fs-xs);letter-spacing:.35em;color:var(--gold);text-transform:uppercase;margin-bottom:16px;}
 .header-title{font-family:'Noto Serif KR',serif;font-size:clamp(28px,6vw,48px);font-weight:700;letter-spacing:-.02em;line-height:1.1;margin-bottom:12px;}
 .header-dates{font-size:var(--fs-xs);color:var(--gray);letter-spacing:.1em;margin-top:4px;}
 .gold-line{width:36px;height:1px;background:var(--gold);margin:20px auto;}
@@ -39,9 +39,9 @@ header{text-align:center;padding:52px 24px 36px;border-bottom:1px solid #222;}
 .step-dot.on{background:var(--gold);}
 /* 섹션 */
 .section{margin-bottom:36px;}
-.section-label{font-size:10px;letter-spacing:.25em;color:var(--gold);text-transform:uppercase;display:flex;align-items:center;gap:10px;margin-bottom:16px;}
+.section-label{font-size:var(--fs-xs);letter-spacing:.25em;color:var(--gold);text-transform:uppercase;display:flex;align-items:center;gap:10px;margin-bottom:16px;}
 .section-label::after{content:'';flex:1;height:1px;background:#222;}
-.section-num{width:18px;height:18px;border:1px solid var(--gold);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:9px;color:var(--gold);flex-shrink:0;}
+.section-num{width:20px;height:20px;border:1px solid var(--gold);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:var(--fs-xs);color:var(--gold);flex-shrink:0;}
 /* 회차 카드 */
 .session-grid{display:grid;gap:8px;}
 .session-card{background:#141414;border:1px solid #2a2a2a;border-radius:var(--radius);padding:14px 18px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;transition:all .2s;}
@@ -49,7 +49,7 @@ header{text-align:center;padding:52px 24px 36px;border-bottom:1px solid #222;}
 .session-card.selected{border-color:var(--gold);background:#1e1c0f;}
 .session-card.sold-out{opacity:.4;cursor:not-allowed;}
 .sess-date{font-size:var(--fs-xs);color:var(--gray);margin-bottom:3px;}
-.sess-time{font-size:17px;font-weight:500;letter-spacing:.04em;}
+.sess-time{font-size:var(--fs-lg);font-weight:500;letter-spacing:.04em;}
 .sess-right{text-align:right;}
 .sess-remain{font-size:var(--fs-xs);color:var(--gray);}
 .sess-remain.low{color:var(--orange);}
@@ -112,7 +112,7 @@ input.error{border-color:var(--red);}
 .success-resnum{font-family:'Noto Serif KR',serif;font-size:24px;font-weight:600;color:var(--gold);letter-spacing:.1em;margin:14px 0;}
 .success-desc{font-size:var(--fs-xs);color:var(--gray);line-height:2;}
 .success-box{background:#141414;border:1px solid #2a2a2a;border-radius:var(--radius);padding:18px;margin:20px 0;text-align:left;}
-.success-box-label{font-size:10px;letter-spacing:.2em;color:var(--gold);text-transform:uppercase;margin-bottom:12px;}
+.success-box-label{font-size:var(--fs-xs);letter-spacing:.2em;color:var(--gold);text-transform:uppercase;margin-bottom:12px;}
 .success-row{display:flex;justify-content:space-between;font-size:var(--fs-xs);color:var(--gray);margin-bottom:7px;}
 .success-row span:last-child{color:var(--white);}
 .success-row.amount span:last-child{color:var(--gold);font-weight:500;}

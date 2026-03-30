@@ -11,24 +11,24 @@
 <style>
 :root{
   /* ── 폰트 크기 변수 (여기서 한 번에 조절) ── */
-  --fs-xs:   clamp(11px, 2.8vw, 13px);
-  --fs-sm:   clamp(13px, 3.2vw, 15px);
-  --fs-md:   clamp(14px, 3.5vw, 16px);
-  --fs-lg:   clamp(16px, 4vw,   18px);
-  --fs-xl:   clamp(18px, 4.5vw, 22px);
-  --fs-2xl:  clamp(22px, 5.5vw, 28px);
+  --fs-xs:   clamp(13px, 3.8vw, 15px);
+  --fs-sm:   clamp(15px, 4.2vw, 17px);
+  --fs-md:   clamp(16px, 4.8vw, 19px);
+  --fs-lg:   clamp(19px, 5.2vw, 22px);
+  --fs-xl:   clamp(22px, 6vw,   27px);
+  --fs-2xl:  clamp(27px, 7.5vw, 35px);
 --black:#0d0d0d;--white:#f5f2ea;--gold:#c9a84c;--gray:#888;--gray2:#444;--red:#c0392b;--orange:#e07b39;--border:#222;--surface:#141414;--radius:6px;}
 *{box-sizing:border-box;margin:0;padding:0;}
 html,body{min-height:100vh;background:var(--black);color:var(--white);font-family:'Noto Sans KR',sans-serif;font-weight:300;}
 header{text-align:center;padding:44px 24px 28px;border-bottom:1px solid var(--border);}
-.header-label{font-size:10px;letter-spacing:.35em;color:var(--gold);text-transform:uppercase;margin-bottom:12px;}
-.header-title{font-size:20px;font-weight:500;letter-spacing:-.01em;}
+.header-label{font-size:var(--fs-xs);letter-spacing:.35em;color:var(--gold);text-transform:uppercase;margin-bottom:12px;}
+.header-title{font-size:var(--fs-xl);font-weight:500;letter-spacing:-.01em;}
 .header-sub{font-size:var(--fs-xs);color:var(--gray);margin-top:8px;line-height:1.9;}
 .container{max-width:480px;margin:0 auto;padding:28px 20px 60px;}
 .notice-box{background:#1a1a0f;border:1px solid #3a3010;border-radius:var(--radius);padding:14px 16px;margin-bottom:24px;font-size:var(--fs-xs);color:#c9a84c;line-height:2;}
 .notice-box.danger{background:#1a0f0f;border-color:#5a2020;color:#e07b7b;}
 .form-group{margin-bottom:16px;}
-.form-group label{display:block;font-size:10px;letter-spacing:.2em;color:var(--gray);text-transform:uppercase;margin-bottom:7px;}
+.form-group label{display:block;font-size:var(--fs-xs);letter-spacing:.2em;color:var(--gray);text-transform:uppercase;margin-bottom:7px;}
 input[type=text],input[type=tel]{width:100%;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);color:var(--white);font-family:inherit;font-size:var(--fs-md);font-weight:300;padding:12px 14px;transition:border-color .2s;}
 input:focus{outline:none;border-color:var(--gold);}
 input::placeholder{color:#444;}
@@ -41,7 +41,7 @@ input.error{border-color:var(--red);}
 .action-tab.active{border-color:var(--gold);color:var(--gold);background:#1e1c0f;}
 /* 예약 확인 카드 */
 .confirm-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:16px;}
-.confirm-title{font-size:10px;letter-spacing:.2em;color:var(--gold);text-transform:uppercase;margin-bottom:12px;}
+.confirm-title{font-size:var(--fs-xs);letter-spacing:.2em;color:var(--gold);text-transform:uppercase;margin-bottom:12px;}
 .confirm-row{display:flex;justify-content:space-between;font-size:var(--fs-sm);margin-bottom:7px;}
 .confirm-label{color:var(--gray);}
 .confirm-value{}
