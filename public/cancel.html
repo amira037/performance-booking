@@ -87,6 +87,9 @@ input.error{border-color:var(--red);}
     <div class="notice-box">
       문의: <span id="notice-tel">—</span>
     </div>
+    <div id="policy-notice" class="notice-box"
+         style="display:none;background:#1a0f1a;border-color:#3a1a3a;color:#c9a0c9;">
+    </div>
     <div class="form-group">
       <label>예약번호</label>
       <input type="text" id="res-num" placeholder="DQ-0320-" maxlength="12" oninput="fmtResNum(this)" style="text-transform:uppercase;letter-spacing:.1em">
@@ -133,6 +136,18 @@ input.error{border-color:var(--red);}
         <label>취소 사유 (선택)</label>
         <input type="text" id="reason" placeholder="사유를 간단히 입력해 주세요.">
       </div>
+      <div class="form-group" style="margin-top:10px;">
+        <label>환불 계좌 <span style="color:#c0392b;">*</span></label>
+        <input type="text" id="refund-bank" placeholder="예: 국민은행 / 기업은행"
+               style="margin-bottom:8px;">
+        <input type="text" id="refund-account" placeholder="계좌번호 (- 없이 입력)"
+               style="margin-bottom:8px;">
+        <input type="text" id="refund-holder" placeholder="예금주명">
+        <div style="font-size:11px;color:var(--gray);margin-top:6px;line-height:1.8;">
+          입금 완료 건만 환불 처리됩니다.<br>
+          초대권 및 무료 티켓은 계좌 입력 불필요합니다.
+        </div>
+      </div>
       <button class="danger-btn" id="cancel-btn" onclick="submitCancel()">예매 취소 신청</button>
     </div>
 
@@ -168,8 +183,14 @@ async function init() {
     CFG = await res.json();
     const p = CFG.performance || {};
     if (p.agency) document.getElementById('header-agency').textContent = p.agency;
-    if (p.tel) {
-      document.getElementById('notice-tel').textContent = p.tel;
+    if (p.tel)    document.getElementById('notice-tel').textContent = p.tel;
+    // 정책 안내 문구 표시
+    if (p.cancelPolicyText) {
+      const policyEl = document.getElementById('policy-notice');
+      if (policyEl) {
+        policyEl.textContent = p.cancelPolicyText;
+        policyEl.style.display = 'block';
+      }
     }
   } catch(e) {}
 }
@@ -262,6 +283,26 @@ function showActionStep(data) {
   // 당일 여부
   const isToday = currentSession && isSameDay(currentSession.date);
 
+  // 정책 기한 체크
+  const p   = CFG.performance || {};
+  const now = Date.now();
+
+  function calcDeadline(daysBeforePerf, hour) {
+    if (daysBeforePerf === -1 || daysBeforePerf === undefined) return null;
+    if (!currentSession) return null;
+    const [sh, sm] = (currentSession.time || '19:00').split(':').map(Number);
+    const perfDate = new Date(currentSession.date + 'T' + String(sh).padStart(2,'0') + ':' + String(sm).padStart(2,'0') + ':00+09:00');
+    const deadline = new Date(perfDate);
+    deadline.setDate(deadline.getDate() - daysBeforePerf);
+    deadline.setHours(hour || 18, 0, 0, 0);
+    return deadline.getTime();
+  }
+
+  const cancelDeadline = calcDeadline(p.cancelDeadlineDay, p.cancelDeadlineHour);
+  const changeDeadline = calcDeadline(p.changeDeadlineDay, p.changeDeadlineHour);
+  const cancelExpired  = cancelDeadline !== null && now > cancelDeadline;
+  const changeExpired  = changeDeadline !== null && now > changeDeadline;
+
   // 당일이면 취소/변경 모두 불가
   if (isToday) {
     document.getElementById('step-action').style.display = 'none';
@@ -282,11 +323,33 @@ function showActionStep(data) {
   // 취소 패널 안내 설정
   const cancelNotice = document.getElementById('cancel-notice');
   const cancelBtn    = document.getElementById('cancel-btn');
-  cancelNotice.innerHTML = '<div class="notice-box">취소 신청 후 담당자 확인을 통해 처리됩니다.<br>입금 완료 건은 환불까지 1~3 영업일 소요될 수 있습니다.</div>';
-  cancelBtn.disabled = false;
+  if (cancelExpired) {
+    cancelNotice.innerHTML = '<div class="notice-box danger">취소 신청 기한이 지났습니다.<br>' + (p.cancelPolicyText || '') + '</div>';
+    cancelBtn.disabled = true;
+    cancelBtn.style.opacity = '0.4';
+    cancelBtn.style.cursor  = 'not-allowed';
+  } else {
+    cancelNotice.innerHTML = '<div class="notice-box">취소 신청 후 담당자 확인을 통해 처리됩니다.<br>입금 완료 건은 환불까지 1~3 영업일 소요될 수 있습니다.</div>';
+    cancelBtn.disabled = false;
+    cancelBtn.style.opacity = '';
+    cancelBtn.style.cursor  = '';
+  }
 
-  // 날짜 변경 회차 목록
-  renderSessList(data.session, isToday);
+  // 날짜 변경 기한 만료 시 차단
+  const changeBtnEl = document.getElementById('change-btn');
+  if (changeExpired) {
+    document.getElementById('sess-list').innerHTML =
+      '<div class="notice-box danger" style="margin-bottom:0;">변경 신청 기한이 지났습니다.<br>' + (p.cancelPolicyText || '') + '</div>';
+    changeBtnEl.disabled = true;
+    changeBtnEl.style.opacity = '0.4';
+    changeBtnEl.style.cursor  = 'not-allowed';
+  } else {
+    changeBtnEl.disabled = true; // 회차 선택 전까지 비활성
+    changeBtnEl.style.opacity = '';
+    changeBtnEl.style.cursor  = '';
+    // 날짜 변경 회차 목록
+    renderSessList(data.session, isToday);
+  }
 
   document.getElementById('step-action').style.display = 'block';
 }
@@ -370,10 +433,13 @@ async function submitCancel() {
     const res  = await fetch('/api/cancel-request', {
       method:'POST', headers:{'Content-Type':'application/json'},
       body: JSON.stringify({
-        resNum:      lookupData.resNum,
-        phone:       document.getElementById('phone').value.trim(),
-        requestType: 'cancel',
-        reason:      document.getElementById('reason').value.trim(),
+        resNum:        lookupData.resNum,
+        phone:         document.getElementById('phone').value.trim(),
+        requestType:   'cancel',
+        reason:        document.getElementById('reason').value.trim(),
+        refundBank:    document.getElementById('refund-bank').value.trim(),
+        refundAccount: document.getElementById('refund-account').value.trim(),
+        refundHolder:  document.getElementById('refund-holder').value.trim(),
       }),
     });
     const data = await res.json();

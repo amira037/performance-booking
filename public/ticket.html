@@ -211,10 +211,25 @@ html,body{min-height:100vh;background:#1a1814;display:flex;align-items:center;ju
 
   </div>
 
+  <!-- 공지사항 -->
+  <div id="notice-section" style="display:none;max-width:380px;margin:0 auto 0;padding:0 0 0;">
+    <div style="background:#1a1814;border:1px solid #3a3010;border-radius:8px;padding:14px 18px;margin-bottom:12px;">
+      <div style="font-size:10px;letter-spacing:.2em;color:#c9a84c;text-transform:uppercase;margin-bottom:8px;font-family:'DM Mono',monospace;">알립니다</div>
+      <div id="notice-text" style="font-size:12px;color:#f0e4b8;line-height:1.9;white-space:pre-line;"></div>
+    </div>
+  </div>
+
   <div class="ticket-notice">
     <div class="notice-text">
-      본 티켓은 1회 입장에 한하여 유효합니다.<br>
-      양도 및 재판매를 금합니다.
+      본 티켓은 1회 입장에 한하여 유효합니다.
+    </div>
+    <div style="margin-top:10px;background:#2a0f0f;border:1px solid #5a2020;border-radius:6px;padding:10px 16px;text-align:center;">
+      <span style="font-size:13px;font-weight:700;color:#e07b7b;letter-spacing:.15em;">
+        ⚠ 양도 · 재판매 엄금
+      </span>
+      <div style="font-size:11px;color:rgba(224,123,123,.7);margin-top:4px;letter-spacing:.05em;">
+        본 티켓의 양도 및 재판매는 금지되어 있습니다.
+      </div>
     </div>
   </div>
 </div>
@@ -242,6 +257,7 @@ const T = {
   quantity:  params.get('qty')       || '1',
   resNum:    resNum,
   needProof: params.get('proof')     === 'true',
+  notice:    params.get('notice')    || '',
   checkedIn: params.get('checked')   === 'true',
 };
 
@@ -272,6 +288,7 @@ async function loadFromApi() {
     T.quantity  = String(data.quantity || 1);
     T.needProof = data.needProof || false;
     T.checkedIn = data.checkedIn || false;
+    T.notice    = data.notice    || '';
   } catch(e) {
     console.error('티켓 정보 조회 실패:', e.message);
   }
@@ -310,6 +327,12 @@ function render() {
 
   // 증빙
   if (T.needProof) document.getElementById('proof-banner').style.display = 'flex';
+
+  // 공지사항
+  if (T.notice) {
+    document.getElementById('notice-text').textContent = T.notice;
+    document.getElementById('notice-section').style.display = 'block';
+  }
 
   // 이미 입장된 티켓 — 검표 코드 숨김 + 스탬프 표시
   if (T.checkedIn) {

@@ -51,6 +51,17 @@ export default async function handler(req, res) {
     return at - bt;
   });
 
+  // 취소/변경 정책 마감 시각 계산 헬퍼 (각 회차 기준)
+  function deadlineTs(sessionDate, sessionTime, daysBeforePerf, hour) {
+    if (daysBeforePerf === -1) return null; // 제한 없음
+    const [h, m] = sessionTime.split(':').map(Number);
+    const perfDate = new Date(sessionDate + 'T' + String(h).padStart(2,'0') + ':' + String(m).padStart(2,'0') + ':00+09:00');
+    const deadline = new Date(perfDate);
+    deadline.setDate(deadline.getDate() - daysBeforePerf);
+    deadline.setHours(hour, 0, 0, 0);
+    return deadline.getTime();
+  }
+
   return res.status(200).json({
     performance,
     sessions: sessionsWithRemain,

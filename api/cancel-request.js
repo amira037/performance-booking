@@ -11,7 +11,7 @@ export default async function handler(req, res) {
   if (req.method !== 'POST')
     return res.status(405).json({ error: 'Method not allowed' });
 
-  const { resNum, phone, reason } = req.body;
+  const { resNum, phone, reason, refundBank, refundAccount, refundHolder } = req.body;
 
   if (!resNum || !phone)
     return res.status(400).json({ success: false, message: '예약번호와 연락처를 입력해 주세요.' });
@@ -85,7 +85,14 @@ export default async function handler(req, res) {
 
   // 예약 상태에 취소신청 기록
   await updateReservation(resNum, {
-    changeRequest: { type: 'cancel', reason: reason || '', requestedAt: new Date().toISOString() }
+    changeRequest: {
+      type:          'cancel',
+      reason:        reason        || '',
+      refundBank:    refundBank    || '',
+      refundAccount: refundAccount || '',
+      refundHolder:  refundHolder  || '',
+      requestedAt:   new Date().toISOString(),
+    }
   });
 
   // 취소 신청 로그 저장

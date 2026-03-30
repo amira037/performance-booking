@@ -41,5 +41,6 @@ export default async function handler(req, res) {
     organizer:  perf.organizer  || '',
     sponsor:    perf.sponsor    || '',
     poster:     perf.posterUrl  || '',
+    notice:     perf.notice     || '',
   });
 }

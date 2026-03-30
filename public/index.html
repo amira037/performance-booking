@@ -221,6 +221,25 @@ input.error{border-color:var(--red);}
       </div>
     </div>
 
+    <!-- 개인정보 동의 -->
+    <div style="background:#141414;border:1px solid #2a2a2a;border-radius:4px;padding:16px;margin-bottom:10px;">
+      <label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer;">
+        <input type="checkbox" id="privacy-agree"
+               style="width:16px;height:16px;accent-color:#c9a84c;flex-shrink:0;margin-top:2px;">
+        <div>
+          <div style="font-size:13px;color:#f5f2ea;margin-bottom:6px;">
+            개인정보 수집 및 이용에 동의합니다. <span style="color:#c0392b;">*</span>
+          </div>
+          <div style="font-size:11px;color:#888;line-height:1.8;">
+            수집항목: 이름, 휴대폰 번호, 이메일<br>
+            수집목적: 예약 확인 및 모바일 티켓 발송<br>
+            보유기간: 공연 종료 후 1개월
+          </div>
+        </div>
+      </label>
+    </div>
+    <div class="err-msg" id="err-privacy" style="margin-bottom:8px;">개인정보 수집 및 이용에 동의해 주세요.</div>
+
     <button class="submit-btn" onclick="submitBooking()">예매 신청하기</button>
   </div>
 
@@ -248,7 +267,12 @@ input.error{border-color:var(--red);}
       <div class="success-row amount"><span>입금금액</span><span id="s-amount">—</span></div>
       <div class="success-row deadline"><span>입금기한</span><span id="s-deadline">—</span></div>
     </div>
-    <div style="font-size:12px;color:var(--gray)">문의: <span id="s-tel" style="color:var(--white)">—</span></div>
+    <div id="s-notice-wrap" style="display:none;margin-bottom:14px;background:#1a1a0f;border:1px solid #3a3010;border-radius:4px;padding:14px;">
+    <div style="font-size:10px;letter-spacing:.2em;color:#c9a84c;margin-bottom:6px;">알립니다</div>
+    <div id="s-notice" style="font-size:12px;color:#f0e4b8;line-height:1.9;white-space:pre-line;"></div>
+  </div>
+  <div id="s-policy" style="display:none;margin-bottom:14px;background:#141414;border:1px solid #2a2a2a;border-radius:4px;padding:12px 14px;font-size:12px;color:var(--gray);line-height:1.8;text-align:left;"></div>
+  <div style="font-size:12px;color:var(--gray)">문의: <span id="s-tel" style="color:var(--white)">—</span></div>
   </div>
 </div>
 
@@ -508,6 +532,13 @@ function validate() {
   const email = document.getElementById('email').value.trim();
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { document.getElementById('err-email').classList.add('show'); document.getElementById('email').classList.add('error'); ok=false; }
   else { document.getElementById('err-email').classList.remove('show'); document.getElementById('email').classList.remove('error'); }
+
+  if (!document.getElementById('privacy-agree').checked) {
+    document.getElementById('err-privacy').classList.add('show'); ok=false;
+  } else {
+    document.getElementById('err-privacy').classList.remove('show');
+  }
+
   return ok;
 }
 
@@ -568,6 +599,18 @@ function showSuccess(resNum, total, sessionLabel) {
   document.getElementById('s-resnum').textContent  = resNum;
   document.getElementById('s-amount').textContent  = total===0?'무료':total.toLocaleString()+'원';
   document.getElementById('s-deadline').textContent = dlStr;
+  // 취소/변경 정책 안내
+  const policyText = CFG.performance && CFG.performance.cancelPolicyText;
+  if (policyText) {
+    const el = document.getElementById('s-policy');
+    el.textContent = '📋 ' + policyText;
+    el.style.display = 'block';
+  }
+  const noticeText = CFG.performance && CFG.performance.notice;
+  if (noticeText) {
+    const nel = document.getElementById('s-notice');
+    if (nel) { nel.textContent = noticeText; nel.parentElement.style.display = 'block'; }
+  }
   document.getElementById('success-screen').classList.add('show');
   window.scrollTo({top:0,behavior:'smooth'});
 }

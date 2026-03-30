@@ -57,6 +57,7 @@ export default async function handler(req, res) {
     let sent = false;
     try {
       sent = await sendTicketAlimtalk({
+        customText: perf.tpl02 || '',
         name:      reservation.name,
         phone:     reservation.phone,
         resNum,
@@ -268,6 +269,7 @@ export default async function handler(req, res) {
       try {
         const ticketUrl = base + '/ticket.html?res=' + encodeURIComponent(r.resNum);
         await sendReminderAlimtalk({
+          customText: perf.tpl03 || '',
           name:     r.name,
           phone:    r.phone,
           resNum:   r.resNum,

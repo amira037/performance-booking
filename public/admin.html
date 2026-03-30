@@ -192,6 +192,7 @@ body{background:var(--bg);color:var(--white);font-family:'Noto Sans KR',sans-ser
     <div class="tab" onclick="switchTab('sessions',this)">회차 관리</div>
     <div class="tab" onclick="switchTab('presets',this)">할인 설정</div>
     <div class="tab" onclick="switchTab('manual',this)">직권 예약</div>
+    <div class="tab" onclick="switchTab('alimtalk',this)">알림톡 편집</div>
     <div class="tab" onclick="switchTab('performance',this)">공연 설정</div>
   </div>
   <div class="content">
@@ -385,6 +386,46 @@ body{background:var(--bg);color:var(--white);font-family:'Noto Sans KR',sans-ser
       </div>
     </div>
 
+    <!-- 알림톡 편집 -->
+    <div class="tab-content" id="tab-alimtalk">
+      <div style="font-size:12px;color:var(--gray);margin-bottom:16px;line-height:1.9;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px;">
+        아래 내용을 수정한 뒤 <span style="color:var(--gold);">솔라피 템플릿에 복붙</span>해서 재심사 제출하세요.<br>
+        <span style="color:var(--orange);font-size:11px;">⚠ 수정 후 저장 버튼을 누르면 실제 발송 문자에도 반영됩니다.</span>
+      </div>
+
+      <!-- 템플릿 1 -->
+      <div class="section-box">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+          <div class="section-title" style="margin-bottom:0;">예약 접수 알림 (TEMPLATE_01)</div>
+          <button class="icon-btn" onclick="copyTpl('tpl01')">복사</button>
+        </div>
+        <textarea class="form-input" id="tpl01" rows="14" style="resize:vertical;line-height:1.7;font-size:12px;font-family:monospace;"></textarea>
+        <div class="hint">변수: #{공연명} #{예약번호} #{이름} #{회차} #{예매유형} #{매수} #{결제금액} #{계좌번호} #{예금주} #{카카오페이링크}</div>
+      </div>
+
+      <!-- 템플릿 2 -->
+      <div class="section-box">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+          <div class="section-title" style="margin-bottom:0;">티켓 발송 알림 (TEMPLATE_02)</div>
+          <button class="icon-btn" onclick="copyTpl('tpl02')">복사</button>
+        </div>
+        <textarea class="form-input" id="tpl02" rows="10" style="resize:vertical;line-height:1.7;font-size:12px;font-family:monospace;"></textarea>
+        <div class="hint">변수: #{공연명} #{예약번호} #{이름} #{회차} #{매수} #{티켓링크}</div>
+      </div>
+
+      <!-- 템플릿 3 -->
+      <div class="section-box">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+          <div class="section-title" style="margin-bottom:0;">당일 리마인드 (TEMPLATE_03)</div>
+          <button class="icon-btn" onclick="copyTpl('tpl03')">복사</button>
+        </div>
+        <textarea class="form-input" id="tpl03" rows="8" style="resize:vertical;line-height:1.7;font-size:12px;font-family:monospace;"></textarea>
+        <div class="hint">변수: #{공연명} #{이름} #{회차} #{예약번호}</div>
+      </div>
+
+      <button class="save-btn" onclick="saveTplTexts()">알림톡 문자 저장</button>
+    </div>
+
     <!-- 공연 설정 -->
     <div class="tab-content" id="tab-performance">
       <!-- 검표 코드 + 포스터 -->
@@ -443,6 +484,76 @@ body{background:var(--bg);color:var(--white);font-family:'Noto Sans KR',sans-ser
         </div>
         <div class="form-row"><div class="form-group full"><label>후원 (쉼표로 구분)</label><input type="text" class="form-input" id="perf-sponsor"></div></div>
       </div>
+      <div class="section-box">
+        <div class="section-title">공지사항 (알립니다)</div>
+        <textarea class="form-input" id="perf-notice" rows="4"
+                  placeholder="예: 공연장 내 음식물 반입이 금지됩니다.&#10;공연 시작 후 10분 이내에만 입장 가능합니다."
+                  style="resize:vertical;line-height:1.7;"></textarea>
+        <div class="hint">예매 완료 화면과 모바일 티켓 하단에 표시됩니다. 비워두면 표시되지 않습니다.</div>
+      </div>
+
+      <div class="section-box">
+        <div class="section-title">취소 / 변경 정책</div>
+        <div style="font-size:12px;color:var(--gray);margin-bottom:14px;line-height:1.8;">
+          설정한 기한 이후에는 관객이 취소/변경 신청을 할 수 없습니다.<br>
+          공연 당일 취소/변경은 항상 차단됩니다.
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>취소 가능 기한</label>
+            <select class="form-select" id="cancel-deadline-day">
+              <option value="-1">제한 없음</option>
+              <option value="0">공연 당일 0시까지</option>
+              <option value="1">공연 전날까지</option>
+              <option value="2">공연 2일 전까지</option>
+              <option value="3">공연 3일 전까지</option>
+              <option value="7">공연 7일 전까지</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>취소 마감 시각</label>
+            <select class="form-select" id="cancel-deadline-hour">
+              <option value="0">00:00</option>
+              <option value="12">12:00</option>
+              <option value="15">15:00</option>
+              <option value="18" selected>18:00</option>
+              <option value="21">21:00</option>
+              <option value="23">23:59</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>변경 가능 기한</label>
+            <select class="form-select" id="change-deadline-day">
+              <option value="-1">제한 없음</option>
+              <option value="0">공연 당일 0시까지</option>
+              <option value="1">공연 전날까지</option>
+              <option value="2">공연 2일 전까지</option>
+              <option value="3">공연 3일 전까지</option>
+              <option value="7">공연 7일 전까지</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>변경 마감 시각</label>
+            <select class="form-select" id="change-deadline-hour">
+              <option value="0">00:00</option>
+              <option value="12">12:00</option>
+              <option value="15">15:00</option>
+              <option value="18" selected>18:00</option>
+              <option value="21">21:00</option>
+              <option value="23">23:59</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>정책 안내 문구 (예매 페이지 / 취소 페이지에 표시)</label>
+          <textarea class="form-input" id="cancel-policy-text" rows="3"
+                    placeholder="예: 공연 전날 18시까지 취소/변경 신청 가능합니다. 이후에는 환불이 불가합니다."
+                    style="resize:vertical;line-height:1.7;"></textarea>
+        </div>
+      </div>
+
       <div class="section-box">
         <div class="section-title">예매 설정</div>
         <div class="form-row">
@@ -505,6 +616,71 @@ function sortSessions(arr) {
   return [...arr].sort((a,b) => new Date(a.date+'T'+a.time) - new Date(b.date+'T'+b.time));
 }
 
+// ── 알림톡 기본 템플릿 ──
+const DEFAULT_TPL01 = `[#{공연명}] 예약이 접수되었습니다.
+
+■ 예약번호: #{예약번호}
+■ 예매자: #{이름}
+■ 회차: #{회차}
+■ 유형: #{예매유형} × #{매수}매
+■ 결제금액: #{결제금액}원
+
+[방법 1] 계좌이체
+#{계좌번호}
+예금주: #{예금주}
+
+[방법 2] 카카오페이 송금
+#{카카오페이링크}
+송금 시 #{결제금액}원을 입력해 주세요.
+
+입금기한: 예약 후 24시간 이내
+입금 확인 후 모바일 티켓이 발송됩니다.
+미입금 시 예약이 자동 취소됩니다.`;
+
+const DEFAULT_TPL02 = `[#{공연명}] 입금이 확인되었습니다.
+
+■ 예약번호: #{예약번호}
+■ 예매자: #{이름}
+■ 회차: #{회차}
+■ 매수: #{매수}매
+
+모바일 티켓:
+#{티켓링크}
+
+공연 30분 전까지 입장해 주세요.`;
+
+const DEFAULT_TPL03 = `[#{공연명}] 오늘 공연 안내입니다.
+
+■ 예매자: #{이름}
+■ 회차: #{회차}
+■ 예약번호: #{예약번호}
+
+공연 30분 전까지 입장해 주세요.
+모바일 티켓을 미리 준비해 주세요.`;
+
+function loadTplTexts() {
+  document.getElementById('tpl01').value = performance.tpl01 || DEFAULT_TPL01;
+  document.getElementById('tpl02').value = performance.tpl02 || DEFAULT_TPL02;
+  document.getElementById('tpl03').value = performance.tpl03 || DEFAULT_TPL03;
+}
+
+function copyTpl(id) {
+  const el = document.getElementById(id);
+  navigator.clipboard.writeText(el.value).then(() => toast('복사됐습니다!'));
+}
+
+async function saveTplTexts() {
+  const data = {
+    ...performance,
+    tpl01: document.getElementById('tpl01').value,
+    tpl02: document.getElementById('tpl02').value,
+    tpl03: document.getElementById('tpl03').value,
+  };
+  const r = await callAPI({action:'savePerformance', data});
+  if (r.success) { performance = data; toast('알림톡 문자가 저장됐습니다.'); }
+  else toast('저장 실패');
+}
+
 // ── 로그인 ──
 function doLogin() {
   const pw = document.getElementById('pw-input').value;
@@ -539,6 +715,7 @@ function renderAll() {
   renderDashboard(); renderReservations(); renderSessionList(); renderPresets(); syncPerfForm();
   renderManualSessions();
   renderReminderSessions();
+  loadTplTexts();
   document.getElementById('topbar-title').textContent = performance.name || '공연 관리자';
 }
 
@@ -714,6 +891,10 @@ function buildResCard(r) {
       + '<div style="color:#e07b39;font-weight:500;margin-bottom:6px;">' + reqType + ' 접수됨</div>'
       + '<div style="color:var(--gray);margin-bottom:8px;">' + reqDesc + '</div>'
       + '<div style="display:flex;gap:8px;">'
+      + (reqType === '취소신청' && reqInfo.refundAccount
+        ? '<div style="font-size:11px;color:var(--gray);margin-bottom:8px;">'
+          + '환불 계좌: ' + (reqInfo.refundBank||'') + ' ' + (reqInfo.refundAccount||'') + ' (' + (reqInfo.refundHolder||'') + ')</div>'
+        : '')
       + (reqType === '변경신청'
         ? '<button class="action-btn warn" data-action="process-change" data-rn="' + r.resNum + '">변경 처리</button>'
         : '<button class="action-btn danger" data-action="process-cancel" data-rn="' + r.resNum + '">취소 처리</button>'
@@ -1084,7 +1265,13 @@ function onPosterUrlInput(url) {
 
 // ── 공연 설정 ──
 function syncPerfForm(){
-  document.getElementById('checkin-code-input').value  = performance.checkinCode || '';
+  document.getElementById('perf-notice').value           = performance.notice          || '';
+  document.getElementById('checkin-code-input').value   = performance.checkinCode      || '';
+  document.getElementById('cancel-deadline-day').value  = performance.cancelDeadlineDay  !== undefined ? performance.cancelDeadlineDay  : 1;
+  document.getElementById('cancel-deadline-hour').value = performance.cancelDeadlineHour !== undefined ? performance.cancelDeadlineHour : 18;
+  document.getElementById('change-deadline-day').value  = performance.changeDeadlineDay  !== undefined ? performance.changeDeadlineDay  : 1;
+  document.getElementById('change-deadline-hour').value = performance.changeDeadlineHour !== undefined ? performance.changeDeadlineHour : 18;
+  document.getElementById('cancel-policy-text').value   = performance.cancelPolicyText   || '';
   const posterUrl = performance.posterUrl || '';
   document.getElementById('poster-url-input').value = posterUrl;
   if (posterUrl) showPosterPreview(posterUrl);
@@ -1105,7 +1292,13 @@ function syncPerfForm(){
 }
 async function savePerf(){
   const data={
-    checkinCode: document.getElementById('checkin-code-input').value.trim(),
+    notice:              document.getElementById('perf-notice').value.trim(),
+    checkinCode:         document.getElementById('checkin-code-input').value.trim(),
+    cancelDeadlineDay:   parseInt(document.getElementById('cancel-deadline-day').value),
+    cancelDeadlineHour:  parseInt(document.getElementById('cancel-deadline-hour').value),
+    changeDeadlineDay:   parseInt(document.getElementById('change-deadline-day').value),
+    changeDeadlineHour:  parseInt(document.getElementById('change-deadline-hour').value),
+    cancelPolicyText:    document.getElementById('cancel-policy-text').value.trim(),
     posterUrl:   document.getElementById('poster-url-input').value.trim(),
     agency:      document.getElementById('agency-name').value.trim(),
     tel:document.getElementById('agency-tel').value.trim(),
