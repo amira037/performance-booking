@@ -366,7 +366,7 @@ body{background:var(--bg);color:var(--white);font-family:'Noto Sans KR',sans-ser
           <div class="form-group"><label>연락처</label><input type="tel" class="form-input" id="m-phone" placeholder="010-0000-0000"></div>
         </div>
         <div class="form-row">
-          <div class="form-group"><label>이메일</label><input type="email" class="form-input" id="m-email" placeholder="example@email.com"></div>
+          <div class="form-group"><label>이메일 (선택)</label><input type="email" class="form-input" id="m-email" placeholder="example@email.com"></div>
           <div class="form-group"><label>매수</label>
             <select class="form-select" id="m-qty">
               <option value="1">1매</option>
@@ -382,10 +382,9 @@ body{background:var(--bg);color:var(--white);font-family:'Noto Sans KR',sans-ser
               <option value="">회차 선택</option>
             </select>
           </div>
-          <div class="form-group"><label>유형</label>
+          <div class="form-group"><label>유형 (전체 권종)</label>
             <select class="form-select" id="m-type">
-              <option value="초대권">초대권 (무료)</option>
-              <option value="일반">일반</option>
+              <option value="">권종 선택</option>
             </select>
           </div>
         </div>
@@ -835,8 +834,9 @@ async function sendReminderAll() {
   toast(r.success ? targets.length + '명에게 발송됐습니다.' : '발송 실패: ' + (r.message || ''));
 }
 
-// 직권 예약 탭 회차 셀렉트 업데이트
+// 직권 예약 탭 회차 + 권종 셀렉트 업데이트
 function renderManualSessions() {
+  // 회차
   const sel = document.getElementById('m-session');
   const cur = sel.value;
   sel.innerHTML = '<option value="">회차 선택</option>';
@@ -847,6 +847,24 @@ function renderManualSessions() {
     if (s.id === cur) opt.selected = true;
     sel.appendChild(opt);
   });
+
+  // 권종 — 활성/비활성 모두 포함
+  const typeSel = document.getElementById('m-type');
+  const curType = typeSel.value;
+  typeSel.innerHTML = '<option value="">권종 선택</option>';
+  presets.forEach(p => {
+    const opt = document.createElement('option');
+    opt.value = p.name;
+    opt.textContent = p.name + ' — ' + (p.price === 0 ? '무료' : p.price.toLocaleString() + '원') + (p.active ? '' : ' (비활성)');
+    if (p.name === curType) opt.selected = true;
+    typeSel.appendChild(opt);
+  });
+  // 초대권이 프리셋에 없으면 기본 추가
+  if (!presets.find(p => p.name === '초대권')) {
+    const opt = document.createElement('option');
+    opt.value = '초대권'; opt.textContent = '초대권 — 무료';
+    typeSel.appendChild(opt);
+  }
 }
 
 async function addManualReservation() {
@@ -856,12 +874,16 @@ async function addManualReservation() {
   const sessionId= document.getElementById('m-session').value;
   const qty      = parseInt(document.getElementById('m-qty').value) || 1;
   const type     = document.getElementById('m-type').value;
-  const price    = parseInt(document.getElementById('m-price').value) || 0;
   const proof    = document.getElementById('m-proof').checked;
   const sendAlim = document.getElementById('m-alim').checked;
 
+  // 선택된 권종 가격 자동 계산
+  const preset = presets.find(p => p.name === type);
+  const price  = preset ? preset.price : (parseInt(document.getElementById('m-price').value) || 0);
+
   if (!name)      { toast('이름을 입력해 주세요.'); return; }
   if (!sessionId) { toast('회차를 선택해 주세요.'); return; }
+  if (!type)      { toast('권종을 선택해 주세요.'); return; }
 
   const session = sessions.find(s => s.id === sessionId);
   if (!session) return;
