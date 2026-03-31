@@ -2,7 +2,7 @@
 // POST /api/admin  { action, ...payload }
 
 import {
-  getReservations, updateReservation, findReservation,
+  getReservations, addReservation, updateReservation, findReservation,
   getSessions, saveSessions,
   getPresets, savePresets,
   getPerformance, savePerformance,
