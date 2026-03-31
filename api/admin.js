@@ -31,7 +31,15 @@ export default async function handler(req, res) {
       getPresets(),
       getPerformance(),
     ]);
-    return res.status(200).json({ reservations, sessions, presets, performance });
+
+    // 각 회차의 실제 booked 수 계산 (입금확인 + 미입금 모두 포함)
+    const sessionsWithBooked = sessions.map(s => {
+      const confirmed = reservations.filter(r => r.sessionId === s.id && r.payStatus === '입금확인').reduce((sum, r) => sum + (r.quantity||0), 0);
+      const pending   = reservations.filter(r => r.sessionId === s.id && r.payStatus === '미입금').reduce((sum, r) => sum + (r.quantity||0), 0);
+      return { ...s, bookedConfirmed: confirmed, bookedPending: pending, booked: confirmed + pending };
+    });
+
+    return res.status(200).json({ reservations, sessions: sessionsWithBooked, presets, performance });
   }
 
   if (req.method !== 'POST')
@@ -310,6 +318,38 @@ export default async function handler(req, res) {
       sessionId: newSessionId,
       session:   newSessionLabel,
     });
+    return res.status(200).json({ success: true });
+  }
+
+  // ── 프리셋 이름 변경 + 기존 예약 ticketType 동기화 ────────
+  if (action === 'syncPresetName') {
+    const { oldName, newName } = payload;
+    if (!oldName || !newName) return res.status(400).json({ success: false });
+    const all = await getReservations();
+    let count = 0;
+    for (const r of all) {
+      if (r.ticketType === oldName) {
+        await updateReservation(r.resNum, { ticketType: newName });
+        count++;
+      }
+    }
+    return res.status(200).json({ success: true, count });
+  }
+
+  // ── 알 수 없는 권종 예약 조회 ────────────────────────────
+  if (action === 'getUnknownTicketTypes') {
+    const all     = await getReservations();
+    const presets = await getPresets();
+    const names   = new Set(presets.map(p => p.name));
+    const unknown = all.filter(r => r.ticketType && !names.has(r.ticketType));
+    return res.status(200).json({ success: true, reservations: unknown });
+  }
+
+  // ── 예약 권종 수동 수정 ──────────────────────────────────
+  if (action === 'fixTicketType') {
+    const { resNum, newTicketType } = payload;
+    if (!resNum || !newTicketType) return res.status(400).json({ success: false });
+    await updateReservation(resNum, { ticketType: newTicketType });
     return res.status(200).json({ success: true });
   }
 
