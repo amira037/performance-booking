@@ -327,6 +327,17 @@ body{background:var(--bg);color:var(--white);font-family:'Noto Sans KR',sans-ser
 
     <!-- 할인 설정 -->
     <div class="tab-content" id="tab-presets">
+      <!-- 알 수 없는 권종 감지 -->
+      <div class="section-box" style="margin-bottom:16px;border-color:#854f0b;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+          <div class="section-title" style="margin-bottom:0;color:var(--orange);">권종 불일치 예약 찾기</div>
+          <button class="icon-btn" onclick="findUnknownTickets()">검색</button>
+        </div>
+        <div style="font-size:var(--fs-xs);color:var(--gray);margin-bottom:10px;line-height:1.8;">
+          권종명 변경 후 기존 예약과 불일치하는 건을 찾아 수정합니다.
+        </div>
+        <div id="unknown-ticket-list"></div>
+      </div>
       <div id="preset-list" style="margin-bottom:4px;"></div>
       <div style="font-size:var(--fs-xs);color:var(--gray2);text-align:center;margin-bottom:16px;">카드를 드래그해서 순서를 변경하세요</div>
       <div class="section-box">
@@ -894,14 +905,35 @@ function renderDashboard() {
   document.getElementById('stat-pending').textContent       = pending.length + '건';
   document.getElementById('stat-revenue').textContent       = revenue.toLocaleString() + '원';
   document.getElementById('session-status-list').innerHTML  = sessions.map(s => {
-    const booked = reservations.filter(r=>r.sessionId===s.id&&r.payStatus==='입금확인').reduce((sum,r)=>sum+(r.quantity||0),0);
-    const pct    = s.seats>0 ? Math.round(booked/s.seats*100) : 0;
-    const remain = s.seats - booked;
-    const isFull = remain<=0||s.status==='closed';
-    const isLow  = !isFull&&remain<=3;
+    const confirmed = reservations.filter(r=>r.sessionId===s.id&&r.payStatus==='입금확인').reduce((sum,r)=>sum+(r.quantity||0),0);
+    const pending   = reservations.filter(r=>r.sessionId===s.id&&r.payStatus==='미입금').reduce((sum,r)=>sum+(r.quantity||0),0);
+    const booked    = s.booked !== undefined ? s.booked : (confirmed + pending); // DB 실제값 우선
+    const total     = confirmed + pending;
+    const pctConf   = s.seats>0 ? Math.round(confirmed/s.seats*100) : 0;
+    const pctPend   = s.seats>0 ? Math.round(pending/s.seats*100)   : 0;
+    const remain    = s.seats - total;
+    const isFull    = remain<=0||s.status==='closed';
+    const isLow     = !isFull&&remain<=3;
     const bc = isFull?'badge-sold':isLow?'badge-low':'badge-open';
     const bt = isFull?'마감':isLow?'마감임박':'예매중';
-    return '<div class="session-row"><div class="session-bar-wrap"><div class="session-bar-label"><span>' + sessLabel(s) + '</span><span style="color:var(--gray)">' + booked + '/' + s.seats + '석</span></div><div class="session-bar-bg"><div class="session-bar-fill' + (isFull?' full':'') + '" style="width:' + pct + '%"></div></div></div><span class="badge ' + bc + '">' + bt + '</span></div>';
+    return '<div class="session-row">'
+      + '<div class="session-bar-wrap">'
+      +   '<div class="session-bar-label">'
+      +     '<span>' + sessLabel(s) + '</span>'
+      +     '<span style="color:var(--gray);font-size:11px;">'
+      +       '<span style="color:var(--gold)">입금확인 ' + confirmed + '석</span>'
+      +       (pending>0 ? ' <span style="color:var(--orange)">+ 미입금 ' + pending + '석</span>' : '')
+      +       ' / ' + s.seats + '석'
+      +     '</span>'
+      +   '</div>'
+      +   '<div class="session-bar-bg" style="position:relative;">'
+      +     '<div style="position:absolute;left:0;top:0;height:100%;width:' + (pctConf+pctPend) + '%;background:var(--orange);border-radius:2px;"></div>'
+      +     '<div style="position:absolute;left:0;top:0;height:100%;width:' + pctConf + '%;background:var(--gold);border-radius:2px;"></div>'
+      +   '</div>'
+      +   '<div style="font-size:10px;color:var(--gray2);margin-top:4px;">잔여 ' + Math.max(0,remain) + '석</div>'
+      + '</div>'
+      + '<span class="badge ' + bc + '">' + bt + '</span>'
+      + '</div>';
   }).join('');
 }
 
@@ -1243,7 +1275,20 @@ async function saveEditPreset(orig,i){
   const updated={...presets[idx],name:nn,price:np,needProof:nf};
   await callAPI({action:'deletePreset',name:orig});
   await callAPI({action:'savePreset',preset:updated});
-  presets[idx]=updated;editingPresetName=null;renderPresets();toast('수정됐습니다.');
+
+  // 이름이 바뀐 경우 기존 예약 ticketType 동기화
+  if (orig !== nn) {
+    const syncRes = await callAPI({action:'syncPresetName', oldName:orig, newName:nn});
+    if (syncRes.success && syncRes.count > 0) {
+      toast('수정됐습니다. 기존 예약 ' + syncRes.count + '건 권종명도 업데이트됐습니다.');
+    } else {
+      toast('수정됐습니다.');
+    }
+  } else {
+    toast('수정됐습니다.');
+  }
+
+  presets[idx]=updated;editingPresetName=null;renderPresets();await loadData();
 }
 async function deletePreset(name){
   if(!confirm('"'+name+'" 할인을 삭제하시겠습니까?'))return;
@@ -1259,6 +1304,54 @@ function onDragStart(e,i){dragSrcIndex=i;e.currentTarget.classList.add('dragging
 function onDragOver(e,i){e.preventDefault();document.querySelectorAll('.preset-item').forEach(el=>el.classList.remove('drag-over'));const items=document.querySelectorAll('.preset-item');if(items[i])items[i].classList.add('drag-over');}
 function onDrop(e,i){e.preventDefault();if(dragSrcIndex===null||dragSrcIndex===i)return;const moved=presets.splice(dragSrcIndex,1)[0];presets.splice(i,0,moved);callAPI({action:'reorderPresets',presets});dragSrcIndex=null;renderPresets();toast('순서 변경됐습니다.');}
 function onDragEnd(){document.querySelectorAll('.preset-item').forEach(el=>{el.classList.remove('dragging');el.classList.remove('drag-over');});dragSrcIndex=null;}
+// ── 권종 불일치 예약 찾기 ──
+async function findUnknownTickets() {
+  const r = await callAPI({action:'getUnknownTicketTypes'});
+  const el = document.getElementById('unknown-ticket-list');
+  if (!r.success) { toast('조회 실패'); return; }
+  if (!r.reservations.length) {
+    el.innerHTML = '<div style="font-size:var(--fs-xs);color:#4caf7d;padding:8px 0;">✅ 불일치 예약 없음. 모든 권종이 정상입니다.</div>';
+    return;
+  }
+  el.innerHTML = r.reservations.map(res =>
+    '<div style="background:var(--bg);border:1px solid #854f0b;border-radius:var(--radius);padding:12px 14px;margin-bottom:8px;">' +
+      '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">' +
+        '<div>' +
+          '<span class="res-num-badge">' + res.resNum + '</span>' +
+          '<span style="margin-left:8px;font-size:var(--fs-sm);">' + res.name + '</span>' +
+        '</div>' +
+        '<span style="font-size:var(--fs-xs);color:var(--orange);">' + res.payStatus + '</span>' +
+      '</div>' +
+      '<div style="font-size:var(--fs-xs);color:var(--orange);margin-bottom:8px;">권종: ' + res.ticketType + ' (현재 프리셋에 없음)</div>' +
+      '<div style="display:flex;gap:8px;align-items:center;">' +
+        '<select id="fix-type-' + res.resNum + '" class="form-select" style="flex:1;font-size:var(--fs-xs);padding:7px 10px;">' +
+          presets.map(p => '<option value="' + p.name + '">' + p.name + ' (' + (p.price===0?'무료':p.price.toLocaleString()+'원') + ')</option>').join('') +
+        '</select>' +
+        '<button class="action-btn confirm" style="flex:0 0 auto;" onclick="fixTicketType_btn(this)">수정</button>' +
+      '</div>' +
+    '</div>'
+  ).join('');
+  toast(r.reservations.length + '건 불일치 예약 발견');
+}
+
+async function fixTicketType_btn(btn) {
+  const resNum = btn.dataset.fixRn;
+  return fixTicketType(resNum);
+}
+
+async function fixTicketType(resNum) {
+  const newType = document.getElementById('fix-type-' + resNum).value;
+  if (!newType) return;
+  const r = await callAPI({action:'fixTicketType', resNum, newTicketType: newType});
+  if (r.success) {
+    toast(resNum + ' 권종이 "' + newType + '"으로 수정됐습니다.');
+    await loadData();
+    findUnknownTickets();
+  } else {
+    toast('수정 실패');
+  }
+}
+
 async function addPreset(){
   const name=document.getElementById('new-preset-name').value.trim();
   const price=parseInt(document.getElementById('new-preset-price').value);
