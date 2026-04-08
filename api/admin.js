@@ -362,9 +362,9 @@ export default async function handler(req, res) {
     const reservation = await findReservation(resNum);
     if (!reservation) return res.status(404).json({ success: false, message: '예약을 찾을 수 없습니다.' });
 
-    // 활성 상태면 좌석 복구
-    if (['입금확인', '미입금'].includes(reservation.payStatus)) {
-      await decrementBooked(reservation.sessionId, reservation.quantity);
+    // 취소 상태가 아니면 삭제 거부
+    if (!reservation.payStatus.includes('취소')) {
+      return res.status(400).json({ success: false, message: '취소된 예약만 삭제할 수 있습니다.' });
     }
     await deleteReservation(resNum);
     return res.status(200).json({ success: true });
