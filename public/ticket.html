@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>모바일 티켓</title>
+<meta property="og:title" content="모바일 티켓">
+<meta property="og:description" content="공연 모바일 티켓">
+<meta property="og:type" content="website">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;600;700&family=Noto+Sans+KR:wght@300;400;500;700&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+:root{
+  /* ── 폰트 크기 변수 (여기서 한 번에 조절) ── */
+  --fs-xs:   clamp(11px, 2.8vw, 13px);
+  --fs-sm:   clamp(13px, 3.2vw, 15px);
+  --fs-md:   clamp(14px, 3.5vw, 16px);
+  --fs-lg:   clamp(16px, 4vw,   18px);
+  --fs-xl:   clamp(18px, 4.5vw, 22px);
+  --fs-2xl:  clamp(22px, 5.5vw, 28px);
+--black:#0d0d0d;--paper:#f7f3ea;--paper-dark:#ede8db;--ink:#1a1712;--gold:#b8962e;--gold-light:#d4b04a;--gold-pale:#f0e4b8;--gray:#8a8478;--gray-light:#c8c2b4;--red-stamp:#8b1a1a;}
+html,body{min-height:100vh;background:#1a1814;display:flex;align-items:center;justify-content:center;font-family:'Noto Sans KR',sans-serif;padding:24px 16px 40px;}
+.ticket-wrap{width:100%;max-width:380px;animation:reveal .6s cubic-bezier(.16,1,.3,1) both;}
+@keyframes reveal{from{opacity:0;transform:translateY(20px) scale(.97)}to{opacity:1;transform:translateY(0) scale(1)}}
+.ticket{background:var(--paper);border-radius:16px;overflow:hidden;position:relative;box-shadow:0 2px 4px rgba(0,0,0,.3),0 8px 24px rgba(0,0,0,.4),0 32px 64px rgba(0,0,0,.3);}
+/* 헤더 */
+.ticket-header{background:var(--black);padding:22px 24px 20px;position:relative;overflow:hidden;}
+.ticket-header::before{content:'';position:absolute;inset:0;background-image:repeating-linear-gradient(45deg,transparent,transparent 8px,rgba(255,255,255,.02) 8px,rgba(255,255,255,.02) 9px);}
+.header-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;position:relative;}
+.agency-name{font-size:10px;letter-spacing:.35em;color:var(--gold-light);text-transform:uppercase;font-weight:400;}
+.ticket-label{font-size:9px;letter-spacing:.25em;color:rgba(255,255,255,.3);text-transform:uppercase;border:1px solid rgba(255,255,255,.15);border-radius:3px;padding:3px 8px;}
+.perf-title{font-family:'Noto Serif KR',serif;font-size:28px;font-weight:700;color:#fff;letter-spacing:-.02em;line-height:1.1;position:relative;margin-bottom:4px;}
+.perf-subtitle{font-size:11px;color:rgba(255,255,255,.35);letter-spacing:.15em;position:relative;}
+/* 포스터 */
+.ticket-poster{display:none;width:100%;aspect-ratio:3/4;overflow:hidden;position:relative;max-height:300px;}
+.ticket-poster img{width:100%;height:100%;object-fit:cover;object-position:center top;display:block;}
+.ticket-poster.show{display:block;}
+/* 골드 구분선 */
+.gold-divider{height:3px;background:linear-gradient(90deg,var(--gold) 0%,var(--gold-light) 50%,var(--gold) 100%);}
+/* 메인 */
+.ticket-body{padding:20px 24px;background:var(--paper);position:relative;}
+.main-info{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--paper-dark);border:1px solid var(--paper-dark);border-radius:8px;overflow:hidden;margin-bottom:16px;}
+.info-cell{background:var(--paper);padding:12px 14px;}
+.info-cell.full{grid-column:1/-1;}
+.info-label{font-size:9px;letter-spacing:.25em;color:var(--gray);text-transform:uppercase;margin-bottom:5px;font-family:'DM Mono',monospace;}
+.info-value{font-size:14px;font-weight:500;color:var(--ink);letter-spacing:-.01em;line-height:1.3;}
+.info-value.large{font-family:'Noto Serif KR',serif;font-size:17px;font-weight:600;}
+.info-value.mono{font-family:'DM Mono',monospace;font-size:13px;font-weight:400;letter-spacing:.05em;}
+.info-value.accent{color:var(--gold);}
+.dashed-divider{border:none;border-top:1.5px dashed var(--gray-light);margin:4px 0 16px;}
+.holder-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
+.holder-label{font-size:9px;letter-spacing:.25em;color:var(--gray);text-transform:uppercase;font-family:'DM Mono',monospace;margin-bottom:3px;}
+.holder-name{font-family:'Noto Serif KR',serif;font-size:20px;font-weight:600;color:var(--ink);letter-spacing:-.02em;}
+.seat-badge{background:var(--black);color:var(--gold-light);border-radius:6px;padding:8px 14px;text-align:center;}
+.seat-badge-type{font-size:9px;letter-spacing:.2em;color:rgba(255,255,255,.4);text-transform:uppercase;margin-bottom:2px;}
+.seat-badge-value{font-size:13px;font-weight:500;letter-spacing:.05em;}
+.proof-banner{background:#fff8ee;border:1px solid #e8d5a0;border-radius:6px;padding:10px 12px;margin-bottom:14px;display:none;align-items:center;gap:8px;font-size:11px;color:#7a5c1e;line-height:1.5;}
+.proof-dot{width:6px;height:6px;background:var(--gold);border-radius:50%;flex-shrink:0;}
+/* 검표 코드 입력 영역 */
+.checkin-section{padding:16px 20px;background:var(--paper-dark);border-top:1px dashed var(--gray-light);}
+.checkin-label{font-size:10px;letter-spacing:.2em;color:var(--gray);text-transform:uppercase;margin-bottom:10px;font-family:'DM Mono',monospace;}
+.checkin-input-row{display:flex;gap:8px;}
+.checkin-input{flex:1;background:var(--paper);border:1px solid var(--gray-light);border-radius:6px;font-family:'DM Mono',monospace;font-size:18px;font-weight:500;padding:10px 14px;letter-spacing:.2em;text-align:center;color:var(--ink);}
+.checkin-input:focus{outline:none;border-color:var(--gold);}
+.checkin-input::placeholder{font-size:13px;letter-spacing:.1em;color:var(--gray-light);}
+.checkin-btn{background:var(--black);color:var(--gold-light);border:none;border-radius:6px;font-family:'Noto Sans KR',sans-serif;font-size:13px;font-weight:500;padding:10px 16px;cursor:pointer;white-space:nowrap;}
+.checkin-btn:active{opacity:.8;}
+.checkin-result{margin-top:10px;font-size:12px;text-align:center;display:none;}
+.checkin-result.ok{color:#2d6a4f;}
+.checkin-result.fail{color:var(--red-stamp);}
+.checkin-result.show{display:block;}
+/* 찢는 선 */
+.ticket-tear{height:24px;background:var(--paper);position:relative;display:flex;align-items:center;}
+.ticket-tear::before,.ticket-tear::after{content:'';position:absolute;width:24px;height:24px;background:#1a1814;border-radius:50%;top:50%;transform:translateY(-50%);}
+.ticket-tear::before{left:-12px;}
+.ticket-tear::after{right:-12px;}
+.tear-line{flex:1;margin:0 18px;border-top:1.5px dashed var(--gray-light);}
+.tear-label{position:absolute;left:50%;transform:translateX(-50%);font-size:8px;letter-spacing:.3em;color:var(--gray-light);text-transform:uppercase;font-family:'DM Mono',monospace;background:var(--paper);padding:0 8px;white-space:nowrap;}
+/* 예약번호 영역 (QR 대신) */
+.ticket-resnum-area{background:var(--paper);padding:20px 24px 24px;text-align:center;}
+.res-number{font-family:'DM Mono',monospace;font-size:22px;font-weight:500;color:var(--ink);letter-spacing:.2em;margin-bottom:6px;}
+.res-instruction{font-size:11px;color:var(--gray);letter-spacing:.1em;}
+/* 입장 완료 스탬프 */
+.stamp{display:none;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%) rotate(-15deg);width:120px;height:120px;border:3px solid var(--red-stamp);border-radius:50%;align-items:center;justify-content:center;opacity:.5;}
+.stamp.show{display:flex;}
+.stamp-text{font-family:'DM Mono',monospace;font-size:14px;font-weight:500;color:var(--red-stamp);letter-spacing:.15em;text-transform:uppercase;text-align:center;line-height:1.4;}
+/* 하단 */
+.ticket-info-bottom{background:var(--paper-dark);padding:14px 20px;display:grid;grid-template-columns:1fr 1fr;gap:10px 20px;}
+.info-bottom-item{}
+.info-bottom-label{font-size:8px;letter-spacing:.3em;color:var(--gray);text-transform:uppercase;font-family:'DM Mono',monospace;margin-bottom:3px;}
+.info-bottom-value{font-size:11px;color:var(--ink);line-height:1.5;font-weight:400;}
+.info-bottom-item.full{grid-column:1/-1;}
+.contact-row{background:var(--black);padding:12px 20px;display:flex;align-items:center;justify-content:space-between;}
+.contact-label{font-size:9px;letter-spacing:.25em;color:rgba(255,255,255,.35);text-transform:uppercase;font-family:'DM Mono',monospace;}
+.contact-value{font-size:13px;font-weight:500;color:var(--gold-light);letter-spacing:.05em;font-family:'DM Mono',monospace;}
+.ticket-footer{background:var(--black);padding:14px 24px;display:flex;align-items:center;justify-content:space-between;}
+.footer-agency{font-size:9px;letter-spacing:.25em;color:rgba(255,255,255,.3);text-transform:uppercase;}
+.footer-dots{display:flex;gap:5px;}
+.footer-dot{width:4px;height:4px;border-radius:50%;background:var(--gold);opacity:.4;}
+.footer-dot:nth-child(2){opacity:.6;}
+.footer-dot:nth-child(3){opacity:1;}
+.ticket-notice{margin-top:16px;text-align:center;}
+.notice-text{font-size:11px;color:rgba(255,255,255,.3);line-height:1.9;letter-spacing:.05em;}
+</style>
+</head>
+<body>
+<div class="ticket-wrap">
+  <div class="ticket" id="ticket">
+
+    <!-- 헤더 -->
+    <div class="ticket-header">
+      <div class="header-top">
+        <div class="agency-name" id="agency-name">블루블라인드</div>
+        <div class="ticket-label">Mobile Ticket</div>
+      </div>
+      <div class="perf-title" id="perf-title">덕질의 이해</div>
+      <div class="perf-subtitle" id="perf-subtitle">2025 SPECIAL PERFORMANCE</div>
+    </div>
+
+    <!-- 포스터 이미지 (URL 있을 때만 표시) -->
+    <div class="ticket-poster" id="ticket-poster">
+      <img id="poster-img" src="" alt="공연 포스터">
+    </div>
+
+    <div class="gold-divider"></div>
+
+    <!-- 메인 정보 -->
+    <div class="ticket-body">
+      <div class="main-info">
+        <div class="info-cell">
+          <div class="info-label">Date</div>
+          <div class="info-value large" id="ticket-date">4월 16일 (수)</div>
+        </div>
+        <div class="info-cell">
+          <div class="info-label">Time</div>
+          <div class="info-value large accent" id="ticket-time">19:30</div>
+        </div>
+        <div class="info-cell full">
+          <div class="info-label">Session</div>
+          <div class="info-value mono" id="ticket-session">4월 16일 (수) 19:30</div>
+        </div>
+      </div>
+
+      <hr class="dashed-divider">
+
+      <div class="holder-row">
+        <div class="holder-info">
+          <div class="holder-label">Ticket Holder</div>
+          <div class="holder-name" id="holder-name">홍 길 동</div>
+        </div>
+        <div class="seat-badge">
+          <div class="seat-badge-type">Seat</div>
+          <div class="seat-badge-value" id="seat-info">일반 × 2</div>
+        </div>
+      </div>
+
+      <div class="proof-banner" id="proof-banner">
+        <div class="proof-dot"></div>
+        입장 시 할인 증빙 서류를 지참해 주세요.
+      </div>
+    </div>
+
+    <!-- 검표 코드 입력 -->
+    <div class="checkin-section" id="checkin-section">
+      <div class="checkin-label">입장 코드 입력</div>
+      <div class="checkin-input-row">
+        <input class="checkin-input" id="checkin-code" type="tel"
+               placeholder="검표 코드 4자리" maxlength="6"
+               onkeydown="if(event.key==='Enter')submitCheckin()">
+        <button class="checkin-btn" onclick="submitCheckin()">입장</button>
+      </div>
+      <div class="checkin-result" id="checkin-result"></div>
+    </div>
+
+    <!-- 찢는 선 -->
+    <div class="ticket-tear">
+      <div class="tear-line"></div>
+      <div class="tear-label">예약 정보</div>
+    </div>
+
+    <!-- 예약번호 -->
+    <div class="ticket-resnum-area" style="position:relative;">
+      <div class="res-number" id="res-number">DQ-0416-001</div>
+      <div class="res-instruction">예약번호 — 문의 시 알려주세요</div>
+      <div class="stamp" id="stamp">
+        <div class="stamp-text">입장<br>완료</div>
+      </div>
+    </div>
+
+    <!-- 주최/주관/후원 -->
+    <div class="ticket-info-bottom" id="ticket-info-bottom">
+      <div class="info-bottom-item" id="host-block" style="display:none">
+        <div class="info-bottom-label">주최</div>
+        <div class="info-bottom-value" id="ticket-host"></div>
+      </div>
+      <div class="info-bottom-item" id="organizer-block" style="display:none">
+        <div class="info-bottom-label">주관</div>
+        <div class="info-bottom-value" id="ticket-organizer"></div>
+      </div>
+      <div class="info-bottom-item full" id="sponsor-block" style="display:none">
+        <div class="info-bottom-label">후원</div>
+        <div class="info-bottom-value" id="ticket-sponsor"></div>
+      </div>
+    </div>
+
+    <!-- 문의 -->
+    <div class="contact-row" id="contact-row" style="display:none">
+      <div class="contact-label">문의</div>
+      <div class="contact-value" id="ticket-tel"></div>
+    </div>
+
+    <!-- 푸터 -->
+    <div class="ticket-footer">
+      <div class="footer-agency" id="footer-agency">블루블라인드</div>
+      <div class="footer-dots">
+        <div class="footer-dot"></div>
+        <div class="footer-dot"></div>
+        <div class="footer-dot"></div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- 공지사항 -->
+  <div id="notice-section" style="display:none;max-width:380px;margin:0 auto 0;padding:0 0 0;">
+    <div style="background:#1a1814;border:1px solid #3a3010;border-radius:8px;padding:14px 18px;margin-bottom:12px;">
+      <div style="font-size:10px;letter-spacing:.2em;color:#c9a84c;text-transform:uppercase;margin-bottom:8px;font-family:'DM Mono',monospace;">알립니다</div>
+      <div id="notice-text" style="font-size:12px;color:#f0e4b8;line-height:1.9;white-space:pre-line;"></div>
+    </div>
+  </div>
+
+  <div class="ticket-notice">
+    <div class="notice-text">
+      본 티켓은 1회 입장에 한하여 유효합니다.
+    </div>
+    <div style="margin-top:10px;background:#2a0f0f;border:1px solid #5a2020;border-radius:6px;padding:10px 16px;text-align:center;">
+      <span style="font-size:13px;font-weight:700;color:#e07b7b;letter-spacing:.15em;">
+        ⚠ 양도 · 재판매 엄금
+      </span>
+      <div style="font-size:11px;color:rgba(224,123,123,.7);margin-top:4px;letter-spacing:.05em;">
+        본 티켓의 양도 및 재판매는 금지되어 있습니다.
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const params = new URLSearchParams(window.location.search);
+const resNum = params.get('res') || '';
+
+// URL 파라미터로 직접 받은 경우 (관리자 티켓 확인 버튼)
+// 또는 예약번호만 있는 경우 (알림톡 버튼) 둘 다 지원
+const T = {
+  agency:    params.get('agency')    || '',
+  tel:       params.get('tel')       || '',
+  perfName:  params.get('perf')      || '',
+  perfSub:   params.get('sub')       || '',
+  host:      params.get('host')      || '',
+  organizer: params.get('organizer') || '',
+  sponsor:   params.get('sponsor')   || '',
+  poster:    params.get('poster')    || '',
+  date:      params.get('date')      || '',
+  time:      params.get('time')      || '',
+  session:   params.get('session')   || '',
+  name:      params.get('name')      || '',
+  seatType:  params.get('type')      || '',
+  quantity:  params.get('qty')       || '1',
+  resNum:    resNum,
+  needProof: params.get('proof')     === 'true',
+  notice:    params.get('notice')    || '',
+  checkedIn: params.get('checked')   === 'true',
+};
+
+function show(id)  { document.getElementById(id).style.display = ''; }
+function hide(id)  { document.getElementById(id).style.display = 'none'; }
+function text(id, val) { document.getElementById(id).textContent = val; }
+
+// API에서 티켓 정보 로드
+async function loadFromApi() {
+  if (!resNum) return;
+  try {
+    const res  = await fetch('/api/ticket-info?res=' + encodeURIComponent(resNum));
+    const data = await res.json();
+    if (!data.success) return;
+    // URL 파라미터로 받은 값이 없는 것만 API로 채움
+    // 단, notice/poster는 항상 API에서 로드 (관리자 설정값이 최신)
+    if (!T.name)      T.name      = data.name      || '';
+    if (!T.agency)    T.agency    = data.agency     || '';
+    if (!T.tel)       T.tel       = data.tel        || '';
+    if (!T.perfName)  T.perfName  = data.perfName   || '';
+    if (!T.perfSub)   T.perfSub   = data.perfSub    || '';
+    if (!T.host)      T.host      = data.host       || '';
+    if (!T.organizer) T.organizer = data.organizer  || '';
+    if (!T.sponsor)   T.sponsor   = data.sponsor    || '';
+    if (!T.session)   T.session   = data.session    || '';
+    if (!T.seatType)  T.seatType  = data.seatType   || '일반';
+    if (!T.quantity || T.quantity === '1') T.quantity = String(data.quantity || 1);
+    T.needProof = data.needProof || false;
+    T.checkedIn = data.checkedIn || false;
+    // 항상 API에서 로드
+    T.notice = data.notice || '';
+    T.poster = data.poster || T.poster || '';
+  } catch(e) {
+    console.error('티켓 정보 조회 실패:', e.message);
+  }
+}
+
+function render() {
+  document.title = T.perfName + ' 모바일 티켓';
+  const ogTitle = document.querySelector('meta[property="og:title"]');
+  if (ogTitle) ogTitle.setAttribute('content', T.perfName + ' 모바일 티켓');
+  text('agency-name',    T.agency);
+  text('perf-title',     T.perfName);
+  text('perf-subtitle',  T.perfSub);
+  text('ticket-date',    T.date);
+  text('ticket-time',    T.time);
+  text('ticket-session', T.session);
+  text('holder-name',    T.name);
+  text('seat-info',      T.seatType + ' × ' + T.quantity);
+  text('res-number',     T.resNum);
+  text('footer-agency',  T.agency);
+
+  // 포스터
+  if (T.poster) {
+    document.getElementById('poster-img').src = T.poster;
+    document.getElementById('ticket-poster').classList.add('show');
+  }
+
+  // 주최/주관/후원
+  function showBlock(blockId, valueId, val) {
+    if (val) { show(blockId); text(valueId, val); }
+  }
+  showBlock('host-block',      'ticket-host',      T.host);
+  showBlock('organizer-block', 'ticket-organizer', T.organizer);
+  showBlock('sponsor-block',   'ticket-sponsor',   T.sponsor);
+  if (!T.host && !T.organizer && !T.sponsor) hide('ticket-info-bottom');
+
+  // 문의
+  if (T.tel) { show('contact-row'); text('ticket-tel', T.tel); }
+
+  // 증빙
+  if (T.needProof) document.getElementById('proof-banner').style.display = 'flex';
+
+  // 공지사항
+  if (T.notice) {
+    document.getElementById('notice-text').textContent = T.notice;
+    document.getElementById('notice-section').style.display = 'block';
+  }
+
+  // 이미 입장된 티켓 — 검표 코드 숨김 + 스탬프 표시
+  if (T.checkedIn) {
+    hide('checkin-section');
+    document.getElementById('stamp').classList.add('show');
+  }
+}
+
+// ── 검표 코드 입장 처리 ──
+async function submitCheckin() {
+  if (T.checkedIn) return;
+  const code = document.getElementById('checkin-code').value.trim();
+  if (!code) { showResult('fail', '코드를 입력해 주세요.'); return; }
+
+  try {
+    const res  = await fetch('/api/checkin', {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ resNum: T.resNum, code }),
+    });
+    const data = await res.json();
+
+    if (data.success) {
+      T.checkedIn = true;
+      showResult('ok', '입장이 완료됐습니다!');
+      setTimeout(() => {
+        hide('checkin-section');
+        document.getElementById('stamp').classList.add('show');
+      }, 1200);
+    } else {
+      showResult('fail', data.message || '코드가 올바르지 않습니다.');
+    }
+  } catch(e) {
+    showResult('fail', '오류가 발생했습니다. 다시 시도해 주세요.');
+  }
+}
+
+function showResult(type, msg) {
+  const el = document.getElementById('checkin-result');
+  el.textContent  = msg;
+  el.className    = 'checkin-result show ' + type;
+  if (type === 'fail') setTimeout(() => el.classList.remove('show'), 3000);
+}
+
+async function init() {
+  await loadFromApi();
+  render();
+}
+init();
+</script>
+</body>
+</html>

@@ -1,0 +1,1652 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>공연 예약 관리자</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  /* ── 폰트 크기 변수 (여기서 한 번에 조절) ── */
+  --fs-xs:   clamp(11px, 2.8vw, 13px);
+  --fs-sm:   clamp(13px, 3.2vw, 15px);
+  --fs-md:   clamp(14px, 3.5vw, 16px);
+  --fs-lg:   clamp(16px, 4vw,   18px);
+  --fs-xl:   clamp(18px, 4.5vw, 22px);
+  --fs-2xl:  clamp(22px, 5.5vw, 28px);
+--bg:#0f0f0f;--surface:#161616;--surface2:#1e1e1e;--border:#2a2a2a;--gold:#c9a84c;--white:#f0ede6;--gray:#888;--gray2:#555;--red:#c0392b;--orange:#e07b39;--radius:6px;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--white);font-family:'Noto Sans KR',sans-serif;font-weight:300;font-size:var(--fs-md);}
+.login-screen{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;}
+.login-box{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:40px;width:100%;max-width:360px;text-align:center;}
+.login-title{font-size:var(--fs-xs);letter-spacing:.3em;color:var(--gold);text-transform:uppercase;margin-bottom:24px;}
+.login-input{width:100%;background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);color:var(--white);font-family:inherit;font-size:var(--fs-md);padding:12px 16px;margin-bottom:12px;text-align:center;letter-spacing:.2em;}
+.login-input:focus{outline:none;border-color:var(--gold);}
+.login-btn{width:100%;background:var(--gold);color:#0f0f0f;border:none;border-radius:var(--radius);font-family:inherit;font-size:var(--fs-sm);font-weight:700;letter-spacing:.15em;padding:13px;cursor:pointer;}
+.login-error{font-size:var(--fs-xs);color:var(--red);margin-top:10px;display:none;}
+.app{display:none;min-height:100vh;flex-direction:column;}
+.app.show{display:flex;}
+.topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:0 16px;height:52px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;}
+.topbar-title{font-size:var(--fs-sm);font-weight:500;}
+.topbar-title span{color:var(--gold);}
+.topbar-right{display:flex;align-items:center;gap:8px;}
+.top-btn{background:none;border:1px solid var(--border);border-radius:var(--radius);color:var(--gray);font-family:inherit;font-size:var(--fs-xs);padding:6px 10px;cursor:pointer;white-space:nowrap;}
+.top-btn:hover{border-color:var(--gold);color:var(--gold);}
+.logout-btn{background:none;border:none;color:var(--gray2);font-family:inherit;font-size:var(--fs-xs);cursor:pointer;}
+.tabs{background:var(--surface);border-bottom:1px solid var(--border);display:flex;padding:0 4px;overflow-x:auto;scrollbar-width:none;}
+.tabs::-webkit-scrollbar{display:none;}
+.tab{padding:12px 11px;font-size:var(--fs-xs);letter-spacing:.06em;color:var(--gray);cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;flex-shrink:0;}
+.tab.active{color:var(--gold);border-bottom-color:var(--gold);}
+.content{padding:16px;flex:1;}
+.tab-content{display:none;}
+.tab-content.active{display:block;}
+.stat-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:16px;}
+.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;}
+.stat-label{font-size:10px;letter-spacing:.2em;color:var(--gray);text-transform:uppercase;margin-bottom:8px;}
+.stat-value{font-size:22px;font-weight:500;}
+.stat-value.gold{color:var(--gold);}
+.stat-sub{font-size:var(--fs-xs);color:var(--gray2);margin-top:4px;}
+.session-status{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:16px;}
+.session-status-header{padding:12px 16px;font-size:10px;letter-spacing:.2em;color:var(--gold);text-transform:uppercase;border-bottom:1px solid var(--border);}
+.session-row{display:flex;align-items:center;padding:12px 16px;border-bottom:1px solid var(--border);gap:12px;}
+.session-row:last-child{border-bottom:none;}
+.session-bar-wrap{flex:1;}
+.session-bar-label{display:flex;justify-content:space-between;font-size:var(--fs-xs);margin-bottom:6px;}
+.session-bar-bg{height:4px;background:var(--border);border-radius:2px;overflow:hidden;}
+.session-bar-fill{height:100%;background:var(--gold);border-radius:2px;}
+.session-bar-fill.full{background:var(--red);}
+.badge{font-size:10px;padding:3px 8px;border-radius:3px;flex-shrink:0;}
+.badge-open{background:#1a2e1e;color:#4caf7d;}
+.badge-sold{background:#2e1a1a;color:#e07b7b;}
+.badge-low{background:#2e2014;color:#e07b39;}
+.filter-row{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;}
+.filter-btn{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);color:var(--gray);font-family:inherit;font-size:var(--fs-xs);padding:6px 12px;cursor:pointer;}
+.filter-btn.active{border-color:var(--gold);color:var(--gold);}
+.search-input{width:100%;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);color:var(--white);font-family:inherit;font-size:var(--fs-sm);padding:10px 14px;margin-bottom:12px;}
+.search-input:focus{outline:none;border-color:var(--gold);}
+.res-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:8px;overflow:hidden;}
+.res-card.has-request{border-color:#854f0b;}
+.res-card-header{padding:12px 14px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;gap:8px;}
+.res-num-badge{font-size:10px;color:var(--gold);background:#1e1c0f;border:1px solid #3a3010;border-radius:3px;padding:3px 7px;white-space:nowrap;}
+.res-name{font-size:var(--fs-md);font-weight:500;margin-left:8px;}
+.res-session{font-size:var(--fs-xs);color:var(--gray);margin-top:2px;}
+.pay-badge{font-size:10px;padding:4px 8px;border-radius:3px;flex-shrink:0;white-space:nowrap;}
+.pay-pending{background:#2a2010;color:#e07b39;}
+.pay-confirmed{background:#1a2e1e;color:#4caf7d;}
+.pay-cancelled{background:#2a1a1a;color:#e07b7b;}
+.request-badge{font-size:10px;padding:3px 8px;border-radius:3px;background:#2a1a00;color:#e07b39;border:1px solid #854f0b;flex-shrink:0;white-space:nowrap;}
+.res-card-body{padding:0 14px 14px;border-top:1px solid var(--border);display:none;}
+.res-card-body.open{display:block;}
+.res-detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px 16px;margin:12px 0;}
+.res-detail-label{font-size:10px;color:var(--gray);margin-bottom:3px;}
+.res-detail-value{font-size:var(--fs-sm);}
+.res-detail-value.gold{color:var(--gold);font-weight:500;}
+.res-detail-value.proof{color:var(--orange);font-size:var(--fs-xs);}
+.res-detail-value.request{color:var(--orange);}
+.res-actions{display:flex;gap:6px;margin-top:10px;flex-wrap:wrap;}
+.action-btn{background:none;border:1px solid var(--border);border-radius:var(--radius);color:var(--gray);font-family:inherit;font-size:var(--fs-xs);padding:8px 10px;cursor:pointer;white-space:nowrap;}
+.action-btn:hover{border-color:var(--white);color:var(--white);}
+.action-btn.confirm{border-color:#2d5a3d;color:#4caf7d;background:#111e15;}
+.action-btn.danger{border-color:#5a2d2d;color:#e07b7b;}
+.action-btn.info{border-color:#1a3a5a;color:#7aabee;background:#0f1a2e;}
+.action-btn.warn{border-color:#854f0b;color:#e07b39;background:#1a1000;}
+.action-btn.checked{border-color:#444;color:#666;cursor:default;}
+.section-box{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:12px;}
+.section-title{font-size:10px;letter-spacing:.2em;color:var(--gold);text-transform:uppercase;margin-bottom:14px;}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;}
+.form-group label{display:block;font-size:10px;letter-spacing:.15em;color:var(--gray);text-transform:uppercase;margin-bottom:6px;}
+.form-input,.form-select{width:100%;background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);color:var(--white);font-family:inherit;font-size:var(--fs-sm);padding:10px 12px;}
+.form-input:focus,.form-select:focus{outline:none;border-color:var(--gold);}
+.form-select option{background:#1a1a1a;}
+.full{grid-column:1/-1;}
+.hint{font-size:var(--fs-xs);color:var(--gray2);margin-top:5px;}
+.save-btn{width:100%;background:var(--gold);color:#0f0f0f;border:none;border-radius:var(--radius);font-family:inherit;font-size:var(--fs-sm);font-weight:700;letter-spacing:.15em;padding:12px;cursor:pointer;margin-top:4px;}
+.session-item{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;gap:12px;cursor:pointer;transition:border-color .15s;}
+.session-item:hover{border-color:var(--gold);}
+.session-item.selected{border-color:var(--gold);background:#1e1c0f;}
+.session-item-date{font-size:var(--fs-md);font-weight:500;margin-bottom:3px;}
+.session-item-info{font-size:var(--fs-xs);color:var(--gray);}
+.item-btns{display:flex;gap:6px;flex-shrink:0;}
+.icon-btn{background:none;border:1px solid var(--border);border-radius:var(--radius);color:var(--gray);font-family:inherit;font-size:var(--fs-xs);padding:5px 10px;cursor:pointer;}
+.icon-btn:hover{border-color:var(--gold);color:var(--gold);}
+.icon-btn.danger:hover{border-color:var(--red);color:var(--red);}
+.preset-item{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:12px 16px;margin-bottom:8px;display:flex;align-items:center;gap:10px;cursor:grab;}
+.preset-item.dragging{opacity:.4;border-color:var(--gold);}
+.preset-item.drag-over{border-color:var(--gold);border-style:dashed;}
+.drag-handle{color:var(--gray2);font-size:16px;flex-shrink:0;cursor:grab;user-select:none;}
+.preset-info{flex:1;}
+.preset-name-edit{font-size:var(--fs-md);font-weight:500;margin-bottom:3px;}
+.preset-price-edit{font-size:var(--fs-xs);color:var(--gold);}
+.preset-proof-label{font-size:var(--fs-xs);color:var(--orange);}
+.preset-actions{display:flex;gap:6px;flex-shrink:0;}
+.toggle-btn{background:none;border:1px solid var(--border);border-radius:var(--radius);font-family:inherit;font-size:var(--fs-xs);padding:5px 10px;cursor:pointer;}
+.toggle-btn.on{border-color:var(--gold);color:var(--gold);}
+.toggle-btn.off{border-color:var(--gray2);color:var(--gray2);}
+.edit-panel{background:var(--surface2);border:1px solid var(--gold);border-radius:var(--radius);padding:14px;margin-bottom:8px;}
+.edit-panel-title{font-size:10px;letter-spacing:.15em;color:var(--gold);text-transform:uppercase;margin-bottom:12px;}
+.edit-row{display:flex;gap:8px;margin-top:10px;}
+.edit-save{flex:1;background:var(--gold);color:#0f0f0f;border:none;border-radius:var(--radius);font-family:inherit;font-size:var(--fs-xs);font-weight:700;padding:10px;cursor:pointer;}
+.edit-cancel{flex:1;background:none;border:1px solid var(--border);border-radius:var(--radius);color:var(--gray);font-family:inherit;font-size:var(--fs-xs);padding:10px;cursor:pointer;}
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:200;align-items:center;justify-content:center;padding:20px;}
+.modal-bg.show{display:flex;}
+.modal{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:24px;width:100%;max-width:400px;max-height:80vh;overflow-y:auto;}
+.modal-title{font-size:var(--fs-sm);font-weight:500;color:var(--gold);letter-spacing:.1em;margin-bottom:14px;}
+.modal-sub{font-size:var(--fs-xs);color:var(--gray);margin-bottom:14px;line-height:1.8;}
+.modal-sess-list{margin-bottom:16px;}
+.modal-sess-item{background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);padding:12px 14px;margin-bottom:8px;cursor:pointer;transition:border-color .15s;}
+.modal-sess-item:hover{border-color:var(--gold);}
+.modal-sess-item.sel{border-color:var(--gold);background:#1e1c0f;}
+.modal-sess-item.disabled{opacity:.4;cursor:not-allowed;}
+.modal-btns{display:flex;gap:8px;}
+.modal-confirm{flex:1;background:var(--gold);color:#0f0f0f;border:none;border-radius:var(--radius);font-family:inherit;font-size:var(--fs-sm);font-weight:700;padding:12px;cursor:pointer;}
+.modal-close{flex:1;background:none;border:1px solid var(--border);border-radius:var(--radius);color:var(--gray);font-family:inherit;font-size:var(--fs-sm);padding:12px;cursor:pointer;}
+.qr-wrap{padding:20px 0;}
+.qr-input-row{display:flex;gap:8px;margin-bottom:16px;}
+.qr-input{flex:1;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);color:var(--white);font-family:inherit;font-size:16px;font-weight:500;padding:14px 16px;text-align:center;letter-spacing:.1em;}
+.qr-input:focus{outline:none;border-color:var(--gold);}
+.qr-check-btn{background:var(--gold);color:#0f0f0f;border:none;border-radius:var(--radius);font-family:inherit;font-size:var(--fs-sm);font-weight:700;padding:14px 18px;cursor:pointer;}
+.check-result{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;display:none;}
+.check-result.show{display:block;}
+.check-result.ok{border-color:#2d5a3d;}
+.check-result.fail{border-color:#5a2d2d;}
+.check-status{font-size:var(--fs-md);font-weight:500;margin-bottom:10px;}
+.check-status.ok{color:#4caf7d;}
+.check-status.fail{color:#e07b7b;}
+.empty-state{text-align:center;padding:32px;color:var(--gray2);font-size:var(--fs-sm);line-height:2;}
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--surface);border:1px solid var(--gold);border-radius:var(--radius);color:var(--white);font-size:var(--fs-sm);padding:12px 20px;z-index:999;opacity:0;pointer-events:none;transition:opacity .3s;white-space:nowrap;}
+.toast.show{opacity:1;}
+.mode-label{font-size:var(--fs-xs);color:var(--gold);margin-bottom:10px;display:none;}
+.mode-label.show{display:block;}
+</style>
+</head>
+<body>
+
+<div class="login-screen" id="login-screen">
+  <div class="login-box">
+    <div class="login-title">관리자 로그인</div>
+    <div style="font-size:18px;font-weight:500;margin-bottom:24px;">공연 예약 관리</div>
+    <input type="password" class="login-input" id="pw-input" placeholder="비밀번호"
+           onkeydown="if(event.key==='Enter')doLogin()">
+    <button class="login-btn" onclick="doLogin()">로그인</button>
+    <div class="login-error" id="login-error">비밀번호가 올바르지 않습니다.</div>
+  </div>
+</div>
+
+<!-- 새 공연 초기화 모달 -->
+<div class="modal-bg" id="reset-modal-bg">
+  <div class="modal">
+    <div class="modal-title" style="color:var(--red);">새 공연 초기화</div>
+    <div class="modal-sub" style="line-height:2;">
+      아래 항목은 <strong style="color:var(--white);">모두 삭제</strong>됩니다:<br>
+      <span style="color:var(--orange);">예약 전체 · 회차 전체 · 선점(Lock) · 좌석 카운트</span>
+    </div>
+    <div style="background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);padding:14px;margin-bottom:16px;">
+      <div style="font-size:var(--fs-xs);color:var(--gray);margin-bottom:12px;letter-spacing:.05em;">유지할 항목 선택</div>
+      <label style="display:flex;align-items:center;gap:10px;font-size:var(--fs-sm);color:var(--white);cursor:pointer;margin-bottom:10px;">
+        <input type="checkbox" id="reset-keep-presets" checked style="width:15px;height:15px;accent-color:var(--gold);">
+        할인 프리셋 유지
+      </label>
+      <label style="display:flex;align-items:center;gap:10px;font-size:var(--fs-sm);color:var(--white);cursor:pointer;">
+        <input type="checkbox" id="reset-keep-performance" checked style="width:15px;height:15px;accent-color:var(--gold);">
+        공연/기획사 설정 유지
+      </label>
+    </div>
+    <div class="modal-btns">
+      <button class="modal-confirm" onclick="doResetPerformance()" style="background:var(--red);color:#fff;">초기화 진행</button>
+      <button class="modal-close" onclick="closeResetModal()">취소</button>
+    </div>
+  </div>
+</div>
+
+<!-- 회차 변경 모달 -->
+<div class="modal-bg" id="modal-bg">
+  <div class="modal">
+    <div class="modal-title">회차 변경</div>
+    <div class="modal-sub" id="modal-sub"></div>
+    <div class="modal-sess-list" id="modal-sess-list"></div>
+    <div class="modal-btns">
+      <button class="modal-confirm" onclick="confirmSessionChange()">변경 확인</button>
+      <button class="modal-close" onclick="closeModal()">취소</button>
+    </div>
+  </div>
+</div>
+
+<div class="app" id="app">
+  <div class="topbar">
+    <div class="topbar-title"><span id="topbar-title">공연 관리자</span></div>
+    <div class="topbar-right">
+      <button class="top-btn" onclick="exportExcel()">엑셀 내보내기</button>
+      <button class="top-btn" onclick="loadData()">새로고침</button>
+      <button class="logout-btn" onclick="doLogout()">로그아웃</button>
+    </div>
+  </div>
+  <div class="tabs">
+    <div class="tab active" onclick="switchTab('dashboard',this)">현황</div>
+    <div class="tab" onclick="switchTab('reservations',this)">예약 목록</div>
+    <div class="tab" onclick="switchTab('sessions',this)">회차 관리</div>
+    <div class="tab" onclick="switchTab('presets',this)">할인 설정</div>
+    <div class="tab" onclick="switchTab('manual',this)">직권 예약</div>
+    <div class="tab" onclick="switchTab('alimtalk',this)">알림톡 편집</div>
+    <div class="tab" onclick="switchTab('performance',this)">공연 설정</div>
+  </div>
+  <div class="content">
+
+    <!-- 현황 -->
+    <div class="tab-content active" id="tab-dashboard">
+      <div class="stat-grid">
+        <div class="stat-card"><div class="stat-label">전체 예약</div><div class="stat-value" id="stat-total">—</div><div class="stat-sub" id="stat-total-sub">—</div></div>
+        <div class="stat-card"><div class="stat-label">입금 확인</div><div class="stat-value gold" id="stat-confirmed">—</div><div class="stat-sub" id="stat-confirmed-sub">—</div></div>
+        <div class="stat-card"><div class="stat-label">미입금</div><div class="stat-value" id="stat-pending">—</div><div class="stat-sub">24시간 후 자동 취소</div></div>
+        <div class="stat-card"><div class="stat-label">예상 수입</div><div class="stat-value gold" id="stat-revenue">—</div><div class="stat-sub">입금확인 기준</div></div>
+      </div>
+      <div class="session-status">
+        <div class="session-status-header">회차별 현황</div>
+        <div id="session-status-list"></div>
+      </div>
+      <div class="section-box">
+        <div class="section-title">당일 리마인드 일괄 발송</div>
+        <div style="font-size:var(--fs-xs);color:var(--gray);margin-bottom:14px;line-height:1.8;">
+          선택한 회차의 입금확인 예약자 전원에게 알림톡을 발송합니다.
+        </div>
+        <div class="form-row">
+          <div class="form-group full">
+            <label>발송할 회차</label>
+            <select class="form-select" id="reminder-session" onchange="updateReminderCount()">
+              <option value="">회차 선택</option>
+            </select>
+          </div>
+        </div>
+        <div id="reminder-preview" style="font-size:var(--fs-xs);color:var(--gray);margin-bottom:12px;display:none;">
+          대상: <span id="reminder-count" style="color:var(--gold);font-weight:500;">0</span>명
+        </div>
+        <button class="save-btn" onclick="sendReminderAll()" style="background:#1a2e1e;color:#4caf7d;border:1px solid #2d5a3d;">
+          전체 리마인드 발송
+        </button>
+      </div>
+      <div class="section-box">
+        <div class="section-title">당일 리마인드 발송</div>
+        <div style="font-size:var(--fs-xs);color:var(--gray);margin-bottom:14px;line-height:1.8;">
+          선택한 회차의 입금확인 예약자 전원에게<br>
+          공연 당일 안내 알림톡을 발송합니다.
+        </div>
+        <div class="form-row">
+          <div class="form-group full">
+            <label>발송할 회차</label>
+            <select class="form-select" id="reminder-session">
+              <option value="">회차 선택</option>
+            </select>
+          </div>
+        </div>
+        <div id="reminder-preview" style="font-size:var(--fs-xs);color:var(--gray);margin-bottom:12px;display:none;">
+          대상: <span id="reminder-count" style="color:var(--gold);font-weight:500;">0</span>명
+        </div>
+        <button class="save-btn" onclick="sendReminderAll()"
+                style="background:#2d5a3d;color:#4caf7d;">
+          리마인드 알림톡 발송
+        </button>
+      </div>
+    </div>
+
+    <!-- 예약 목록 -->
+    <div class="tab-content" id="tab-reservations">
+      <input class="search-input" type="text" placeholder="이름 또는 예약번호 검색..." oninput="filterRes(this.value)">
+      <div class="filter-row">
+        <button class="filter-btn active" onclick="setFilter('all',this)">전체</button>
+        <button class="filter-btn" onclick="setFilter('미입금',this)">미입금</button>
+        <button class="filter-btn" onclick="setFilter('입금확인',this)">입금확인</button>
+        <button class="filter-btn" onclick="setFilter('신청',this)">변경/취소신청</button>
+        <button class="filter-btn" onclick="setFilter('취소',this)">취소완료</button>
+      </div>
+      <div id="res-list"></div>
+    </div>
+
+    <!-- 회차 관리 -->
+    <div class="tab-content" id="tab-sessions">
+      <div id="session-list" style="margin-bottom:16px;"></div>
+      <div class="section-box">
+        <div class="mode-label" id="session-mode-label">— 수정 모드 —</div>
+        <div class="section-title" id="session-form-title">회차 추가</div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>날짜</label>
+            <input type="date" class="form-input" id="sess-date"
+                   style="color-scheme:dark;cursor:pointer;">
+          </div>
+          <div class="form-group">
+            <label>시간 (24시간제)</label>
+            <select class="form-select" id="sess-time">
+              <option value="">선택</option>
+              <option value="10:00">10:00</option>
+              <option value="11:00">11:00</option>
+              <option value="12:00">12:00</option>
+              <option value="13:00">13:00</option>
+              <option value="14:00">14:00</option>
+              <option value="15:00">15:00</option>
+              <option value="16:00">16:00</option>
+              <option value="17:00">17:00</option>
+              <option value="18:00">18:00</option>
+              <option value="19:00">19:00</option>
+              <option value="19:30">19:30</option>
+              <option value="20:00">20:00</option>
+              <option value="20:30">20:30</option>
+              <option value="21:00">21:00</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label>좌석 수</label><input type="number" class="form-input" id="sess-seats" placeholder="10" min="1"></div>
+          <div class="form-group"><label>상태</label>
+            <select class="form-select" id="sess-status">
+              <option value="open">예매 중</option>
+              <option value="closed">마감</option>
+              <option value="soon">오픈 예정</option>
+            </select>
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;margin-top:4px;">
+          <button class="save-btn" id="sess-add-btn" onclick="addSession()" style="flex:1;">회차 추가</button>
+          <button class="save-btn" id="sess-update-btn" onclick="updateSession()" style="flex:1;display:none;background:#2d5a3d;color:#4caf7d;">수정 저장</button>
+          <button id="sess-cancel-btn" onclick="resetSessionForm()" style="flex:0 0 80px;background:none;border:1px solid var(--border);border-radius:var(--radius);color:var(--gray);font-family:inherit;font-size:var(--fs-sm);padding:12px;cursor:pointer;display:none;">취소</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 할인 설정 -->
+    <div class="tab-content" id="tab-presets">
+      <!-- 알 수 없는 권종 감지 -->
+      <div class="section-box" style="margin-bottom:16px;border-color:#854f0b;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+          <div class="section-title" style="margin-bottom:0;color:var(--orange);">권종 불일치 예약 찾기</div>
+          <button class="icon-btn" onclick="findUnknownTickets()">검색</button>
+        </div>
+        <div style="font-size:var(--fs-xs);color:var(--gray);margin-bottom:10px;line-height:1.8;">
+          권종명 변경 후 기존 예약과 불일치하는 건을 찾아 수정합니다.
+        </div>
+        <div id="unknown-ticket-list"></div>
+      </div>
+      <div id="preset-list" style="margin-bottom:4px;"></div>
+      <div style="font-size:var(--fs-xs);color:var(--gray2);text-align:center;margin-bottom:16px;">카드를 드래그해서 순서를 변경하세요</div>
+      <div class="section-box">
+        <div class="section-title">새 할인 추가</div>
+        <div class="form-row">
+          <div class="form-group"><label>할인명</label><input type="text" class="form-input" id="new-preset-name" placeholder="예: 학생"></div>
+          <div class="form-group"><label>판매가격 (원)</label><input type="number" class="form-input" id="new-preset-price" placeholder="예: 24000" min="0"></div>
+        </div>
+        <label style="display:flex;align-items:center;gap:8px;font-size:var(--fs-sm);color:var(--gray);margin-bottom:14px;cursor:pointer;">
+          <input type="checkbox" id="new-preset-proof" style="width:14px;height:14px;accent-color:var(--gold);"> 입장 시 증빙 서류 확인 필요
+        </label>
+        <button class="save-btn" onclick="addPreset()">프리셋 저장</button>
+      </div>
+    </div>
+
+    <!-- 직권 예약 -->
+    <div class="tab-content" id="tab-manual">
+      <div class="section-box">
+        <div class="section-title">관리자 직권 예약 추가</div>
+        <div style="font-size:var(--fs-xs);color:var(--gray);margin-bottom:14px;line-height:1.8;">
+          초대권, 관계자 등 직접 예약을 등록합니다.<br>
+          등록 즉시 <span style="color:var(--gold)">입금확인</span> 상태로 처리됩니다.
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label>이름 *</label><input type="text" class="form-input" id="m-name" placeholder="홍길동"></div>
+          <div class="form-group"><label>연락처</label><input type="tel" class="form-input" id="m-phone" placeholder="010-0000-0000"></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label>이메일 (선택)</label><input type="email" class="form-input" id="m-email" placeholder="example@email.com"></div>
+          <div class="form-group"><label>매수</label>
+            <select class="form-select" id="m-qty">
+              <option value="1">1매</option>
+              <option value="2">2매</option>
+              <option value="3">3매</option>
+              <option value="4">4매</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label>회차 *</label>
+            <select class="form-select" id="m-session">
+              <option value="">회차 선택</option>
+            </select>
+          </div>
+          <div class="form-group"><label>유형 (전체 권종)</label>
+            <select class="form-select" id="m-type">
+              <option value="">권종 선택</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label>결제금액 (원)</label><input type="number" class="form-input" id="m-price" placeholder="0" value="0" min="0"></div>
+          <div class="form-group" style="display:flex;align-items:flex-end;">
+            <label style="display:flex;align-items:center;gap:8px;font-size:var(--fs-sm);color:var(--gray);cursor:pointer;padding-bottom:2px;">
+              <input type="checkbox" id="m-proof" style="width:14px;height:14px;accent-color:var(--gold);"> 현장 증빙 필요
+            </label>
+          </div>
+        </div>
+        <label style="display:flex;align-items:center;gap:8px;font-size:var(--fs-sm);color:var(--gray);margin-bottom:14px;cursor:pointer;">
+          <input type="checkbox" id="m-alim" checked style="width:14px;height:14px;accent-color:var(--gold);">
+          카카오 알림톡으로 티켓 발송
+        </label>
+        <button class="save-btn" onclick="addManualReservation()">직권 예약 등록</button>
+      </div>
+    </div>
+
+    <!-- 알림톡 편집 -->
+    <div class="tab-content" id="tab-alimtalk">
+      <div style="font-size:var(--fs-xs);color:var(--gray);margin-bottom:16px;line-height:1.9;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px;">
+        아래 내용을 수정한 뒤 <span style="color:var(--gold);">솔라피 템플릿에 복붙</span>해서 재심사 제출하세요.<br>
+        <span style="color:var(--orange);font-size:var(--fs-xs);">⚠ 수정 후 저장 버튼을 누르면 실제 발송 문자에도 반영됩니다.</span>
+      </div>
+
+      <!-- 템플릿 1 -->
+      <div class="section-box">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+          <div class="section-title" style="margin-bottom:0;">예약 접수 알림 (TEMPLATE_01)</div>
+          <button class="icon-btn" onclick="copyTpl('tpl01')">복사</button>
+        </div>
+        <textarea class="form-input" id="tpl01" rows="14" style="resize:vertical;line-height:1.7;font-size:var(--fs-xs);font-family:monospace;"></textarea>
+        <div class="hint">변수: #{공연명} #{예약번호} #{이름} #{회차} #{예매유형} #{매수} #{결제금액} #{계좌번호} #{예금주} #{카카오페이링크}</div>
+      </div>
+
+      <!-- 템플릿 2 -->
+      <div class="section-box">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+          <div class="section-title" style="margin-bottom:0;">티켓 발송 알림 (TEMPLATE_02)</div>
+          <button class="icon-btn" onclick="copyTpl('tpl02')">복사</button>
+        </div>
+        <textarea class="form-input" id="tpl02" rows="10" style="resize:vertical;line-height:1.7;font-size:var(--fs-xs);font-family:monospace;"></textarea>
+        <div class="hint">변수: #{공연명} #{예약번호} #{이름} #{회차} #{매수} #{티켓링크}</div>
+      </div>
+
+      <!-- 템플릿 3 -->
+      <div class="section-box">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+          <div class="section-title" style="margin-bottom:0;">당일 리마인드 (TEMPLATE_03)</div>
+          <button class="icon-btn" onclick="copyTpl('tpl03')">복사</button>
+        </div>
+        <textarea class="form-input" id="tpl03" rows="8" style="resize:vertical;line-height:1.7;font-size:var(--fs-xs);font-family:monospace;"></textarea>
+        <div class="hint">변수: #{공연명} #{이름} #{회차} #{예약번호}</div>
+      </div>
+
+      <!-- 버튼 설정 -->
+      <div class="section-box">
+        <div class="section-title">버튼 설정 (솔라피 버튼 등록용)</div>
+        <div style="font-size:var(--fs-xs);color:var(--gray);margin-bottom:14px;line-height:1.8;">
+          아래 내용을 솔라피 템플릿 버튼 설정에 그대로 입력하세요.
+        </div>
+
+        <div style="margin-bottom:16px;">
+          <div style="font-size:var(--fs-xs);color:var(--gold);letter-spacing:.1em;margin-bottom:8px;">TEMPLATE_01 버튼</div>
+          <div style="background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);padding:12px;font-size:var(--fs-xs);color:var(--white);line-height:2;font-family:monospace;">
+            버튼1 — 웹링크<br>
+            버튼명: 입금완료알리기<br>
+            모바일 URL: <span style="color:var(--gold);" id="btn01-chat"></span>
+          </div>
+          <div style="background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);padding:12px;font-size:var(--fs-xs);color:var(--white);line-height:2;font-family:monospace;margin-top:6px;">
+            버튼2 — 웹링크<br>
+            버튼명: 예매변경/취소신청<br>
+            모바일 URL: <span style="color:var(--gold);" id="btn01-cancel"></span>
+          </div>
+        </div>
+
+        <div style="margin-bottom:16px;">
+          <div style="font-size:var(--fs-xs);color:var(--gold);letter-spacing:.1em;margin-bottom:8px;">TEMPLATE_02 버튼</div>
+          <div style="background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);padding:12px;font-size:var(--fs-xs);color:var(--white);line-height:2;font-family:monospace;">
+            버튼1 — 웹링크<br>
+            버튼명: 모바일티켓<br>
+            모바일 URL: <span style="color:var(--gold);" id="btn02-ticket"></span>
+          </div>
+        </div>
+
+        <div>
+          <div style="font-size:var(--fs-xs);color:var(--gold);letter-spacing:.1em;margin-bottom:8px;">TEMPLATE_03 버튼</div>
+          <div style="background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);padding:12px;font-size:var(--fs-xs);color:var(--white);line-height:2;font-family:monospace;">
+            버튼1 — 웹링크<br>
+            버튼명: 모바일티켓<br>
+            모바일 URL: <span style="color:var(--gold);" id="btn03-ticket"></span>
+          </div>
+        </div>
+      </div>
+
+      <button class="save-btn" onclick="saveTplTexts()">알림톡 문자 저장</button>
+    </div>
+
+    <!-- 공연 설정 -->
+    <div class="tab-content" id="tab-performance">
+      <!-- 검표 코드 + 포스터 -->
+      <div class="section-box">
+        <div class="section-title">입장 / 포스터 설정</div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>검표 코드</label>
+            <input type="text" class="form-input" id="checkin-code-input" placeholder="예: 1234"
+                   style="letter-spacing:.2em;font-size:16px;">
+            <div class="hint">공연 당일 검표원이 관객에게 알려주는 코드예요.<br>관객이 모바일 티켓에 입력하면 자동 입장 처리됩니다.</div>
+          </div>
+          <div class="form-group">
+            <label>포스터 이미지</label>
+            <div id="poster-upload-area" style="background:var(--bg);border:1px dashed var(--border);border-radius:var(--radius);padding:14px;text-align:center;cursor:pointer;transition:border-color .2s;" onclick="document.getElementById('poster-file').click()">
+              <div id="poster-preview-wrap" style="display:none;margin-bottom:10px;">
+                <img id="poster-preview" src="" style="max-width:100%;max-height:160px;border-radius:4px;object-fit:contain;">
+              </div>
+              <div id="poster-placeholder" style="color:var(--gray);font-size:var(--fs-xs);line-height:2;">
+                클릭하여 이미지 선택<br>
+                <span style="font-size:var(--fs-xs);color:var(--gray2)">JPG, PNG, WEBP · 최대 10MB</span>
+              </div>
+              <div id="poster-upload-status" style="font-size:var(--fs-xs);margin-top:6px;display:none;"></div>
+            </div>
+            <input type="file" id="poster-file" accept="image/*" style="display:none" onchange="uploadPoster(this)">
+            <input type="url" class="form-input" id="poster-url-input" placeholder="또는 이미지 URL 직접 입력"
+                   style="margin-top:8px;font-size:var(--fs-xs);" oninput="onPosterUrlInput(this.value)">
+            <div class="hint">Vercel Blob에 자동 업로드됩니다.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section-box">
+        <div class="section-title">기획사 정보</div>
+        <div class="form-row"><div class="form-group full"><label>기획사 이름</label><input type="text" class="form-input" id="agency-name" placeholder="예: 주식회사 극단아리랑"></div></div>
+        <div class="form-row">
+          <div class="form-group"><label>문의 전화 (티켓에 표시)</label><input type="tel" class="form-input" id="agency-tel" placeholder="예: 02-741-5332"></div>
+          <div class="form-group"><label>문의 이메일</label><input type="email" class="form-input" id="agency-email" placeholder="예: info@example.com"></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group full">
+            <label>관리자 연락처 (알림톡 수신번호)</label>
+            <input type="tel" class="form-input" id="admin-phone" placeholder="예: 010-0000-0000">
+            <div class="hint">취소/변경 신청 알림을 받을 번호예요. 문의 전화와 다를 수 있어요.</div>
+          </div>
+        </div>
+        <div class="form-row"><div class="form-group full"><label>카카오페이 송금 링크</label><input type="url" class="form-input" id="kakaopay-link" placeholder="https://qr.kakaopay.com/..."></div></div>
+      </div>
+      <div class="section-box">
+        <div class="section-title">공연 정보</div>
+        <div class="form-row"><div class="form-group full"><label>공연명</label><input type="text" class="form-input" id="perf-name" placeholder="예: 덕질의 이해"></div></div>
+        <div class="form-row"><div class="form-group full"><label>티켓 부제목 (영문)</label><input type="text" class="form-input" id="perf-subtitle" placeholder="예: 2025 SPECIAL PERFORMANCE"></div></div>
+        <div class="form-row">
+          <div class="form-group"><label>주최</label><input type="text" class="form-input" id="perf-host"></div>
+          <div class="form-group"><label>주관</label><input type="text" class="form-input" id="perf-organizer"></div>
+        </div>
+        <div class="form-row"><div class="form-group full"><label>후원 (쉼표로 구분)</label><input type="text" class="form-input" id="perf-sponsor"></div></div>
+      </div>
+      <div class="section-box">
+        <div class="section-title">공지사항 (알립니다)</div>
+        <textarea class="form-input" id="perf-notice" rows="4"
+                  placeholder="예: 공연장 내 음식물 반입이 금지됩니다.&#10;공연 시작 후 10분 이내에만 입장 가능합니다."
+                  style="resize:vertical;line-height:1.7;"></textarea>
+        <div class="hint">예매 완료 화면과 모바일 티켓 하단에 표시됩니다. 비워두면 표시되지 않습니다.</div>
+      </div>
+
+      <div class="section-box">
+        <div class="section-title">취소 / 변경 정책</div>
+        <div style="font-size:var(--fs-xs);color:var(--gray);margin-bottom:14px;line-height:1.8;">
+          설정한 기한 이후에는 관객이 취소/변경 신청을 할 수 없습니다.<br>
+          공연 당일 취소/변경은 항상 차단됩니다.
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>취소 가능 기한</label>
+            <select class="form-select" id="cancel-deadline-day">
+              <option value="-1">제한 없음</option>
+              <option value="0">공연 당일 0시까지</option>
+              <option value="1">공연 전날까지</option>
+              <option value="2">공연 2일 전까지</option>
+              <option value="3">공연 3일 전까지</option>
+              <option value="7">공연 7일 전까지</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>취소 마감 시각</label>
+            <select class="form-select" id="cancel-deadline-hour">
+              <option value="0">00:00</option>
+              <option value="12">12:00</option>
+              <option value="15">15:00</option>
+              <option value="18" selected>18:00</option>
+              <option value="21">21:00</option>
+              <option value="23">23:59</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>변경 가능 기한</label>
+            <select class="form-select" id="change-deadline-day">
+              <option value="-1">제한 없음</option>
+              <option value="0">공연 당일 0시까지</option>
+              <option value="1">공연 전날까지</option>
+              <option value="2">공연 2일 전까지</option>
+              <option value="3">공연 3일 전까지</option>
+              <option value="7">공연 7일 전까지</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>변경 마감 시각</label>
+            <select class="form-select" id="change-deadline-hour">
+              <option value="0">00:00</option>
+              <option value="12">12:00</option>
+              <option value="15">15:00</option>
+              <option value="18" selected>18:00</option>
+              <option value="21">21:00</option>
+              <option value="23">23:59</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>정책 안내 문구 (예매 페이지 / 취소 페이지에 표시)</label>
+          <textarea class="form-input" id="cancel-policy-text" rows="3"
+                    placeholder="예: 공연 전날 18시까지 취소/변경 신청 가능합니다. 이후에는 환불이 불가합니다."
+                    style="resize:vertical;line-height:1.7;"></textarea>
+        </div>
+      </div>
+
+      <div class="section-box">
+        <div class="section-title">예매 설정</div>
+        <div class="form-row">
+          <div class="form-group"><label>입금 계좌</label><input type="text" class="form-input" id="perf-account" placeholder="예: 기업은행 000-000-000"></div>
+          <div class="form-group"><label>예금주</label><input type="text" class="form-input" id="perf-account-holder"></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label>예매 상태</label>
+            <select class="form-select" id="perf-open">
+              <option value="open">예매 중</option>
+              <option value="closed">예매 마감</option>
+              <option value="soon">오픈 예정</option>
+            </select>
+          </div>
+          <div class="form-group"><label>1인 최대 매수</label><input type="number" class="form-input" id="perf-max-qty" placeholder="4" min="1" max="10"></div>
+        </div>
+        <button class="save-btn" onclick="savePerf()">전체 설정 저장</button>
+      </div>
+
+      <!-- 백업 & 초기화 -->
+      <div class="section-box" style="border-color:#5a2d2d;">
+        <div class="section-title" style="color:var(--red);">데이터 관리</div>
+        <div style="font-size:var(--fs-xs);color:var(--gray);margin-bottom:14px;line-height:1.9;">
+          공연이 종료된 후 다음 공연을 위해 데이터를 초기화할 때 사용합니다.<br>
+          <span style="color:var(--orange);">⚠ 초기화 전 반드시 백업을 먼저 진행하세요.</span>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <button class="action-btn info" onclick="backupData()" style="flex:1;padding:12px;font-size:var(--fs-sm);">
+            공연 데이터 백업 (JSON)
+          </button>
+          <button class="action-btn danger" onclick="openResetModal()" style="flex:1;padding:12px;font-size:var(--fs-sm);border-color:#7a1a1a;">
+            새 공연 초기화
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 입장 확인 -->
+    <div class="tab-content" id="tab-checkin">
+      <div class="qr-wrap">
+        <div style="font-size:var(--fs-xs);letter-spacing:.2em;color:var(--gray);text-transform:uppercase;margin-bottom:14px;">예약번호 입력 또는 QR 스캔</div>
+        <div class="qr-input-row">
+          <input type="text" class="qr-input" id="qr-input" placeholder="DQ-0416-001"
+                 style="text-transform:uppercase" onkeydown="if(event.key==='Enter')doCheckIn()">
+          <button class="qr-check-btn" onclick="doCheckIn()">확인</button>
+        </div>
+        <div class="check-result" id="check-result">
+          <div class="check-status" id="check-status"></div>
+          <div id="check-detail"></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+const API_BASE = '/api/admin';
+let ADMIN_PW = '';
+let reservations = [], sessions = [], presets = [], performance = {};
+let currentFilter = 'all', currentSearch = '';
+let editingSessionId = null, editingPresetName = null, dragSrcIndex = null;
+let modalResNum = null, modalNewSessionId = null;
+const DAYS = ['일','월','화','수','목','금','토'];
+
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+function sessLabel(s) {
+  const d = new Date(s.date + 'T00:00:00');
+  return (d.getMonth()+1) + '월 ' + d.getDate() + '일 (' + DAYS[d.getDay()] + ') ' + s.time;
+}
+function sortSessions(arr) {
+  return [...arr].sort((a,b) => new Date(a.date+'T'+a.time) - new Date(b.date+'T'+b.time));
+}
+
+// ── 알림톡 기본 템플릿 ──
+const DEFAULT_TPL01 = `[#{공연명}] 예약이 접수되었습니다.
+
+■ 예약번호: #{예약번호}
+■ 예매자: #{이름}
+■ 회차: #{회차}
+■ 유형: #{예매유형} × #{매수}매
+■ 결제금액: #{결제금액}원
+
+[방법 1] 계좌이체
+#{계좌번호}
+예금주: #{예금주}
+
+[방법 2] 카카오페이 송금
+#{카카오페이링크}
+송금 시 #{결제금액}원을 입력해 주세요.
+
+입금기한: 예약 후 24시간 이내
+입금 확인 후 모바일 티켓이 발송됩니다.
+미입금 시 예약이 자동 취소됩니다.`;
+
+const DEFAULT_TPL02 = `[#{공연명}] 입금이 확인되었습니다.
+
+■ 예약번호: #{예약번호}
+■ 예매자: #{이름}
+■ 회차: #{회차}
+■ 매수: #{매수}매
+
+모바일 티켓:
+#{티켓링크}
+
+공연 30분 전까지 입장해 주세요.`;
+
+const DEFAULT_TPL03 = `[#{공연명}] 오늘 공연 안내입니다.
+
+■ 예매자: #{이름}
+■ 회차: #{회차}
+■ 예약번호: #{예약번호}
+
+공연 30분 전까지 입장해 주세요.
+모바일 티켓을 미리 준비해 주세요.`;
+
+function loadTplTexts() {
+  document.getElementById('tpl01').value = performance.tpl01 || DEFAULT_TPL01;
+  document.getElementById('tpl02').value = performance.tpl02 || DEFAULT_TPL02;
+  document.getElementById('tpl03').value = performance.tpl03 || DEFAULT_TPL03;
+
+  // 버튼 URL 표시
+  const chatUrl   = performance.kakaopayLink
+    ? (window.KAKAO_CHAT_URL || 'https://pf.kakao.com/_xlUqEX/chat')
+    : 'https://pf.kakao.com/_xlUqEX/chat';
+  const baseUrl   = 'https://ticket-alarm-manage.vercel.app';
+  const cancelUrl = baseUrl + '/cancel.html';
+  const ticketUrl = baseUrl + '/ticket.html?res=#{예약번호}';
+
+  const el01c = document.getElementById('btn01-chat');
+  const el01x = document.getElementById('btn01-cancel');
+  const el02t = document.getElementById('btn02-ticket');
+  const el03t = document.getElementById('btn03-ticket');
+  if (el01c) el01c.textContent = 'https://pf.kakao.com/_xlUqEX/chat';
+  if (el01x) el01x.textContent = cancelUrl;
+  if (el02t) el02t.textContent = ticketUrl;
+  if (el03t) el03t.textContent = ticketUrl;
+}
+
+function copyTpl(id) {
+  const el = document.getElementById(id);
+  navigator.clipboard.writeText(el.value).then(() => toast('복사됐습니다!'));
+}
+
+async function saveTplTexts() {
+  const data = {
+    ...performance,
+    tpl01: document.getElementById('tpl01').value,
+    tpl02: document.getElementById('tpl02').value,
+    tpl03: document.getElementById('tpl03').value,
+  };
+  const r = await callAPI({action:'savePerformance', data});
+  if (r.success) { performance = data; toast('알림톡 문자가 저장됐습니다.'); }
+  else toast('저장 실패');
+}
+
+// ── 로그인 ──
+function doLogin() {
+  const pw = document.getElementById('pw-input').value;
+  if (!pw) return;
+  ADMIN_PW = pw;
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('app').classList.add('show');
+  loadData();
+}
+function doLogout() {
+  ADMIN_PW = '';
+  document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('app').classList.remove('show');
+  document.getElementById('pw-input').value = '';
+}
+document.getElementById('pw-input').focus();
+
+// ── 데이터 로드 ──
+async function loadData() {
+  try {
+    const res = await fetch(API_BASE, { headers: { 'x-admin-key': ADMIN_PW } });
+    if (res.status === 401) { document.getElementById('login-error').style.display='block'; doLogout(); return; }
+    const data = await res.json();
+    reservations = data.reservations || [];
+    sessions     = sortSessions(data.sessions || []);
+    presets      = data.presets      || [];
+    performance  = data.performance  || {};
+    renderAll();
+  } catch(e) { toast('데이터 로드 실패: ' + e.message); }
+}
+function renderAll() {
+  renderDashboard(); renderReservations(); renderSessionList(); renderPresets(); syncPerfForm();
+  renderManualSessions();
+  renderReminderSessions();
+  loadTplTexts();
+  document.getElementById('topbar-title').textContent = performance.name || '공연 관리자';
+}
+
+function renderReminderSessions() {
+  const sel = document.getElementById('reminder-session');
+  const cur = sel.value;
+  sel.innerHTML = '<option value="">회차 선택</option>';
+  sessions.forEach(s => {
+    const opt = document.createElement('option');
+    opt.value = s.id;
+    opt.textContent = sessLabel(s);
+    if (s.id === cur) opt.selected = true;
+    sel.appendChild(opt);
+  });
+  updateReminderCount();
+}
+
+function updateReminderCount() {
+  const sessionId = document.getElementById('reminder-session').value;
+  const preview   = document.getElementById('reminder-preview');
+  if (!sessionId) { preview.style.display = 'none'; return; }
+  const count = reservations.filter(r => r.sessionId === sessionId && r.payStatus === '입금확인').length;
+  document.getElementById('reminder-count').textContent = count;
+  preview.style.display = 'block';
+}
+
+// 개별 리마인드 발송
+async function sendReminderOne(rn) {
+  const r = await callAPI({ action: 'sendReminder', resNum: rn });
+  toast(r.success ? '리마인드가 발송됐습니다.' : '발송 실패: ' + (r.message || ''));
+}
+
+// 회차 전체 리마인드 발송
+async function sendReminderAll() {
+  const sessionId = document.getElementById('reminder-session').value;
+  if (!sessionId) { toast('회차를 선택해 주세요.'); return; }
+  const targets = reservations.filter(r => r.sessionId === sessionId && r.payStatus === '입금확인');
+  if (!targets.length) { toast('발송 대상이 없습니다.'); return; }
+  if (!confirm(targets.length + '명에게 리마인드를 발송하시겠습니까?')) return;
+  const r = await callAPI({ action: 'sendReminderAll', sessionId });
+  toast(r.success ? targets.length + '명에게 발송됐습니다.' : '발송 실패: ' + (r.message || ''));
+}
+
+// 직권 예약 탭 회차 + 권종 셀렉트 업데이트
+function renderManualSessions() {
+  // 회차
+  const sel = document.getElementById('m-session');
+  const cur = sel.value;
+  sel.innerHTML = '<option value="">회차 선택</option>';
+  sessions.forEach(s => {
+    const opt = document.createElement('option');
+    opt.value = s.id;
+    opt.textContent = sessLabel(s);
+    if (s.id === cur) opt.selected = true;
+    sel.appendChild(opt);
+  });
+
+  // 권종 — 활성/비활성 모두 포함
+  const typeSel = document.getElementById('m-type');
+  const curType = typeSel.value;
+  typeSel.innerHTML = '<option value="">권종 선택</option>';
+  presets.forEach(p => {
+    const opt = document.createElement('option');
+    opt.value = p.name;
+    opt.textContent = p.name + ' — ' + (p.price === 0 ? '무료' : p.price.toLocaleString() + '원') + (p.active ? '' : ' (비활성)');
+    if (p.name === curType) opt.selected = true;
+    typeSel.appendChild(opt);
+  });
+  // 초대권이 프리셋에 없으면 기본 추가
+  if (!presets.find(p => p.name === '초대권')) {
+    const opt = document.createElement('option');
+    opt.value = '초대권'; opt.textContent = '초대권 — 무료';
+    typeSel.appendChild(opt);
+  }
+}
+
+async function addManualReservation() {
+  const name     = document.getElementById('m-name').value.trim();
+  const phone    = document.getElementById('m-phone').value.trim();
+  const email    = document.getElementById('m-email').value.trim();
+  const sessionId= document.getElementById('m-session').value;
+  const qty      = parseInt(document.getElementById('m-qty').value) || 1;
+  const type     = document.getElementById('m-type').value;
+  const proof    = document.getElementById('m-proof').checked;
+  const sendAlim = document.getElementById('m-alim').checked;
+
+  // 선택된 권종 가격 자동 계산
+  const preset = presets.find(p => p.name === type);
+  const price  = preset ? preset.price : (parseInt(document.getElementById('m-price').value) || 0);
+
+  if (!name)      { toast('이름을 입력해 주세요.'); return; }
+  if (!sessionId) { toast('회차를 선택해 주세요.'); return; }
+  if (!type)      { toast('권종을 선택해 주세요.'); return; }
+
+  const session = sessions.find(s => s.id === sessionId);
+  if (!session) return;
+
+  const r = await callAPI({
+    action: 'addManualReservation',
+    name, phone, email,
+    sessionId,
+    sessionLabel: sessLabel(session),
+    ticketType: type,
+    quantity: qty,
+    unitPrice: price,
+    total: price * qty,
+    needProof: proof,
+    sendAlim,
+  });
+
+  if (r.success) {
+    toast('직권 예약 완료: ' + r.resNum);
+    document.getElementById('m-name').value  = '';
+    document.getElementById('m-phone').value = '';
+    document.getElementById('m-email').value = '';
+    document.getElementById('m-price').value = '0';
+    document.getElementById('m-proof').checked = false;
+    await loadData();
+  } else {
+    toast('오류: ' + (r.message || '실패'));
+  }
+}
+
+// ── 현황 ──
+function renderDashboard() {
+  const confirmed  = reservations.filter(r => r.payStatus === '입금확인');
+  const pending    = reservations.filter(r => r.payStatus === '미입금');
+  const revenue    = confirmed.reduce((s,r) => s+(r.total||0), 0);
+  const totalSeats = sessions.reduce((s,s2) => s+(s2.seats||0), 0);
+  document.getElementById('stat-total').textContent         = reservations.length + '건';
+  document.getElementById('stat-total-sub').textContent     = '총 ' + totalSeats + '석 기준';
+  document.getElementById('stat-confirmed').textContent     = confirmed.length + '건';
+  document.getElementById('stat-confirmed-sub').textContent = confirmed.reduce((s,r)=>s+(r.quantity||0),0) + '석 확정';
+  document.getElementById('stat-pending').textContent       = pending.length + '건';
+  document.getElementById('stat-revenue').textContent       = revenue.toLocaleString() + '원';
+  document.getElementById('session-status-list').innerHTML  = sessions.map(s => {
+    const confirmed = reservations.filter(r=>r.sessionId===s.id&&r.payStatus==='입금확인').reduce((sum,r)=>sum+(r.quantity||0),0);
+    const pending   = reservations.filter(r=>r.sessionId===s.id&&r.payStatus==='미입금').reduce((sum,r)=>sum+(r.quantity||0),0);
+    const booked    = s.booked !== undefined ? s.booked : (confirmed + pending); // DB 실제값 우선
+    const total     = confirmed + pending;
+    const pctConf   = s.seats>0 ? Math.round(confirmed/s.seats*100) : 0;
+    const pctPend   = s.seats>0 ? Math.round(pending/s.seats*100)   : 0;
+    const remain    = s.seats - total;
+    const isFull    = remain<=0||s.status==='closed';
+    const isLow     = !isFull&&remain<=3;
+    const bc = isFull?'badge-sold':isLow?'badge-low':'badge-open';
+    const bt = isFull?'마감':isLow?'마감임박':'예매중';
+    return '<div class="session-row">'
+      + '<div class="session-bar-wrap">'
+      +   '<div class="session-bar-label">'
+      +     '<span>' + sessLabel(s) + '</span>'
+      +     '<span style="color:var(--gray);font-size:11px;">'
+      +       '<span style="color:var(--gold)">입금확인 ' + confirmed + '석</span>'
+      +       (pending>0 ? ' <span style="color:var(--orange)">+ 미입금 ' + pending + '석</span>' : '')
+      +       ' / ' + s.seats + '석'
+      +     '</span>'
+      +   '</div>'
+      +   '<div class="session-bar-bg" style="position:relative;">'
+      +     '<div style="position:absolute;left:0;top:0;height:100%;width:' + (pctConf+pctPend) + '%;background:var(--orange);border-radius:2px;"></div>'
+      +     '<div style="position:absolute;left:0;top:0;height:100%;width:' + pctConf + '%;background:var(--gold);border-radius:2px;"></div>'
+      +   '</div>'
+      +   '<div style="font-size:10px;color:var(--gray2);margin-top:4px;">잔여 ' + Math.max(0,remain) + '석</div>'
+      + '</div>'
+      + '<span class="badge ' + bc + '">' + bt + '</span>'
+      + '</div>';
+  }).join('');
+}
+
+// ── 예약 목록 ──
+function renderReservations() {
+  let list = reservations;
+  if (currentFilter === '신청') {
+    list = list.filter(r => r.changeRequest);
+  } else if (currentFilter !== 'all') {
+    list = list.filter(r => currentFilter==='취소' ? r.payStatus.includes('취소') : r.payStatus===currentFilter);
+  }
+  if (currentSearch) {
+    const q = currentSearch.toLowerCase();
+    list = list.filter(r => r.name.includes(q) || (r.resNum||'').toLowerCase().includes(q));
+  }
+  const el = document.getElementById('res-list');
+  if (!list.length) { el.innerHTML = '<div class="empty-state">해당하는 예약이 없습니다.</div>'; return; }
+  el.innerHTML = list.map(r => buildResCard(r)).join('');
+}
+
+function buildResCard(r) {
+  const bc = r.payStatus==='입금확인'?'pay-confirmed':r.payStatus==='미입금'?'pay-pending':'pay-cancelled';
+  const hasRequest = r.changeRequest;
+  const reqType    = hasRequest ? (r.changeRequest.type === 'cancel' ? '취소신청' : '변경신청') : '';
+  const rn = r.resNum || '';
+
+  const deleteBtn = '<button class="action-btn danger" data-action="delete" data-rn="' + rn + '" style="border-color:#5a1a1a;color:#c06060;margin-left:auto;">삭제</button>';
+
+  let actions = '';
+  if (r.payStatus === '미입금') {
+    actions = '<div class="res-actions">'
+      + '<button class="action-btn confirm" data-action="pay" data-rn="' + rn + '">입금 확인</button>'
+      + '<button class="action-btn" data-action="change" data-rn="' + rn + '">회차 변경</button>'
+      + '<button class="action-btn danger" data-action="cancel" data-rn="' + rn + '">예약 취소</button>'
+      + deleteBtn
+      + '</div>';
+  } else if (r.payStatus === '입금확인') {
+    actions = '<div class="res-actions">'
+      + '<button class="action-btn info" data-action="ticket" data-rn="' + rn + '">티켓 확인</button>'
+      + '<button class="action-btn" data-action="resend" data-rn="' + rn + '">티켓 재발송</button>'
+      + '<button class="action-btn" data-action="reminder" data-rn="' + rn + '">리마인드</button>'
+      + '<button class="action-btn" data-action="change" data-rn="' + rn + '">회차 변경</button>'
+      + '<button class="action-btn danger" data-action="cancel" data-rn="' + rn + '">예약 취소</button>'
+      + '<button class="action-btn' + (r.checkedIn ? ' checked' : '') + '" data-action="' + (r.checkedIn ? '' : 'checkin') + '" data-rn="' + rn + '">' + (r.checkedIn ? '✓입장완료' : '입장처리') + '</button>'
+      + deleteBtn
+      + '</div>';
+  } else {
+    // 취소 등 비활성 상태
+    actions = '<div class="res-actions">' + deleteBtn + '</div>';
+  }
+
+  // 변경/취소 신청 처리 버튼
+  if (hasRequest) {
+    const reqInfo = r.changeRequest;
+    const reqDesc = reqType === '변경신청'
+      ? ('→ ' + (reqInfo.newSessionLabel||''))
+      : ('사유: ' + (reqInfo.reason||'없음'));
+    actions += '<div style="background:#1a1000;border:1px solid #854f0b;border-radius:4px;padding:10px 12px;margin-top:8px;font-size:var(--fs-xs);">'
+      + '<div style="color:#e07b39;font-weight:500;margin-bottom:6px;">' + reqType + ' 접수됨</div>'
+      + '<div style="color:var(--gray);margin-bottom:8px;">' + reqDesc + '</div>'
+      + '<div style="display:flex;gap:8px;">'
+      + (reqType === '취소신청' && reqInfo.refundAccount
+        ? '<div style="font-size:var(--fs-xs);color:var(--gray);margin-bottom:8px;">'
+          + '환불 계좌: ' + (reqInfo.refundBank||'') + ' ' + (reqInfo.refundAccount||'') + ' (' + (reqInfo.refundHolder||'') + ')</div>'
+        : '')
+      + (reqType === '변경신청'
+        ? '<button class="action-btn warn" data-action="process-change" data-rn="' + r.resNum + '">변경 처리</button>'
+        : '<button class="action-btn danger" data-action="process-cancel" data-rn="' + r.resNum + '">취소 처리</button>'
+      )
+      + '<button class="action-btn" data-action="dismiss" data-rn="' + r.resNum + '">신청 무시</button>'
+      + '</div></div>';
+  }
+
+  return '<div class="res-card' + (hasRequest?' has-request':'') + '">'
+    + '<div class="res-card-header" onclick="toggleCard(\'' + r.resNum + '\')">'
+    +   '<div style="flex:1;min-width:0">'
+    +     '<div style="display:flex;align-items:center;flex-wrap:wrap;gap:4px">'
+    +       '<span class="res-num-badge">' + (r.resNum||'') + '</span>'
+    +       '<span class="res-name">' + (r.name||'') + '</span>'
+    +       (hasRequest ? '<span class="request-badge">' + reqType + '</span>' : '')
+    +     '</div>'
+    +     '<div class="res-session">' + (r.session||'') + ' · ' + (r.ticketType||'') + ' ' + (r.quantity||0) + '매</div>'
+    +   '</div>'
+    +   '<span class="pay-badge ' + bc + '">' + r.payStatus + '</span>'
+    + '</div>'
+    + '<div class="res-card-body" id="body-' + r.resNum + '">'
+    +   '<div class="res-detail-grid">'
+    +     '<div><div class="res-detail-label">연락처</div><div class="res-detail-value">' + (r.phone||'') + '</div></div>'
+    +     '<div><div class="res-detail-label">결제금액</div><div class="res-detail-value gold">' + ((r.total||0)===0?'무료':(r.total||0).toLocaleString()+'원') + '</div></div>'
+    +     '<div><div class="res-detail-label">이메일</div><div class="res-detail-value" style="font-size:var(--fs-xs)">' + (r.email||'') + '</div></div>'
+    +     '<div><div class="res-detail-label">증빙확인</div><div class="res-detail-value' + (r.needProof?' proof':'') + '">' + (r.needProof?'현장 확인 필요':'해당 없음') + '</div></div>'
+    +   '</div>'
+    +   actions
+    + '</div>'
+    + '</div>';
+}
+
+function mkBtn(cls, label, onclick) {
+  if (!onclick) return '<button class="action-btn ' + cls + '" style="pointer-events:none">' + label + '</button>';
+  return '<button class="action-btn' + (cls?' '+cls:'') + '" onclick="' + onclick + '">' + label + '</button>';
+}
+
+// ── 예약 목록 버튼 이벤트 위임 ──
+document.addEventListener('click', function(e) {
+  const btn = e.target.closest('[data-action]');
+  if (!btn) return;
+  const action = btn.dataset.action;
+  const rn     = btn.dataset.rn;
+  console.log('[BTN DEBUG] action:', action, '/ rn:', rn);
+  if (!action) { console.warn('[BTN DEBUG] action 없음'); return; }
+  if (!rn)     { console.warn('[BTN DEBUG] rn 없음'); return; }
+
+  if (action === 'pay')     confirmPay(rn);
+  if (action === 'change')  changeSession(rn);
+  if (action === 'cancel')  cancelRes(rn);
+  if (action === 'delete')  deleteRes(rn);
+  if (action === 'resend')   resendTicket(rn);
+  if (action === 'reminder') sendReminderOne(rn);
+  if (action === 'checkin') doCheckInById(rn);
+  if (action === 'ticket') {
+    const r = reservations.find(x => x.resNum === rn);
+    if (!r) return;
+    const p = performance || {};
+    const url = '/ticket.html?res=' + encodeURIComponent(r.resNum||'')
+      + '&name='    + encodeURIComponent(r.name||'')
+      + '&perf='    + encodeURIComponent(p.name||'')
+      + '&agency='  + encodeURIComponent(p.agency||'')
+      + '&tel='     + encodeURIComponent(p.tel||'')
+      + '&sub='     + encodeURIComponent(p.subtitle||'')
+      + '&host='    + encodeURIComponent(p.host||'')
+      + '&organizer='+ encodeURIComponent(p.organizer||'')
+      + '&sponsor=' + encodeURIComponent(p.sponsor||'')
+      + '&session=' + encodeURIComponent(r.session||'')
+      + '&type='    + encodeURIComponent(r.ticketType||'')
+      + '&qty='     + (r.quantity||1)
+      + '&proof='   + (r.needProof?'true':'false');
+    window.open(url, '_blank');
+  }
+  // 신청 처리 버튼
+  if (action === 'process-change')  processChangeRequest(rn);
+  if (action === 'process-cancel')  processCancelRequest(rn);
+  if (action === 'dismiss')         dismissRequest(rn);
+});
+
+function toggleCard(rn) { document.getElementById('body-'+rn).classList.toggle('open'); }
+function setFilter(f,b) {
+  currentFilter=f;
+  document.querySelectorAll('.filter-btn').forEach(x=>x.classList.remove('active'));
+  b.classList.add('active');
+  renderReservations();
+}
+function filterRes(q) { currentSearch=q.trim(); renderReservations(); }
+
+async function confirmPay(rn) {
+  if (!confirm(rn + ' 입금 확인 처리하시겠습니까?')) return;
+  const r = await callAPI({action:'confirmPayment', resNum:rn});
+  if (r.success) { toast('티켓이 발송됩니다.'); await loadData(); }
+  else toast('오류: '+(r.message||'실패'));
+}
+async function cancelRes(rn) {
+  if (!confirm(rn + ' 예약을 취소하시겠습니까?')) return;
+  const r = await callAPI({action:'cancel', resNum:rn});
+  if (r.success) { toast('취소됐습니다.'); await loadData(); }
+}
+async function deleteRes(rn) {
+  if (!confirm(rn + ' 예약을 DB에서 완전 삭제하시겠습니까?\n\n⚠ 삭제 후 복구할 수 없습니다.')) return;
+  const r = await callAPI({action:'deleteReservation', resNum:rn});
+  if (r.success) { toast('삭제됐습니다.'); await loadData(); }
+  else toast('삭제 실패: ' + (r.message || '오류'));
+}
+
+// ── 백업 & 초기화 ──
+async function backupData() {
+  const r = await callAPI({action:'backup'});
+  if (!r.success) { toast('백업 실패'); return; }
+  const json = JSON.stringify(r.data, null, 2);
+  const blob = new Blob([json], {type:'application/json'});
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  const date = new Date().toLocaleDateString('ko-KR').replace(/\. /g,'-').replace('.','');
+  a.href = url; a.download = '공연데이터_백업_' + date + '.json';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  toast('백업 파일이 다운로드됩니다.');
+}
+function openResetModal() {
+  document.getElementById('reset-modal-bg').classList.add('show');
+}
+function closeResetModal() {
+  document.getElementById('reset-modal-bg').classList.remove('show');
+}
+async function doResetPerformance() {
+  const keepPresets     = document.getElementById('reset-keep-presets').checked;
+  const keepPerformance = document.getElementById('reset-keep-performance').checked;
+  const confirmMsg = '정말 초기화하시겠습니까?\n\n'
+    + '삭제 대상: 예약 전체, 회차 전체, 선점(Lock), 좌석 카운트\n'
+    + (keepPresets     ? '' : '+ 할인 프리셋\n')
+    + (keepPerformance ? '' : '+ 공연/기획사 설정\n')
+    + '\n⚠ 이 작업은 되돌릴 수 없습니다.';
+  if (!confirm(confirmMsg)) return;
+  const r = await callAPI({action:'resetPerformance', keepPresets, keepPerformance});
+  if (r.success) {
+    toast('초기화 완료. 데이터를 새로 불러옵니다.');
+    closeResetModal();
+    await loadData();
+  } else {
+    toast('초기화 실패: ' + (r.message || '오류'));
+  }
+}
+async function resendTicket(rn) {
+  const r = await callAPI({action:'resendTicket', resNum:rn});
+  toast(r.success ? '티켓이 재발송됐습니다.' : '재발송 실패');
+}
+async function doCheckInById(rn) {
+  const r = await callAPI({action:'checkIn', resNum:rn});
+  if (r.success) { toast('입장 처리됐습니다.'); await loadData(); }
+}
+
+// ── 신청 처리 ──
+async function processChangeRequest(rn) {
+  const reservation = reservations.find(r => r.resNum === rn);
+  if (!reservation || !reservation.changeRequest) return;
+  const req = reservation.changeRequest;
+  if (!confirm('회차를 변경하시겠습니까?\n→ ' + req.newSessionLabel)) return;
+  const r = await callAPI({
+    action: 'changeSession',
+    resNum: rn,
+    newSessionId: req.newSessionId,
+    newSessionLabel: req.newSessionLabel,
+  });
+  if (r.success) {
+    await callAPI({action:'dismissRequest', resNum:rn});
+    toast('회차가 변경됐습니다.'); await loadData();
+  }
+}
+async function processCancelRequest(rn) {
+  if (!confirm('예약을 취소 처리하시겠습니까?')) return;
+  const r = await callAPI({action:'cancel', resNum:rn});
+  if (r.success) { toast('취소됐습니다.'); await loadData(); }
+}
+async function dismissRequest(rn) {
+  if (!confirm('신청을 무시하시겠습니까?')) return;
+  await callAPI({action:'dismissRequest', resNum:rn});
+  toast('신청이 무시됐습니다.'); await loadData();
+}
+
+// ── 회차 변경 모달 ──
+function changeSession(resNum) {
+  const reservation = reservations.find(r => r.resNum === resNum);
+  if (!reservation) return;
+  modalResNum = resNum; modalNewSessionId = null;
+  document.getElementById('modal-sub').innerHTML =
+    '<strong style="color:var(--white)">' + reservation.name + '</strong> 현재 회차:<br>'
+    + '<span style="color:var(--gold)">' + reservation.session + '</span>';
+  document.getElementById('modal-sess-list').innerHTML = sessions.map(s => {
+    const isCurrent = reservation.session === sessLabel(s);
+    const isFull    = s.status === 'closed';
+    return '<div class="modal-sess-item' + (isCurrent?' sel':'') + (isFull?' disabled':'') + '" '
+      + (isFull ? '' : 'onclick="selectModalSession(\'' + s.id + '\', this)"') + '>'
+      + '<div style="font-size:var(--fs-sm);font-weight:500">' + sessLabel(s) + '</div>'
+      + '<div style="font-size:var(--fs-xs);color:var(--gray);margin-top:2px">' + s.seats + '석'
+      + (isFull?' · 마감':'') + (isCurrent?' · 현재':'') + '</div>'
+      + '</div>';
+  }).join('');
+  document.getElementById('modal-bg').classList.add('show');
+}
+function selectModalSession(id, el) {
+  modalNewSessionId = id;
+  document.querySelectorAll('.modal-sess-item').forEach(x=>x.classList.remove('sel'));
+  el.classList.add('sel');
+}
+function closeModal() {
+  document.getElementById('modal-bg').classList.remove('show');
+  modalResNum = null; modalNewSessionId = null;
+}
+async function confirmSessionChange() {
+  if (!modalNewSessionId) { toast('변경할 회차를 선택해 주세요.'); return; }
+  const newSession = sessions.find(s=>s.id===modalNewSessionId);
+  if (!newSession) return;
+  const r = await callAPI({action:'changeSession', resNum:modalResNum, newSessionId:modalNewSessionId, newSessionLabel:sessLabel(newSession)});
+  if (r.success) { toast('회차가 변경됐습니다.'); closeModal(); await loadData(); }
+  else toast('변경 실패: '+(r.message||'오류'));
+}
+
+// ── 회차 관리 ──
+function renderSessionList() {
+  const el = document.getElementById('session-list');
+  if (!sessions.length) { el.innerHTML = '<div class="empty-state">등록된 회차가 없습니다.</div>'; return; }
+  el.innerHTML = sessions.map(s => {
+    const st = s.status==='open'?'예매중':s.status==='closed'?'마감':'오픈예정';
+    return '<div class="session-item' + (editingSessionId===s.id?' selected':'') + '" onclick="selectSession(\'' + s.id + '\')">'
+      + '<div><div class="session-item-date">' + sessLabel(s) + '</div><div class="session-item-info">' + s.seats + '석 · ' + st + '</div></div>'
+      + '<div class="item-btns"><button class="icon-btn danger" onclick="event.stopPropagation();deleteSession(\'' + s.id + '\')">삭제</button></div>'
+      + '</div>';
+  }).join('');
+}
+function selectSession(id) {
+  const s=sessions.find(s=>s.id===id); if(!s) return;
+  editingSessionId=id;
+  document.getElementById('sess-date').value = s.date;
+  // 시간 셀렉트에 없는 값이면 동적으로 추가
+  const timeEl = document.getElementById('sess-time');
+  if (s.time && !Array.from(timeEl.options).find(o => o.value === s.time)) {
+    const opt = document.createElement('option');
+    opt.value = s.time; opt.textContent = s.time;
+    timeEl.appendChild(opt);
+  }
+  timeEl.value = s.time;
+  document.getElementById('sess-seats').value=s.seats;
+  document.getElementById('sess-status').value=s.status;
+  document.getElementById('session-form-title').textContent='회차 수정 / 복사 추가';
+  document.getElementById('session-mode-label').classList.add('show');
+  document.getElementById('sess-add-btn').style.display='flex';
+  document.getElementById('sess-update-btn').style.display='flex';
+  document.getElementById('sess-cancel-btn').style.display='flex';
+  renderSessionList();
+}
+function resetSessionForm() {
+  editingSessionId=null;
+  document.getElementById('sess-date').value='';
+  document.getElementById('sess-time').value='';
+  document.getElementById('sess-seats').value='';
+  document.getElementById('sess-status').value='open';
+  document.getElementById('session-form-title').textContent='회차 추가';
+  document.getElementById('session-mode-label').classList.remove('show');
+  document.getElementById('sess-add-btn').style.display='flex';
+  document.getElementById('sess-update-btn').style.display='none';
+  document.getElementById('sess-cancel-btn').style.display='none';
+  renderSessionList();
+}
+async function addSession() {
+  const date=document.getElementById('sess-date').value, time=document.getElementById('sess-time').value;
+  const seats=parseInt(document.getElementById('sess-seats').value), status=document.getElementById('sess-status').value;
+  if (!date||!time||!seats) { toast('날짜, 시간, 좌석 수를 모두 입력해 주세요.'); return; }
+  const session={id:'S'+Date.now(), date, time, seats, booked:0, status};
+  const r=await callAPI({action:'addSession', session});
+  if(r.success){sessions.push(session);sessions=sortSessions(sessions);resetSessionForm();renderDashboard();toast('회차가 추가됐습니다.');}
+}
+async function updateSession() {
+  if (!editingSessionId) return;
+  const date=document.getElementById('sess-date').value, time=document.getElementById('sess-time').value;
+  const seats=parseInt(document.getElementById('sess-seats').value), status=document.getElementById('sess-status').value;
+  if (!date||!time||!seats) { toast('날짜, 시간, 좌석 수를 모두 입력해 주세요.'); return; }
+  const session={id:editingSessionId, date, time, seats, status};
+  const r=await callAPI({action:'updateSession', session});
+  if(r.success){const idx=sessions.findIndex(s=>s.id===editingSessionId);if(idx!==-1)sessions[idx]={...sessions[idx],...session};sessions=sortSessions(sessions);resetSessionForm();renderDashboard();toast('수정됐습니다.');}
+}
+async function deleteSession(id) {
+  const s=sessions.find(s=>s.id===id); if(!s) return;
+  if(!confirm(sessLabel(s)+' 회차를 삭제하시겠습니까?')) return;
+  const r=await callAPI({action:'deleteSession',id});
+  if(r.success){sessions=sessions.filter(s=>s.id!==id);if(editingSessionId===id)resetSessionForm();else renderSessionList();renderDashboard();toast('삭제됐습니다.');}
+}
+
+// ── 할인 프리셋 ──
+function renderPresets() {
+  const el=document.getElementById('preset-list');
+  if(!presets.length){el.innerHTML='<div class="empty-state">등록된 프리셋이 없습니다.</div>';return;}
+  el.innerHTML=presets.map((p,i)=>{
+    if(editingPresetName===p.name){
+      return '<div class="edit-panel">'
+        +'<div class="edit-panel-title">할인 수정</div>'
+        +'<div class="form-row">'
+        +'<div class="form-group"><label>할인명</label><input type="text" class="form-input" id="ep-name-'+i+'" value="'+p.name+'"></div>'
+        +'<div class="form-group"><label>판매가격 (원)</label><input type="number" class="form-input" id="ep-price-'+i+'" value="'+p.price+'"></div>'
+        +'</div>'
+        +'<label style="display:flex;align-items:center;gap:8px;font-size:var(--fs-sm);color:var(--gray);cursor:pointer;margin-bottom:10px;">'
+        +'<input type="checkbox" id="ep-proof-'+i+'" '+(p.needProof?'checked':'')+' style="width:14px;height:14px;accent-color:var(--gold);"> 현장 증빙 필요</label>'
+        +'<div class="edit-row"><button class="edit-save" onclick="saveEditPreset(\''+p.name+'\','+i+')">저장</button>'
+        +'<button class="edit-cancel" onclick="cancelEditPreset()">취소</button></div></div>';
+    }
+    return '<div class="preset-item" draggable="true" data-index="'+i+'" ondragstart="onDragStart(event,'+i+')" ondragover="onDragOver(event,'+i+')" ondrop="onDrop(event,'+i+')" ondragend="onDragEnd()">'
+      +'<span class="drag-handle">⠿</span>'
+      +'<div class="preset-info"><div class="preset-name-edit">'+p.name+'</div>'
+      +'<div class="preset-price-edit">'+(p.price===0?'무료':p.price.toLocaleString()+'원')+'</div>'
+      +(p.needProof?'<div class="preset-proof-label">현장 증빙 필요</div>':'')+'</div>'
+      +'<div class="preset-actions">'
+      +'<button class="toggle-btn '+(p.active?'on':'off')+'" onclick="togglePreset(\''+p.name+'\')">'+( p.active?'활성':'비활성')+'</button>'
+      +'<button class="icon-btn" onclick="startEditPreset(\''+p.name+'\')">수정</button>'
+      +'<button class="icon-btn danger" onclick="deletePreset(\''+p.name+'\')">삭제</button>'
+      +'</div></div>';
+  }).join('');
+}
+function startEditPreset(name){editingPresetName=name;renderPresets();}
+function cancelEditPreset(){editingPresetName=null;renderPresets();}
+async function saveEditPreset(orig,i){
+  const nn=document.getElementById('ep-name-'+i).value.trim();
+  const np=parseInt(document.getElementById('ep-price-'+i).value)||0;
+  const nf=document.getElementById('ep-proof-'+i).checked;
+  if(!nn){toast('할인명을 입력해 주세요.');return;}
+  const idx=presets.findIndex(p=>p.name===orig);if(idx===-1)return;
+  const updated={...presets[idx],name:nn,price:np,needProof:nf};
+  await callAPI({action:'deletePreset',name:orig});
+  await callAPI({action:'savePreset',preset:updated});
+
+  // 이름이 바뀐 경우 기존 예약 ticketType 동기화
+  if (orig !== nn) {
+    const syncRes = await callAPI({action:'syncPresetName', oldName:orig, newName:nn});
+    if (syncRes.success && syncRes.count > 0) {
+      toast('수정됐습니다. 기존 예약 ' + syncRes.count + '건 권종명도 업데이트됐습니다.');
+    } else {
+      toast('수정됐습니다.');
+    }
+  } else {
+    toast('수정됐습니다.');
+  }
+
+  presets[idx]=updated;editingPresetName=null;renderPresets();await loadData();
+}
+async function deletePreset(name){
+  if(!confirm('"'+name+'" 할인을 삭제하시겠습니까?'))return;
+  const r=await callAPI({action:'deletePreset',name});
+  if(r.success){presets=presets.filter(p=>p.name!==name);renderPresets();toast('삭제됐습니다.');}
+}
+async function togglePreset(name){
+  const p=presets.find(p=>p.name===name);if(!p)return;
+  p.active=!p.active;
+  await callAPI({action:'togglePreset',name,active:p.active});renderPresets();
+}
+function onDragStart(e,i){dragSrcIndex=i;e.currentTarget.classList.add('dragging');e.dataTransfer.effectAllowed='move';}
+function onDragOver(e,i){e.preventDefault();document.querySelectorAll('.preset-item').forEach(el=>el.classList.remove('drag-over'));const items=document.querySelectorAll('.preset-item');if(items[i])items[i].classList.add('drag-over');}
+function onDrop(e,i){e.preventDefault();if(dragSrcIndex===null||dragSrcIndex===i)return;const moved=presets.splice(dragSrcIndex,1)[0];presets.splice(i,0,moved);callAPI({action:'reorderPresets',presets});dragSrcIndex=null;renderPresets();toast('순서 변경됐습니다.');}
+function onDragEnd(){document.querySelectorAll('.preset-item').forEach(el=>{el.classList.remove('dragging');el.classList.remove('drag-over');});dragSrcIndex=null;}
+// ── 권종 불일치 예약 찾기 ──
+async function findUnknownTickets() {
+  const r = await callAPI({action:'getUnknownTicketTypes'});
+  const el = document.getElementById('unknown-ticket-list');
+  if (!r.success) { toast('조회 실패'); return; }
+  if (!r.reservations.length) {
+    el.innerHTML = '<div style="font-size:var(--fs-xs);color:#4caf7d;padding:8px 0;">✅ 불일치 예약 없음. 모든 권종이 정상입니다.</div>';
+    return;
+  }
+  el.innerHTML = r.reservations.map(res =>
+    '<div style="background:var(--bg);border:1px solid #854f0b;border-radius:var(--radius);padding:12px 14px;margin-bottom:8px;">' +
+      '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">' +
+        '<div>' +
+          '<span class="res-num-badge">' + res.resNum + '</span>' +
+          '<span style="margin-left:8px;font-size:var(--fs-sm);">' + res.name + '</span>' +
+        '</div>' +
+        '<span style="font-size:var(--fs-xs);color:var(--orange);">' + res.payStatus + '</span>' +
+      '</div>' +
+      '<div style="font-size:var(--fs-xs);color:var(--orange);margin-bottom:8px;">권종: ' + res.ticketType + ' (현재 프리셋에 없음)</div>' +
+      '<div style="display:flex;gap:8px;align-items:center;">' +
+        '<select id="fix-type-' + res.resNum + '" class="form-select" style="flex:1;font-size:var(--fs-xs);padding:7px 10px;">' +
+          presets.map(p => '<option value="' + p.name + '">' + p.name + ' (' + (p.price===0?'무료':p.price.toLocaleString()+'원') + ')</option>').join('') +
+        '</select>' +
+        '<button class="action-btn confirm" style="flex:0 0 auto;" onclick="fixTicketType_btn(this)">수정</button>' +
+      '</div>' +
+    '</div>'
+  ).join('');
+  toast(r.reservations.length + '건 불일치 예약 발견');
+}
+
+async function fixTicketType_btn(btn) {
+  const resNum = btn.dataset.fixRn;
+  return fixTicketType(resNum);
+}
+
+async function fixTicketType(resNum) {
+  const newType = document.getElementById('fix-type-' + resNum).value;
+  if (!newType) return;
+  const r = await callAPI({action:'fixTicketType', resNum, newTicketType: newType});
+  if (r.success) {
+    toast(resNum + ' 권종이 "' + newType + '"으로 수정됐습니다.');
+    await loadData();
+    findUnknownTickets();
+  } else {
+    toast('수정 실패');
+  }
+}
+
+async function addPreset(){
+  const name=document.getElementById('new-preset-name').value.trim();
+  const price=parseInt(document.getElementById('new-preset-price').value);
+  const proof=document.getElementById('new-preset-proof').checked;
+  if(!name){toast('할인명을 입력해 주세요.');return;}
+  if(isNaN(price)||price<0){toast('판매가격을 입력해 주세요.');return;}
+  if(presets.find(p=>p.name===name)){toast('이미 존재하는 할인명입니다.');return;}
+  const preset={name,price,needProof:proof,active:true};
+  const r=await callAPI({action:'savePreset',preset});
+  if(r.success){presets.push(preset);document.getElementById('new-preset-name').value='';document.getElementById('new-preset-price').value='';document.getElementById('new-preset-proof').checked=false;renderPresets();toast('저장됐습니다.');}
+}
+
+// ── 포스터 업로드 ──
+async function uploadPoster(input) {
+  const file = input.files[0];
+  if (!file) return;
+
+  const status = document.getElementById('poster-upload-status');
+  const area   = document.getElementById('poster-upload-area');
+  status.style.display = 'block';
+  status.style.color   = 'var(--gray)';
+  status.textContent   = '업로드 중...';
+  area.style.borderColor = 'var(--gold)';
+
+  try {
+    const res = await fetch('/api/upload', {
+      method:  'PUT',
+      headers: {
+        'x-admin-key':    ADMIN_PW,
+        'x-filename':     encodeURIComponent(file.name),
+        'Content-Type':   file.type,
+      },
+      body: file,
+    });
+    const data = await res.json();
+
+    if (data.success) {
+      document.getElementById('poster-url-input').value = data.url;
+      showPosterPreview(data.url);
+      status.style.color   = '#4caf7d';
+      status.textContent   = '업로드 완료!';
+      performance.posterUrl = data.url;
+      toast('포스터 업로드 완료! 저장 버튼을 눌러 반영하세요.');
+    } else {
+      status.style.color   = 'var(--red)';
+      status.textContent   = '실패: ' + (data.message || '오류');
+      area.style.borderColor = 'var(--red)';
+    }
+  } catch(e) {
+    status.style.color   = 'var(--red)';
+    status.textContent   = '네트워크 오류';
+  }
+}
+
+function showPosterPreview(url) {
+  if (!url) return;
+  const wrap = document.getElementById('poster-preview-wrap');
+  const img  = document.getElementById('poster-preview');
+  const ph   = document.getElementById('poster-placeholder');
+  img.src  = url;
+  wrap.style.display = 'block';
+  ph.style.display   = 'none';
+  document.getElementById('poster-upload-area').style.borderColor = 'var(--gold)';
+}
+
+function onPosterUrlInput(url) {
+  if (url) showPosterPreview(url);
+}
+
+// ── 공연 설정 ──
+function syncPerfForm(){
+  document.getElementById('perf-notice').value           = performance.notice          || '';
+  document.getElementById('checkin-code-input').value   = performance.checkinCode      || '';
+  document.getElementById('cancel-deadline-day').value  = performance.cancelDeadlineDay  !== undefined ? performance.cancelDeadlineDay  : 1;
+  document.getElementById('cancel-deadline-hour').value = performance.cancelDeadlineHour !== undefined ? performance.cancelDeadlineHour : 18;
+  document.getElementById('change-deadline-day').value  = performance.changeDeadlineDay  !== undefined ? performance.changeDeadlineDay  : 1;
+  document.getElementById('change-deadline-hour').value = performance.changeDeadlineHour !== undefined ? performance.changeDeadlineHour : 18;
+  document.getElementById('cancel-policy-text').value   = performance.cancelPolicyText   || '';
+  const posterUrl = performance.posterUrl || '';
+  document.getElementById('poster-url-input').value = posterUrl;
+  if (posterUrl) showPosterPreview(posterUrl);
+  document.getElementById('admin-phone').value         = performance.adminPhone   || '';
+  document.getElementById('agency-name').value         = performance.agency      || '';
+  document.getElementById('agency-tel').value          =performance.tel          ||'';
+  document.getElementById('agency-email').value        =performance.email        ||'';
+  document.getElementById('kakaopay-link').value       =performance.kakaopayLink ||'';
+  document.getElementById('perf-name').value           =performance.name         ||'';
+  document.getElementById('perf-subtitle').value       =performance.subtitle     ||'';
+  document.getElementById('perf-host').value           =performance.host         ||'';
+  document.getElementById('perf-organizer').value      =performance.organizer    ||'';
+  document.getElementById('perf-sponsor').value        =performance.sponsor      ||'';
+  document.getElementById('perf-account').value        =performance.account      ||'';
+  document.getElementById('perf-account-holder').value =performance.accountHolder||'';
+  document.getElementById('perf-open').value           =performance.open         ||'open';
+  document.getElementById('perf-max-qty').value        =performance.maxQty       ||4;
+}
+async function savePerf(){
+  const data={
+    notice:              document.getElementById('perf-notice').value.trim(),
+    checkinCode:         document.getElementById('checkin-code-input').value.trim(),
+    cancelDeadlineDay:   parseInt(document.getElementById('cancel-deadline-day').value),
+    cancelDeadlineHour:  parseInt(document.getElementById('cancel-deadline-hour').value),
+    changeDeadlineDay:   parseInt(document.getElementById('change-deadline-day').value),
+    changeDeadlineHour:  parseInt(document.getElementById('change-deadline-hour').value),
+    cancelPolicyText:    document.getElementById('cancel-policy-text').value.trim(),
+    posterUrl:   document.getElementById('poster-url-input').value.trim(),
+    agency:      document.getElementById('agency-name').value.trim(),
+    tel:document.getElementById('agency-tel').value.trim(),
+    email:document.getElementById('agency-email').value.trim(),
+    kakaopayLink:document.getElementById('kakaopay-link').value.trim(),
+    name:document.getElementById('perf-name').value.trim(),
+    subtitle:document.getElementById('perf-subtitle').value.trim(),
+    host:document.getElementById('perf-host').value.trim(),
+    organizer:document.getElementById('perf-organizer').value.trim(),
+    sponsor:document.getElementById('perf-sponsor').value.trim(),
+    account:document.getElementById('perf-account').value.trim(),
+    accountHolder:document.getElementById('perf-account-holder').value.trim(),
+    open:document.getElementById('perf-open').value,
+    maxQty:parseInt(document.getElementById('perf-max-qty').value)||4,
+  };
+  const r=await callAPI({action:'savePerformance',data});
+  if(r.success){performance=data;toast('저장됐습니다.');renderDashboard();}else toast('저장 실패');
+}
+
+// ── 입장 확인 ──
+function doCheckIn(){
+  const input=document.getElementById('qr-input').value.trim().toUpperCase();
+  const result=document.getElementById('check-result'),status=document.getElementById('check-status'),detail=document.getElementById('check-detail');
+  if(!input)return;
+  const r=reservations.find(r=>r.resNum===input);
+  result.className='check-result show';
+  if(!r){result.classList.add('fail');status.className='check-status fail';status.textContent='예약 정보를 찾을 수 없습니다.';detail.innerHTML='';return;}
+  if(r.payStatus!=='입금확인'){result.classList.add('fail');status.className='check-status fail';status.textContent='입금 미확인 — '+r.payStatus;detail.innerHTML='<div style="font-size:var(--fs-xs);color:var(--gray);margin-top:8px">'+r.name+' · '+r.session+'</div>';return;}
+  result.classList.add('ok');status.className='check-status ok';
+  status.textContent=r.checkedIn?'이미 입장 처리된 티켓입니다.':'입장 확인 ✓';
+  detail.innerHTML='<div style="margin-top:12px;display:grid;gap:6px;font-size:var(--fs-sm)">'
+    +'<div style="display:flex;justify-content:space-between"><span style="color:var(--gray)">예매자</span><span>'+r.name+'</span></div>'
+    +'<div style="display:flex;justify-content:space-between"><span style="color:var(--gray)">회차</span><span>'+r.session+'</span></div>'
+    +'<div style="display:flex;justify-content:space-between"><span style="color:var(--gray)">좌석</span><span>'+r.ticketType+' '+r.quantity+'매</span></div>'
+    +(r.needProof?'<div style="color:var(--orange);font-size:var(--fs-xs);margin-top:4px">⚠ 증빙 서류 확인 필요</div>':'')+'</div>';
+  if(!r.checkedIn){r.checkedIn=true;callAPI({action:'checkIn',resNum:r.resNum});}
+  document.getElementById('qr-input').value='';
+}
+
+// ── 엑셀 내보내기 ──
+async function exportExcel(){
+  try{
+    const res=await fetch('/api/export',{headers:{'x-admin-key':ADMIN_PW}});
+    if(!res.ok){toast('내보내기 실패');return;}
+    const blob=await res.blob(),url=URL.createObjectURL(blob),a=document.createElement('a');
+    const date=new Date().toLocaleDateString('ko-KR').replace(/\. /g,'-').replace('.','');
+    a.href=url;a.download='예약목록_'+date+'.csv';
+    document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url);toast('다운로드됩니다.');
+  }catch(e){toast('내보내기 오류');}
+}
+
+// ── 탭 ──
+function switchTab(tab,el){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('tab-'+tab).classList.add('active');
+}
+
+// ── API ──
+async function callAPI(payload){
+  console.log('[API DEBUG] 호출:', payload.action, payload);
+  try{
+    const res=await fetch(API_BASE,{method:'POST',headers:{'Content-Type':'application/json','x-admin-key':ADMIN_PW},body:JSON.stringify(payload)});
+    const data = await res.json();
+    console.log('[API DEBUG] 응답:', payload.action, data);
+    return data;
+  }catch(e){
+    console.error('[API DEBUG] 오류:', e.message);
+    return{success:false,message:e.message};
+  }
+}
+</script>
+</body>
+</html>
