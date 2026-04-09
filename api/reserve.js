@@ -18,7 +18,7 @@ export default async function handler(req, res) {
   const { lockId, name, phone, email, sessionId, sessionLabel, ticketType, quantity, unitPrice, total, needProof } = req.body;
 
   // 필수값 확인
-  if (!lockId || !name || !phone || !email || !sessionId)
+  if (!lockId || !name || !phone || !sessionId)
     return res.status(400).json({ success: false, message: '필수 값 누락' });
 
   // 선점 유효성 확인
