@@ -544,7 +544,7 @@ function validate() {
   if (!/^01[0-9]{8,9}$/.test(phone)) { document.getElementById('err-phone').classList.add('show'); document.getElementById('phone').classList.add('error'); ok=false; }
   else { document.getElementById('err-phone').classList.remove('show'); document.getElementById('phone').classList.remove('error'); }
   const email = document.getElementById('email').value.trim();
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { document.getElementById('err-email').classList.add('show'); document.getElementById('email').classList.add('error'); ok=false; }
+  if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { document.getElementById('err-email').classList.add('show'); document.getElementById('email').classList.add('error'); ok=false; }
   else { document.getElementById('err-email').classList.remove('show'); document.getElementById('email').classList.remove('error'); }
 
   if (!document.getElementById('privacy-agree').checked) {
