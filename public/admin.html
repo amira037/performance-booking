@@ -394,7 +394,7 @@ body{background:var(--bg);color:var(--white);font-family:'Noto Sans KR',sans-ser
         <div class="form-row">
           <div class="form-group"><label>이메일 (선택)</label><input type="email" class="form-input" id="m-email" placeholder="example@email.com"></div>
           <div class="form-group"><label>매수</label>
-            <select class="form-select" id="m-qty">
+            <select class="form-select" id="m-qty" onchange="calcManualPrice()">
               <option value="1">1매</option>
               <option value="2">2매</option>
               <option value="3">3매</option>
@@ -409,7 +409,7 @@ body{background:var(--bg);color:var(--white);font-family:'Noto Sans KR',sans-ser
             </select>
           </div>
           <div class="form-group"><label>유형 (전체 권종)</label>
-            <select class="form-select" id="m-type">
+            <select class="form-select" id="m-type" onchange="calcManualPrice()">
               <option value="">권종 선택</option>
             </select>
           </div>
@@ -910,6 +910,15 @@ function renderManualSessions() {
   }
 }
 
+function calcManualPrice() {
+  const type = document.getElementById('m-type').value;
+  const qty  = parseInt(document.getElementById('m-qty').value) || 1;
+  const preset = presets.find(p => p.name === type);
+  if (preset) {
+    document.getElementById('m-price').value = preset.price * qty;
+  }
+}
+
 async function addManualReservation() {
   const name     = document.getElementById('m-name').value.trim();
   const phone    = document.getElementById('m-phone').value.trim();
@@ -920,9 +929,8 @@ async function addManualReservation() {
   const proof    = document.getElementById('m-proof').checked;
   const sendAlim = document.getElementById('m-alim').checked;
 
-  // 선택된 권종 가격 자동 계산
-  const preset = presets.find(p => p.name === type);
-  const price  = preset ? preset.price : (parseInt(document.getElementById('m-price').value) || 0);
+  const total = parseInt(document.getElementById('m-price').value) || 0;
+  const price = Math.round(total / qty);
 
   if (!name)      { toast('이름을 입력해 주세요.'); return; }
   if (!sessionId) { toast('회차를 선택해 주세요.'); return; }
@@ -939,7 +947,7 @@ async function addManualReservation() {
     ticketType: type,
     quantity: qty,
     unitPrice: price,
-    total: price * qty,
+    total: total,
     needProof: proof,
     sendAlim,
   });
@@ -1331,6 +1339,7 @@ async function addSession() {
   const date=document.getElementById('sess-date').value, time=document.getElementById('sess-time').value;
   const seats=parseInt(document.getElementById('sess-seats').value), status=document.getElementById('sess-status').value;
   if (!date||!time||!seats) { toast('날짜, 시간, 좌석 수를 모두 입력해 주세요.'); return; }
+  if (sessions.some(s=>s.date===date&&s.time===time)) { toast('같은 날짜·시간의 회차가 이미 존재합니다.'); return; }
   const session={id:'S'+Date.now(), date, time, seats, booked:0, status};
   const r=await callAPI({action:'addSession', session});
   if(r.success){sessions.push(session);sessions=sortSessions(sessions);resetSessionForm();renderDashboard();toast('회차가 추가됐습니다.');}
