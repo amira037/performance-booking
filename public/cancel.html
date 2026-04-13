@@ -3,9 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>예약 취소 / 날짜 변경</title>
-<meta property="og:title" content="공연 예약 취소/날짜 변경">
-<meta property="og:description" content="예약 취소 및 날짜 변경 신청 페이지">
+<title>예약 취소 / 변경 신청</title>
+<meta property="og:title" content="공연 예약 취소/변경 신청">
+<meta property="og:description" content="예약 취소, 날짜 변경, 인원 변경 신청 페이지">
 <meta property="og:type" content="website">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
 <style>
@@ -76,6 +76,7 @@ input.error{border-color:var(--red);}
 .result-icon{width:52px;height:52px;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 18px;}
 .result-icon.cancel{border:1px solid #5a2d2d;}
 .result-icon.change{border:1px solid var(--gold);}
+.result-icon.qty{border:1px solid var(--gold);}
 .result-title{font-size:var(--fs-xl);font-weight:500;margin-bottom:10px;}
 .result-desc{font-size:var(--fs-sm);color:var(--gray);line-height:2;}
 </style>
@@ -84,10 +85,10 @@ input.error{border-color:var(--red);}
 
 <header>
   <div class="header-label" id="header-agency">주식회사 극단아리랑</div>
-  <div class="header-title">예약 취소 / 날짜 변경</div>
+  <div class="header-title">예약 취소 / 변경 신청</div>
   <div class="header-sub">
-    취소는 공연 당일 불가합니다.<br>
-    날짜 변경은 공연 전까지 신청 가능합니다.
+    취소·날짜변경·인원변경 신청 후 담당자가 처리합니다.<br>
+    공연 당일은 모든 신청이 불가합니다.
   </div>
 </header>
 
@@ -127,6 +128,7 @@ input.error{border-color:var(--red);}
     <!-- 액션 탭 -->
     <div class="action-tabs">
       <div class="action-tab active" id="tab-change" onclick="setActionTab('change')">날짜 변경</div>
+      <div class="action-tab" id="tab-qty" onclick="setActionTab('qty')">인원 변경</div>
       <div class="action-tab" id="tab-cancel" onclick="setActionTab('cancel')">예매 취소</div>
     </div>
 
@@ -138,6 +140,35 @@ input.error{border-color:var(--red);}
       </div>
       <div class="sess-list" id="sess-list"></div>
       <button class="primary-btn" id="change-btn" onclick="submitChange()" disabled>날짜 변경 신청</button>
+    </div>
+
+    <!-- 인원 변경 패널 -->
+    <div id="panel-qty" style="display:none">
+      <div id="qty-notice"></div>
+      <div class="form-group" style="margin-top:14px;">
+        <label>현재 매수</label>
+        <div style="font-size:var(--fs-lg);font-weight:500;padding:10px 0;color:var(--gold);">
+          <span id="qty-current">—</span>매
+        </div>
+      </div>
+      <div class="form-group">
+        <label>변경할 매수</label>
+        <div style="display:flex;align-items:center;gap:12px;margin-top:4px;">
+          <button type="button"
+                  style="width:44px;height:44px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);color:var(--white);font-size:22px;cursor:pointer;flex-shrink:0;"
+                  onclick="adjustQty(-1)">−</button>
+          <span id="qty-new-display"
+                style="font-size:var(--fs-xl);font-weight:500;min-width:40px;text-align:center;">1</span>
+          <button type="button"
+                  style="width:44px;height:44px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);color:var(--white);font-size:22px;cursor:pointer;flex-shrink:0;"
+                  onclick="adjustQty(1)">+</button>
+          <span style="font-size:var(--fs-sm);color:var(--gray);">매</span>
+        </div>
+        <div style="font-size:var(--fs-xs);color:var(--gray);margin-top:8px;">
+          최대 <span id="qty-max">4</span>매까지 선택 가능합니다.
+        </div>
+      </div>
+      <button class="primary-btn" id="qty-btn" onclick="submitQtyChange()" disabled>인원 변경 신청</button>
     </div>
 
     <!-- 취소 패널 -->
@@ -187,6 +218,7 @@ let CFG = { sessions:[], performance:{} };
 let lookupData = null;
 let selectedNewSessionId = null;
 let currentAction = 'change';
+let newQty = 1;
 
 async function init() {
   try {
@@ -195,9 +227,9 @@ async function init() {
     const p = CFG.performance || {};
     if (p.agency) document.getElementById('header-agency').textContent = p.agency;
     if (p.name) {
-      document.title = p.name + ' 예약 취소/날짜 변경';
+      document.title = p.name + ' 예약 취소/변경 신청';
       const ogTitle = document.querySelector('meta[property="og:title"]');
-      if (ogTitle) ogTitle.setAttribute('content', p.name + ' 예약 취소/날짜 변경');
+      if (ogTitle) ogTitle.setAttribute('content', p.name + ' 예약 취소/변경 신청');
     }
     if (p.tel)    document.getElementById('notice-tel').textContent = p.tel;
     // 정책 안내 문구 표시
@@ -367,6 +399,32 @@ function showActionStep(data) {
     renderSessList(data.session, isToday);
   }
 
+  // ── 인원 변경 패널 초기화 ──
+  const maxQtyVal = parseInt(p.maxQty) || 4;
+  const curQty    = data.quantity || 1;
+  newQty = curQty;
+  document.getElementById('qty-current').textContent     = curQty;
+  document.getElementById('qty-new-display').textContent = curQty;
+  document.getElementById('qty-max').textContent         = maxQtyVal;
+  document.getElementById('qty-btn').disabled            = true;
+  // 인원변경도 날짜변경과 같은 기한 적용
+  const qtyNoticeEl = document.getElementById('qty-notice');
+  const qtyBtnEl    = document.getElementById('qty-btn');
+  if (changeExpired) {
+    qtyNoticeEl.innerHTML = '<div class="notice-box danger">인원 변경 신청 기한이 지났습니다.<br>' + (p.cancelPolicyText || '') + '</div>';
+    qtyBtnEl.disabled = true;
+    qtyBtnEl.style.opacity = '0.4';
+    qtyBtnEl.style.cursor  = 'not-allowed';
+  } else {
+    qtyNoticeEl.innerHTML = '<div class="notice-box">변경할 매수를 선택해 주세요.<br>담당자 확인 후 처리됩니다.</div>';
+    qtyBtnEl.disabled = true;
+    qtyBtnEl.style.opacity = '';
+    qtyBtnEl.style.cursor  = '';
+  }
+  // 전역 변수에 maxQty 기억
+  window._maxQty = maxQtyVal;
+  window._curQty = curQty;
+
   document.getElementById('step-action').style.display = 'block';
 }
 
@@ -406,8 +464,10 @@ function selectSess(id, el) {
 function setActionTab(tab) {
   currentAction = tab;
   document.getElementById('tab-change').classList.toggle('active', tab==='change');
+  document.getElementById('tab-qty').classList.toggle('active', tab==='qty');
   document.getElementById('tab-cancel').classList.toggle('active', tab==='cancel');
   document.getElementById('panel-change').style.display = tab==='change' ? 'block' : 'none';
+  document.getElementById('panel-qty').style.display    = tab==='qty'    ? 'block' : 'none';
   document.getElementById('panel-cancel').style.display = tab==='cancel' ? 'block' : 'none';
 }
 
@@ -434,6 +494,49 @@ async function submitChange() {
     document.getElementById('loading').classList.remove('show');
     if (data.success) showResult('change', data);
     else { document.getElementById('step-action').style.display='block'; alert(data.message||'오류가 발생했습니다.'); }
+  } catch(e) {
+    document.getElementById('loading').classList.remove('show');
+    document.getElementById('step-action').style.display = 'block';
+    alert('네트워크 오류가 발생했습니다.');
+  }
+}
+
+function adjustQty(delta) {
+  const maxQ = window._maxQty || 4;
+  const curQ = window._curQty || 1;
+  newQty = Math.min(maxQ, Math.max(1, newQty + delta));
+  document.getElementById('qty-new-display').textContent = newQty;
+  // 현재 매수와 다를 때만 신청 버튼 활성화
+  const qtyBtnEl = document.getElementById('qty-btn');
+  if (newQty !== curQ && !qtyBtnEl.style.cursor) {
+    qtyBtnEl.disabled = false;
+  } else {
+    qtyBtnEl.disabled = true;
+  }
+}
+
+async function submitQtyChange() {
+  if (!lookupData) return;
+  const curQ = window._curQty || 1;
+  if (newQty === curQ) { alert('현재 매수와 동일합니다.'); return; }
+
+  document.getElementById('step-action').style.display = 'none';
+  document.getElementById('loading').classList.add('show');
+
+  try {
+    const res = await fetch('/api/cancel-request', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        resNum:      lookupData.resNum,
+        phone:       document.getElementById('phone').value.trim(),
+        requestType: 'quantityChange',
+        newQuantity: newQty,
+      }),
+    });
+    const data = await res.json();
+    document.getElementById('loading').classList.remove('show');
+    if (data.success) showResult('qty', data);
+    else { document.getElementById('step-action').style.display = 'block'; alert(data.message || '오류가 발생했습니다.'); }
   } catch(e) {
     document.getElementById('loading').classList.remove('show');
     document.getElementById('step-action').style.display = 'block';
@@ -482,6 +585,13 @@ function showResult(type, data) {
     svg.innerHTML   = '<path d="M5 12l5 5 9-10"/>';
     title.textContent = '날짜 변경 신청이 접수되었습니다';
     desc.innerHTML  = '담당자 확인 후 처리해 드립니다.<br>문의: <span style="color:var(--white)">' + (p.tel||'—') + '</span>';
+  } else if (type === 'qty') {
+    icon.className  = 'result-icon qty';
+    svg.setAttribute('stroke','#c9a84c');
+    svg.innerHTML   = '<path d="M5 12l5 5 9-10"/>';
+    title.textContent = '인원 변경 신청이 접수되었습니다';
+    desc.innerHTML  = (window._curQty||1) + '매 → ' + newQty + '매 변경 신청<br>'
+      + '담당자 확인 후 처리해 드립니다.<br>문의: <span style="color:var(--white)">' + (p.tel||'—') + '</span>';
   } else {
     icon.className  = 'result-icon cancel';
     svg.setAttribute('stroke','#e07b7b');
@@ -494,8 +604,10 @@ function showResult(type, data) {
 
 function resetForm() {
   lookupData = null; selectedNewSessionId = null;
-  document.getElementById('step-action').style.display = 'none';
-  document.getElementById('step-lookup').style.display = 'block';
+  newQty = 1; window._maxQty = 4; window._curQty = 1;
+  document.getElementById('step-action').style.display  = 'none';
+  document.getElementById('result-screen').classList.remove('show');
+  document.getElementById('step-lookup').style.display  = 'block';
   document.getElementById('res-num').value = '';
   document.getElementById('phone').value   = '';
   setActionTab('change');

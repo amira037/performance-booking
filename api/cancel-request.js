@@ -43,6 +43,7 @@ export default async function handler(req, res) {
       name:      reservation.name,
       session:   reservation.session,
       payStatus: reservation.payStatus,
+      quantity:  reservation.quantity || 1,
     });
   }
 
