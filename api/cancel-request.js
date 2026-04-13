@@ -46,6 +46,49 @@ export default async function handler(req, res) {
     });
   }
 
+  // ── 인원 변경 신청 ──
+  if (req.body.requestType === 'quantityChange') {
+    const { newQuantity } = req.body;
+    const qty = parseInt(newQuantity);
+    if (!qty || qty < 1)
+      return res.status(400).json({ success: false, message: '변경할 매수를 입력해 주세요.' });
+    if (qty === reservation.quantity)
+      return res.status(400).json({ success: false, message: '현재 매수와 동일합니다.' });
+
+    await updateReservation(resNum, {
+      changeRequest: {
+        type: 'quantityChange',
+        newQuantity: qty,
+        requestedAt: new Date().toISOString(),
+      }
+    });
+    await addLog({
+      resNum,
+      name:   reservation.name,
+      phone:  reservation.phone,
+      type:   '인원변경신청',
+      result: '접수',
+      error:  `${reservation.quantity}→${qty}매`,
+    });
+
+    // 관리자 알림
+    const perf3 = await getPerformance();
+    if (perf3.tel || perf3.adminPhone) {
+      try {
+        const { sendCancelRequestAlimtalk } = await import('../lib/alimtalk.js');
+        await sendCancelRequestAlimtalk({
+          adminPhone: perf3.adminPhone || perf3.tel,
+          resNum, name: reservation.name,
+          session: reservation.session,
+          total:   reservation.total,
+          reason:  `인원변경 신청 ${reservation.quantity}매 → ${qty}매`,
+          perfName: perf3.name || '공연',
+        });
+      } catch(e) {}
+    }
+    return res.status(200).json({ success: true, resNum, name: reservation.name });
+  }
+
   // ── 날짜 변경 신청 ──
   if (req.body.requestType === 'change') {
     const { newSessionId, newSessionLabel } = req.body;

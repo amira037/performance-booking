@@ -469,45 +469,48 @@ body{background:var(--bg);color:var(--white);font-family:'Noto Sans KR',sans-ser
 
       <!-- 버튼 설정 -->
       <div class="section-box">
-        <div class="section-title">버튼 설정 (솔라피 버튼 등록용)</div>
+        <div class="section-title">버튼 이름 설정</div>
         <div style="font-size:var(--fs-xs);color:var(--gray);margin-bottom:14px;line-height:1.8;">
-          아래 내용을 솔라피 템플릿 버튼 설정에 그대로 입력하세요.
+          버튼 이름을 수정하면 실제 발송되는 알림톡 버튼에 즉시 반영됩니다.<br>
+          URL은 시스템에서 자동 생성되므로 솔라피 템플릿에는 아래 URL을 그대로 입력하세요.
         </div>
 
         <div style="margin-bottom:16px;">
-          <div style="font-size:var(--fs-xs);color:var(--gold);letter-spacing:.1em;margin-bottom:8px;">TEMPLATE_01 버튼</div>
-          <div style="background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);padding:12px;font-size:var(--fs-xs);color:var(--white);line-height:2;font-family:monospace;">
-            버튼1 — 웹링크<br>
-            버튼명: 입금완료알리기<br>
-            모바일 URL: <span style="color:var(--gold);" id="btn01-chat"></span>
-          </div>
-          <div style="background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);padding:12px;font-size:var(--fs-xs);color:var(--white);line-height:2;font-family:monospace;margin-top:6px;">
-            버튼2 — 웹링크<br>
-            버튼명: 예매변경/취소신청<br>
-            모바일 URL: <span style="color:var(--gold);" id="btn01-cancel"></span>
+          <div style="font-size:var(--fs-xs);color:var(--gold);letter-spacing:.1em;margin-bottom:10px;">TEMPLATE_01 버튼</div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>버튼1 이름</label>
+              <input type="text" class="form-input" id="tplBtn01_1" placeholder="입금완료알리기">
+              <div class="hint">URL: <span id="btn01-chat" style="color:var(--gold);word-break:break-all;"></span></div>
+            </div>
+            <div class="form-group">
+              <label>버튼2 이름</label>
+              <input type="text" class="form-input" id="tplBtn01_2" placeholder="예매변경/취소신청">
+              <div class="hint">URL: <span id="btn01-cancel" style="color:var(--gold);word-break:break-all;"></span></div>
+            </div>
           </div>
         </div>
 
         <div style="margin-bottom:16px;">
-          <div style="font-size:var(--fs-xs);color:var(--gold);letter-spacing:.1em;margin-bottom:8px;">TEMPLATE_02 버튼</div>
-          <div style="background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);padding:12px;font-size:var(--fs-xs);color:var(--white);line-height:2;font-family:monospace;">
-            버튼1 — 웹링크<br>
-            버튼명: 모바일티켓<br>
-            모바일 URL: <span style="color:var(--gold);" id="btn02-ticket"></span>
+          <div style="font-size:var(--fs-xs);color:var(--gold);letter-spacing:.1em;margin-bottom:10px;">TEMPLATE_02 버튼</div>
+          <div class="form-group">
+            <label>버튼1 이름</label>
+            <input type="text" class="form-input" id="tplBtn02_1" placeholder="모바일티켓">
+            <div class="hint">URL: <span id="btn02-ticket" style="color:var(--gold);word-break:break-all;"></span></div>
           </div>
         </div>
 
         <div>
-          <div style="font-size:var(--fs-xs);color:var(--gold);letter-spacing:.1em;margin-bottom:8px;">TEMPLATE_03 버튼</div>
-          <div style="background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);padding:12px;font-size:var(--fs-xs);color:var(--white);line-height:2;font-family:monospace;">
-            버튼1 — 웹링크<br>
-            버튼명: 모바일티켓<br>
-            모바일 URL: <span style="color:var(--gold);" id="btn03-ticket"></span>
+          <div style="font-size:var(--fs-xs);color:var(--gold);letter-spacing:.1em;margin-bottom:10px;">TEMPLATE_03 버튼</div>
+          <div class="form-group">
+            <label>버튼1 이름</label>
+            <input type="text" class="form-input" id="tplBtn03_1" placeholder="모바일티켓">
+            <div class="hint">URL: <span id="btn03-ticket" style="color:var(--gold);word-break:break-all;"></span></div>
           </div>
         </div>
       </div>
 
-      <button class="save-btn" onclick="saveTplTexts()">알림톡 문자 저장</button>
+      <button class="save-btn" onclick="saveTplTexts()">알림톡 문자 · 버튼 저장</button>
     </div>
 
     <!-- 공연 설정 -->
@@ -764,11 +767,14 @@ function loadTplTexts() {
   document.getElementById('tpl02').value = performance.tpl02 || DEFAULT_TPL02;
   document.getElementById('tpl03').value = performance.tpl03 || DEFAULT_TPL03;
 
-  // 버튼 URL 표시
-  const chatUrl   = performance.kakaopayLink
-    ? (window.KAKAO_CHAT_URL || 'https://pf.kakao.com/_xlUqEX/chat')
-    : 'https://pf.kakao.com/_xlUqEX/chat';
-  const baseUrl   = 'https://ticket-alarm-manage.vercel.app';
+  // 버튼 이름 로드 (저장된 값 or 기본값)
+  document.getElementById('tplBtn01_1').value = performance.tplBtn01_1 || '입금완료알리기';
+  document.getElementById('tplBtn01_2').value = performance.tplBtn01_2 || '예매변경/취소신청';
+  document.getElementById('tplBtn02_1').value = performance.tplBtn02_1 || '모바일티켓';
+  document.getElementById('tplBtn03_1').value = performance.tplBtn03_1 || '모바일티켓';
+
+  // 버튼 URL 표시 (솔라피 등록 참고용)
+  const baseUrl   = (performance.ticketBaseUrl || 'https://ticket-alarm-manage.vercel.app').replace('/ticket.html', '');
   const cancelUrl = baseUrl + '/cancel.html';
   const ticketUrl = baseUrl + '/ticket.html?res=#{예약번호}';
 
@@ -793,9 +799,13 @@ async function saveTplTexts() {
     tpl01: document.getElementById('tpl01').value,
     tpl02: document.getElementById('tpl02').value,
     tpl03: document.getElementById('tpl03').value,
+    tplBtn01_1: document.getElementById('tplBtn01_1').value.trim() || '입금완료알리기',
+    tplBtn01_2: document.getElementById('tplBtn01_2').value.trim() || '예매변경/취소신청',
+    tplBtn02_1: document.getElementById('tplBtn02_1').value.trim() || '모바일티켓',
+    tplBtn03_1: document.getElementById('tplBtn03_1').value.trim() || '모바일티켓',
   };
   const r = await callAPI({action:'savePerformance', data});
-  if (r.success) { performance = data; toast('알림톡 문자가 저장됐습니다.'); }
+  if (r.success) { performance = data; toast('알림톡 문자 · 버튼 이름이 저장됐습니다.'); }
   else toast('저장 실패');
 }
 
@@ -1030,7 +1040,11 @@ function renderReservations() {
 function buildResCard(r) {
   const bc = r.payStatus==='입금확인'?'pay-confirmed':r.payStatus==='미입금'?'pay-pending':'pay-cancelled';
   const hasRequest = r.changeRequest;
-  const reqType    = hasRequest ? (r.changeRequest.type === 'cancel' ? '취소신청' : '변경신청') : '';
+  const reqType    = hasRequest
+    ? (r.changeRequest.type === 'cancel' ? '취소신청'
+      : r.changeRequest.type === 'quantityChange' ? '인원변경신청'
+      : '변경신청')
+    : '';
   const rn = r.resNum || '';
 
   let actions = '';
@@ -1038,6 +1052,7 @@ function buildResCard(r) {
     actions = '<div class="res-actions">'
       + '<button class="action-btn confirm" data-action="pay" data-rn="' + rn + '">입금 확인</button>'
       + '<button class="action-btn" data-action="change" data-rn="' + rn + '">회차 변경</button>'
+      + '<button class="action-btn" data-action="qty-change" data-rn="' + rn + '">인원 변경</button>'
       + '<button class="action-btn danger" data-action="cancel" data-rn="' + rn + '">예약 취소</button>'
       + '</div>';
   } else if (r.payStatus === '입금확인') {
@@ -1046,6 +1061,7 @@ function buildResCard(r) {
       + '<button class="action-btn" data-action="resend" data-rn="' + rn + '">티켓 재발송</button>'
       + '<button class="action-btn" data-action="reminder" data-rn="' + rn + '">리마인드</button>'
       + '<button class="action-btn" data-action="change" data-rn="' + rn + '">회차 변경</button>'
+      + '<button class="action-btn" data-action="qty-change" data-rn="' + rn + '">인원 변경</button>'
       + '<button class="action-btn danger" data-action="cancel" data-rn="' + rn + '">예약 취소</button>'
       + '<button class="action-btn' + (r.checkedIn ? ' checked' : '') + '" data-action="' + (r.checkedIn ? '' : 'checkin') + '" data-rn="' + rn + '">' + (r.checkedIn ? '✓입장완료' : '입장처리') + '</button>'
       + '</div>';
@@ -1061,17 +1077,21 @@ function buildResCard(r) {
     const reqInfo = r.changeRequest;
     const reqDesc = reqType === '변경신청'
       ? ('→ ' + (reqInfo.newSessionLabel||''))
+      : reqType === '인원변경신청'
+      ? (r.quantity + '매 → ' + reqInfo.newQuantity + '매로 변경 신청')
       : ('사유: ' + (reqInfo.reason||'없음'));
     actions += '<div style="background:#1a1000;border:1px solid #854f0b;border-radius:4px;padding:10px 12px;margin-top:8px;font-size:var(--fs-xs);">'
       + '<div style="color:#e07b39;font-weight:500;margin-bottom:6px;">' + reqType + ' 접수됨</div>'
       + '<div style="color:var(--gray);margin-bottom:8px;">' + reqDesc + '</div>'
-      + '<div style="display:flex;gap:8px;">'
+      + '<div style="display:flex;gap:8px;flex-wrap:wrap;">'
       + (reqType === '취소신청' && reqInfo.refundAccount
-        ? '<div style="font-size:var(--fs-xs);color:var(--gray);margin-bottom:8px;">'
+        ? '<div style="font-size:var(--fs-xs);color:var(--gray);margin-bottom:8px;width:100%;">'
           + '환불 계좌: ' + (reqInfo.refundBank||'') + ' ' + (reqInfo.refundAccount||'') + ' (' + (reqInfo.refundHolder||'') + ')</div>'
         : '')
       + (reqType === '변경신청'
         ? '<button class="action-btn warn" data-action="process-change" data-rn="' + r.resNum + '">변경 처리</button>'
+        : reqType === '인원변경신청'
+        ? '<button class="action-btn warn" data-action="process-qty-change" data-rn="' + r.resNum + '">인원 변경 처리</button>'
         : '<button class="action-btn danger" data-action="process-cancel" data-rn="' + r.resNum + '">취소 처리</button>'
       )
       + '<button class="action-btn" data-action="dismiss" data-rn="' + r.resNum + '">신청 무시</button>'
@@ -1143,10 +1163,12 @@ document.addEventListener('click', function(e) {
       + '&proof='   + (r.needProof?'true':'false');
     window.open(url, '_blank');
   }
+  if (action === 'qty-change') changeQuantity(rn);
   // 신청 처리 버튼
-  if (action === 'process-change')  processChangeRequest(rn);
-  if (action === 'process-cancel')  processCancelRequest(rn);
-  if (action === 'dismiss')         dismissRequest(rn);
+  if (action === 'process-change')     processChangeRequest(rn);
+  if (action === 'process-cancel')     processCancelRequest(rn);
+  if (action === 'process-qty-change') processQuantityChangeRequest(rn);
+  if (action === 'dismiss')            dismissRequest(rn);
 });
 
 function toggleCard(rn) { document.getElementById('body-'+rn).classList.toggle('open'); }
@@ -1244,6 +1266,36 @@ async function processCancelRequest(rn) {
   if (!confirm('예약을 취소 처리하시겠습니까?')) return;
   const r = await callAPI({action:'cancel', resNum:rn});
   if (r.success) { toast('취소됐습니다.'); await loadData(); }
+}
+async function processQuantityChangeRequest(rn) {
+  const reservation = reservations.find(r => r.resNum === rn);
+  if (!reservation || !reservation.changeRequest) return;
+  const req = reservation.changeRequest;
+  const newQty = req.newQuantity;
+  if (!confirm(reservation.name + ' 예약을 ' + newQty + '매로 인원 변경하시겠습니까?\n(현재: ' + reservation.quantity + '매)')) return;
+  const r = await callAPI({ action: 'changeQuantity', resNum: rn, newQuantity: newQty });
+  if (r.success) {
+    await callAPI({ action: 'dismissRequest', resNum: rn });
+    toast('인원이 변경됐습니다.'); await loadData();
+  } else {
+    toast('변경 실패: ' + (r.message || '오류'));
+  }
+}
+async function changeQuantity(rn) {
+  const reservation = reservations.find(r => r.resNum === rn);
+  if (!reservation) return;
+  const newQtyStr = prompt(
+    reservation.name + ' · 현재 ' + reservation.quantity + '매\n변경할 매수를 입력하세요:',
+    reservation.quantity
+  );
+  if (newQtyStr === null) return;
+  const newQty = parseInt(newQtyStr);
+  if (isNaN(newQty) || newQty < 1) { toast('올바른 매수를 입력해 주세요.'); return; }
+  if (newQty === reservation.quantity) { toast('현재 매수와 동일합니다.'); return; }
+  if (!confirm(reservation.name + ' 예약을 ' + newQty + '매로 변경하시겠습니까?')) return;
+  const r = await callAPI({ action: 'changeQuantity', resNum: rn, newQuantity: newQty });
+  if (r.success) { toast('인원이 변경됐습니다.'); await loadData(); }
+  else toast('변경 실패: ' + (r.message || '오류'));
 }
 async function dismissRequest(rn) {
   if (!confirm('신청을 무시하시겠습니까?')) return;

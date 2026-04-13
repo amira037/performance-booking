@@ -69,6 +69,7 @@ export default async function handler(req, res) {
     try {
       sent = await sendTicketAlimtalk({
         customText: perf.tpl02 || '',
+        btn1Name:   perf.tplBtn02_1 || '',
         name:      reservation.name,
         phone:     reservation.phone,
         resNum,
@@ -117,6 +118,8 @@ export default async function handler(req, res) {
 
     try {
       const result = await sendTicketAlimtalk({
+        customText: perf.tpl02 || '',
+        btn1Name:   perf.tplBtn02_1 || '',
         name:      reservation.name,
         phone:     reservation.phone,
         resNum,
@@ -226,6 +229,8 @@ export default async function handler(req, res) {
         const perf = await getPerformance();
         const ticketUrl = generateTicketUrl(resNum, reservation, perf);
         await sendTicketAlimtalk({
+          customText: perf.tpl02 || '',
+          btn1Name:   perf.tplBtn02_1 || '',
           name, phone, resNum,
           session: sessionLabel,
           quantity: quantity||1,
@@ -253,6 +258,8 @@ export default async function handler(req, res) {
 
     try {
       await sendReminderAlimtalk({
+        customText: perf.tpl03 || '',
+        btn1Name:   perf.tplBtn03_1 || '',
         name:     reservation.name,
         phone:    reservation.phone,
         resNum,
@@ -281,6 +288,7 @@ export default async function handler(req, res) {
         const ticketUrl = base + '/ticket.html?res=' + encodeURIComponent(r.resNum);
         await sendReminderAlimtalk({
           customText: perf.tpl03 || '',
+          btn1Name:   perf.tplBtn03_1 || '',
           name:     r.name,
           phone:    r.phone,
           resNum:   r.resNum,
@@ -295,6 +303,28 @@ export default async function handler(req, res) {
     }
 
     return res.status(200).json({ success: true, count });
+  }
+
+  // ── 인원(매수) 변경 ──────────────────────────────────────
+  if (action === 'changeQuantity') {
+    const { resNum, newQuantity } = payload;
+    const qty = parseInt(newQuantity);
+    if (!qty || qty < 1) return res.status(400).json({ success: false, message: '올바른 매수를 입력해 주세요.' });
+
+    const reservation = await findReservation(resNum);
+    if (!reservation) return res.status(404).json({ success: false, message: '예약을 찾을 수 없습니다.' });
+
+    const diff = qty - (reservation.quantity || 0);
+    if (diff > 0) {
+      await incrementBooked(reservation.sessionId, diff);
+    } else if (diff < 0) {
+      await decrementBooked(reservation.sessionId, Math.abs(diff));
+    }
+
+    const newTotal = Math.round((reservation.unitPrice || 0) * qty);
+    await updateReservation(resNum, { quantity: qty, total: newTotal });
+    try { await addLog({ resNum, name: reservation.name, phone: reservation.phone, type: '인원변경', result: `${reservation.quantity}→${qty}매` }); } catch(e) {}
+    return res.status(200).json({ success: true });
   }
 
   // ── 신청 무시 ────────────────────────────────────────────
