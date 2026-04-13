@@ -168,6 +168,21 @@ input.error{border-color:var(--red);}
           최대 <span id="qty-max">4</span>매까지 선택 가능합니다.
         </div>
       </div>
+      <!-- 인원 축소 시 환불 계좌 입력 (동적 표시) -->
+      <div id="qty-refund-section" style="display:none;margin-top:14px;">
+        <div class="form-group">
+          <label>환불 계좌 <span style="color:#c0392b;">*</span></label>
+          <input type="text" id="qty-refund-bank" placeholder="예: 국민은행 / 기업은행"
+                 style="margin-bottom:8px;">
+          <input type="text" id="qty-refund-account" placeholder="계좌번호 (- 없이 입력)"
+                 style="margin-bottom:8px;">
+          <input type="text" id="qty-refund-holder" placeholder="예금주명">
+          <div style="font-size:var(--fs-xs);color:var(--gray);margin-top:6px;line-height:1.8;">
+            인원 축소 시 차액 환불을 위해 계좌 정보를 입력해 주세요.<br>
+            입금 완료 건만 환불 처리됩니다.
+          </div>
+        </div>
+      </div>
       <button class="primary-btn" id="qty-btn" onclick="submitQtyChange()" disabled>인원 변경 신청</button>
     </div>
 
@@ -513,6 +528,9 @@ function adjustQty(delta) {
   } else {
     qtyBtnEl.disabled = true;
   }
+  // 인원 축소 시 환불 계좌 섹션 표시
+  const refundSection = document.getElementById('qty-refund-section');
+  refundSection.style.display = (newQty < curQ) ? 'block' : 'none';
 }
 
 async function submitQtyChange() {
@@ -520,18 +538,34 @@ async function submitQtyChange() {
   const curQ = window._curQty || 1;
   if (newQty === curQ) { alert('현재 매수와 동일합니다.'); return; }
 
+  // 인원 축소 시 환불 계좌 필수 입력 확인
+  const isReduction = newQty < curQ;
+  const qtyRefundBank    = document.getElementById('qty-refund-bank').value.trim();
+  const qtyRefundAccount = document.getElementById('qty-refund-account').value.trim();
+  const qtyRefundHolder  = document.getElementById('qty-refund-holder').value.trim();
+  if (isReduction && (!qtyRefundBank || !qtyRefundAccount || !qtyRefundHolder)) {
+    alert('인원 축소 시 환불 계좌 정보를 모두 입력해 주세요.');
+    return;
+  }
+
   document.getElementById('step-action').style.display = 'none';
   document.getElementById('loading').classList.add('show');
 
   try {
+    const body = {
+      resNum:      lookupData.resNum,
+      phone:       document.getElementById('phone').value.trim(),
+      requestType: 'quantityChange',
+      newQuantity: newQty,
+    };
+    if (isReduction) {
+      body.refundBank    = qtyRefundBank;
+      body.refundAccount = qtyRefundAccount;
+      body.refundHolder  = qtyRefundHolder;
+    }
     const res = await fetch('/api/cancel-request', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        resNum:      lookupData.resNum,
-        phone:       document.getElementById('phone').value.trim(),
-        requestType: 'quantityChange',
-        newQuantity: newQty,
-      }),
+      body: JSON.stringify(body),
     });
     const data = await res.json();
     document.getElementById('loading').classList.remove('show');

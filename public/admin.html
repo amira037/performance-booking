@@ -1107,7 +1107,7 @@ function buildResCard(r) {
       + '<div style="color:#e07b39;font-weight:500;margin-bottom:6px;">' + reqType + ' 접수됨</div>'
       + '<div style="color:var(--gray);margin-bottom:8px;">' + reqDesc + '</div>'
       + '<div style="display:flex;gap:8px;flex-wrap:wrap;">'
-      + (reqType === '취소신청' && reqInfo.refundAccount
+      + ((reqType === '취소신청' || reqType === '인원변경신청') && reqInfo.refundAccount
         ? '<div style="font-size:var(--fs-xs);color:var(--gray);margin-bottom:8px;width:100%;">'
           + '환불 계좌: ' + (reqInfo.refundBank||'') + ' ' + (reqInfo.refundAccount||'') + ' (' + (reqInfo.refundHolder||'') + ')</div>'
         : '')

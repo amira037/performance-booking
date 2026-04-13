@@ -49,20 +49,29 @@ export default async function handler(req, res) {
 
   // ── 인원 변경 신청 ──
   if (req.body.requestType === 'quantityChange') {
-    const { newQuantity } = req.body;
+    const { newQuantity, refundBank, refundAccount, refundHolder } = req.body;
     const qty = parseInt(newQuantity);
     if (!qty || qty < 1)
       return res.status(400).json({ success: false, message: '변경할 매수를 입력해 주세요.' });
     if (qty === reservation.quantity)
       return res.status(400).json({ success: false, message: '현재 매수와 동일합니다.' });
 
-    await updateReservation(resNum, {
-      changeRequest: {
-        type: 'quantityChange',
-        newQuantity: qty,
-        requestedAt: new Date().toISOString(),
-      }
-    });
+    const isReduction = qty < reservation.quantity;
+    if (isReduction && (!refundBank || !refundAccount || !refundHolder))
+      return res.status(400).json({ success: false, message: '인원 축소 시 환불 계좌 정보를 모두 입력해 주세요.' });
+
+    const changeData = {
+      type: 'quantityChange',
+      newQuantity: qty,
+      requestedAt: new Date().toISOString(),
+    };
+    if (isReduction) {
+      changeData.refundBank    = refundBank;
+      changeData.refundAccount = refundAccount;
+      changeData.refundHolder  = refundHolder;
+    }
+
+    await updateReservation(resNum, { changeRequest: changeData });
     await addLog({
       resNum,
       name:   reservation.name,
