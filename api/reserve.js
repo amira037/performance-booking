@@ -65,9 +65,10 @@ export default async function handler(req, res) {
     const perf = await getPerformance();
     const cancelUrl = (process.env.TICKET_BASE_URL || '').replace('/ticket.html', '') + '/cancel.html';
     sent = await sendReservationAlimtalk({
-      customText: perf.tpl01        || '',
-      btn1Name:   perf.tplBtn01_1   || '',
-      btn2Name:   perf.tplBtn01_2   || '',
+      customText:   perf.tpl01       || '',
+      btn1Name:     perf.tplBtn01_1  || '',
+      btn2Name:     perf.tplBtn01_2  || '',
+      templateCode: perf.tplCode01   || '',
       name, phone, resNum,
       session: sessionLabel,
       ticketType, quantity, total,

@@ -68,8 +68,9 @@ export default async function handler(req, res) {
     let sent = false;
     try {
       sent = await sendTicketAlimtalk({
-        customText: perf.tpl02 || '',
-        btn1Name:   perf.tplBtn02_1 || '',
+        customText:   perf.tpl02     || '',
+        btn1Name:     perf.tplBtn02_1 || '',
+        templateCode: perf.tplCode02 || '',
         name:      reservation.name,
         phone:     reservation.phone,
         resNum,
@@ -118,8 +119,9 @@ export default async function handler(req, res) {
 
     try {
       const result = await sendTicketAlimtalk({
-        customText: perf.tpl02 || '',
-        btn1Name:   perf.tplBtn02_1 || '',
+        customText:   perf.tpl02     || '',
+        btn1Name:     perf.tplBtn02_1 || '',
+        templateCode: perf.tplCode02 || '',
         name:      reservation.name,
         phone:     reservation.phone,
         resNum,
@@ -229,8 +231,9 @@ export default async function handler(req, res) {
         const perf = await getPerformance();
         const ticketUrl = generateTicketUrl(resNum, reservation, perf);
         await sendTicketAlimtalk({
-          customText: perf.tpl02 || '',
-          btn1Name:   perf.tplBtn02_1 || '',
+          customText:   perf.tpl02     || '',
+          btn1Name:     perf.tplBtn02_1 || '',
+          templateCode: perf.tplCode02 || '',
           name, phone, resNum,
           session: sessionLabel,
           quantity: quantity||1,
@@ -258,8 +261,9 @@ export default async function handler(req, res) {
 
     try {
       await sendReminderAlimtalk({
-        customText: perf.tpl03 || '',
-        btn1Name:   perf.tplBtn03_1 || '',
+        customText:   perf.tpl03     || '',
+        btn1Name:     perf.tplBtn03_1 || '',
+        templateCode: perf.tplCode03 || '',
         name:     reservation.name,
         phone:    reservation.phone,
         resNum,
@@ -287,8 +291,9 @@ export default async function handler(req, res) {
       try {
         const ticketUrl = base + '/ticket.html?res=' + encodeURIComponent(r.resNum);
         await sendReminderAlimtalk({
-          customText: perf.tpl03 || '',
-          btn1Name:   perf.tplBtn03_1 || '',
+          customText:   perf.tpl03     || '',
+          btn1Name:     perf.tplBtn03_1 || '',
+          templateCode: perf.tplCode03 || '',
           name:     r.name,
           phone:    r.phone,
           resNum:   r.resNum,

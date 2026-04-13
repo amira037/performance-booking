@@ -443,6 +443,11 @@ body{background:var(--bg);color:var(--white);font-family:'Noto Sans KR',sans-ser
           <div class="section-title" style="margin-bottom:0;">예약 접수 알림 (TEMPLATE_01)</div>
           <button class="icon-btn" onclick="copyTpl('tpl01')">복사</button>
         </div>
+        <div class="form-group" style="margin-bottom:10px;">
+          <label>솔라피 템플릿 코드</label>
+          <input type="text" class="form-input" id="tplCode01" placeholder="예: KA01TP250101XXXXXXXXXXXXXXXX" style="font-family:monospace;letter-spacing:.05em;">
+          <div class="hint">솔라피 콘솔에서 발급받은 템플릿 코드를 입력하세요. 없으면 환경변수(ALIMTALK_TEMPLATE_RESERVE)를 사용합니다.</div>
+        </div>
         <textarea class="form-input" id="tpl01" rows="14" style="resize:vertical;line-height:1.7;font-size:var(--fs-xs);font-family:monospace;"></textarea>
         <div class="hint">변수: #{공연명} #{예약번호} #{이름} #{회차} #{예매유형} #{매수} #{결제금액} #{계좌번호} #{예금주} #{카카오페이링크}</div>
       </div>
@@ -453,6 +458,11 @@ body{background:var(--bg);color:var(--white);font-family:'Noto Sans KR',sans-ser
           <div class="section-title" style="margin-bottom:0;">티켓 발송 알림 (TEMPLATE_02)</div>
           <button class="icon-btn" onclick="copyTpl('tpl02')">복사</button>
         </div>
+        <div class="form-group" style="margin-bottom:10px;">
+          <label>솔라피 템플릿 코드</label>
+          <input type="text" class="form-input" id="tplCode02" placeholder="예: KA01TP250101XXXXXXXXXXXXXXXX" style="font-family:monospace;letter-spacing:.05em;">
+          <div class="hint">솔라피 콘솔에서 발급받은 템플릿 코드를 입력하세요. 없으면 환경변수(ALIMTALK_TEMPLATE_TICKET)를 사용합니다.</div>
+        </div>
         <textarea class="form-input" id="tpl02" rows="10" style="resize:vertical;line-height:1.7;font-size:var(--fs-xs);font-family:monospace;"></textarea>
         <div class="hint">변수: #{공연명} #{예약번호} #{이름} #{회차} #{매수} #{티켓링크}</div>
       </div>
@@ -462,6 +472,11 @@ body{background:var(--bg);color:var(--white);font-family:'Noto Sans KR',sans-ser
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
           <div class="section-title" style="margin-bottom:0;">당일 리마인드 (TEMPLATE_03)</div>
           <button class="icon-btn" onclick="copyTpl('tpl03')">복사</button>
+        </div>
+        <div class="form-group" style="margin-bottom:10px;">
+          <label>솔라피 템플릿 코드</label>
+          <input type="text" class="form-input" id="tplCode03" placeholder="예: KA01TP250101XXXXXXXXXXXXXXXX" style="font-family:monospace;letter-spacing:.05em;">
+          <div class="hint">솔라피 콘솔에서 발급받은 템플릿 코드를 입력하세요. 없으면 환경변수(ALIMTALK_TEMPLATE_REMINDER)를 사용합니다.</div>
         </div>
         <textarea class="form-input" id="tpl03" rows="8" style="resize:vertical;line-height:1.7;font-size:var(--fs-xs);font-family:monospace;"></textarea>
         <div class="hint">변수: #{공연명} #{이름} #{회차} #{예약번호}</div>
@@ -767,6 +782,11 @@ function loadTplTexts() {
   document.getElementById('tpl02').value = performance.tpl02 || DEFAULT_TPL02;
   document.getElementById('tpl03').value = performance.tpl03 || DEFAULT_TPL03;
 
+  // 솔라피 템플릿 코드 로드
+  document.getElementById('tplCode01').value = performance.tplCode01 || '';
+  document.getElementById('tplCode02').value = performance.tplCode02 || '';
+  document.getElementById('tplCode03').value = performance.tplCode03 || '';
+
   // 버튼 이름 로드 (저장된 값 or 기본값)
   document.getElementById('tplBtn01_1').value = performance.tplBtn01_1 || '입금완료알리기';
   document.getElementById('tplBtn01_2').value = performance.tplBtn01_2 || '예매변경/취소신청';
@@ -799,6 +819,9 @@ async function saveTplTexts() {
     tpl01: document.getElementById('tpl01').value,
     tpl02: document.getElementById('tpl02').value,
     tpl03: document.getElementById('tpl03').value,
+    tplCode01: document.getElementById('tplCode01').value.trim(),
+    tplCode02: document.getElementById('tplCode02').value.trim(),
+    tplCode03: document.getElementById('tplCode03').value.trim(),
     tplBtn01_1: document.getElementById('tplBtn01_1').value.trim() || '입금완료알리기',
     tplBtn01_2: document.getElementById('tplBtn01_2').value.trim() || '예매변경/취소신청',
     tplBtn02_1: document.getElementById('tplBtn02_1').value.trim() || '모바일티켓',
