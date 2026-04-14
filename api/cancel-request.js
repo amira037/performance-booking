@@ -120,11 +120,11 @@ export default async function handler(req, res) {
 
     // 관리자 알림
     const perf2 = await getPerformance();
-    if (perf2.tel) {
+    if (perf2.adminPhone || perf2.tel) {
       try {
         const { sendCancelRequestAlimtalk } = await import('../lib/alimtalk.js');
         await sendCancelRequestAlimtalk({
-          adminPhone: perf2.tel,
+          adminPhone: perf2.adminPhone || perf2.tel,
           resNum, name: reservation.name,
           session: reservation.session,
           total:   reservation.total,

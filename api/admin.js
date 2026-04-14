@@ -11,7 +11,7 @@ import {
   decrementBooked, incrementBooked, addLog,
   clearReservations, clearSessions, clearLocks, clearSeatsForSessions,
 } from '../lib/db.js';
-import { sendTicketAlimtalk, sendReminderAlimtalk } from '../lib/alimtalk.js';
+import { sendTicketAlimtalk, sendReminderAlimtalk, sendChangeCompleteAlimtalk } from '../lib/alimtalk.js';
 
 const ADMIN_KEY = process.env.ADMIN_KEY || 'bluebline2025';
 
@@ -327,8 +327,19 @@ export default async function handler(req, res) {
     }
 
     const newTotal = Math.round((reservation.unitPrice || 0) * qty);
-    await updateReservation(resNum, { quantity: qty, total: newTotal });
+    await updateReservation(resNum, { quantity: qty, total: newTotal, changeRequest: null });
     try { await addLog({ resNum, name: reservation.name, phone: reservation.phone, type: '인원변경', result: `${reservation.quantity}→${qty}매` }); } catch(e) {}
+
+    // 고객 변경완료 알림톡 + 변경티켓 발송
+    try {
+      const perf = await getPerformance();
+      await sendChangeCompleteAlimtalk({
+        name: reservation.name, phone: reservation.phone, resNum,
+        session: reservation.session, quantity: qty,
+        perfName: perf.name || '공연',
+      });
+    } catch(e) { console.error('변경완료 알림 오류:', e.message); }
+
     return res.status(200).json({ success: true });
   }
 
@@ -355,7 +366,20 @@ export default async function handler(req, res) {
     await updateReservation(resNum, {
       sessionId: newSessionId,
       session:   newSessionLabel,
+      changeRequest: null,
     });
+    try { await addLog({ resNum, name: reservation.name, phone: reservation.phone, type: '회차변경', result: `${reservation.session}→${newSessionLabel}` }); } catch(e) {}
+
+    // 고객 변경완료 알림톡 + 변경티켓 발송
+    try {
+      const perf = await getPerformance();
+      await sendChangeCompleteAlimtalk({
+        name: reservation.name, phone: reservation.phone, resNum,
+        session: newSessionLabel, quantity: reservation.quantity,
+        perfName: perf.name || '공연',
+      });
+    } catch(e) { console.error('변경완료 알림 오류:', e.message); }
+
     return res.status(200).json({ success: true });
   }
 
