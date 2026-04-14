@@ -11,7 +11,7 @@ import {
   decrementBooked, incrementBooked, addLog,
   clearReservations, clearSessions, clearLocks, clearSeatsForSessions,
 } from '../lib/db.js';
-import { sendTicketAlimtalk, sendReminderAlimtalk, sendChangeCompleteAlimtalk } from '../lib/alimtalk.js';
+import { sendTicketAlimtalk, sendReminderAlimtalk, sendChangeCompleteAlimtalk, sendCancelCompleteAlimtalk } from '../lib/alimtalk.js';
 
 const ADMIN_KEY = process.env.ADMIN_KEY || 'bluebline2025';
 
@@ -99,6 +99,23 @@ export default async function handler(req, res) {
     if (reservation.payStatus !== '입금확인') {
       await decrementBooked(reservation.sessionId, reservation.quantity);
     }
+
+    // 고객 취소 완료 알림톡
+    if (reservation.phone) {
+      try {
+        const perf = await getPerformance();
+        await sendCancelCompleteAlimtalk({
+          customText:   perf.tpl05     || '',
+          templateCode: perf.tplCode05 || '',
+          name:    reservation.name,
+          phone:   reservation.phone,
+          resNum,
+          session: reservation.session,
+          perfName: perf.name || '공연',
+        });
+      } catch(e) { console.error('취소 완료 알림 오류:', e.message); }
+    }
+
     return res.status(200).json({ success: true });
   }
 
@@ -334,6 +351,9 @@ export default async function handler(req, res) {
     try {
       const perf = await getPerformance();
       await sendChangeCompleteAlimtalk({
+        customText:   perf.tpl04     || '',
+        btn1Name:     perf.tplBtn04_1 || '',
+        templateCode: perf.tplCode04 || '',
         name: reservation.name, phone: reservation.phone, resNum,
         session: reservation.session, quantity: qty,
         perfName: perf.name || '공연',
@@ -374,6 +394,9 @@ export default async function handler(req, res) {
     try {
       const perf = await getPerformance();
       await sendChangeCompleteAlimtalk({
+        customText:   perf.tpl04     || '',
+        btn1Name:     perf.tplBtn04_1 || '',
+        templateCode: perf.tplCode04 || '',
         name: reservation.name, phone: reservation.phone, resNum,
         session: newSessionLabel, quantity: reservation.quantity,
         perfName: perf.name || '공연',
