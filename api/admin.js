@@ -119,6 +119,31 @@ export default async function handler(req, res) {
     return res.status(200).json({ success: true });
   }
 
+  // ── 변경 알림 재발송 ─────────────────────────────────────
+  if (action === 'resendChange') {
+    const { resNum } = payload;
+    const reservation = await findReservation(resNum);
+    if (!reservation) return res.status(404).json({ success: false, message: '예약을 찾을 수 없습니다.' });
+
+    const perf = await getPerformance();
+    let sent = false;
+    try {
+      sent = await sendChangeCompleteAlimtalk({
+        customText:   perf.tpl04     || '',
+        btn1Name:     perf.tplBtn04_1 || '',
+        templateCode: perf.tplCode04 || '',
+        name:     reservation.name,
+        phone:    reservation.phone,
+        resNum,
+        session:  reservation.session,
+        quantity: reservation.quantity,
+        perfName: perf.name || '공연',
+      });
+    } catch(e) { console.error('변경 알림 재발송 오류:', e.message); }
+    try { await addLog({ resNum, name: reservation.name, phone: reservation.phone, type: '변경알림재발송', result: sent ? '성공' : '실패' }); } catch(e) {}
+    return res.status(200).json({ success: true, sent });
+  }
+
   // ── 티켓 재발송 ──────────────────────────────────────────
   if (action === 'resendTicket') {
     const { resNum } = payload;

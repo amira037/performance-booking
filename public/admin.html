@@ -1151,6 +1151,7 @@ function buildResCard(r) {
     actions = '<div class="res-actions">'
       + '<button class="action-btn info" data-action="ticket" data-rn="' + rn + '">티켓 확인</button>'
       + '<button class="action-btn" data-action="resend" data-rn="' + rn + '">티켓 재발송</button>'
+      + '<button class="action-btn" data-action="resend-change" data-rn="' + rn + '">변경 알림 재발송</button>'
       + '<button class="action-btn" data-action="reminder" data-rn="' + rn + '">리마인드</button>'
       + '<button class="action-btn" data-action="change" data-rn="' + rn + '">회차 변경</button>'
       + '<button class="action-btn" data-action="qty-change" data-rn="' + rn + '">인원 변경</button>'
@@ -1233,8 +1234,9 @@ document.addEventListener('click', function(e) {
   if (action === 'change')  changeSession(rn);
   if (action === 'cancel')  cancelRes(rn);
   if (action === 'delete')  deleteRes(rn);
-  if (action === 'resend')   resendTicket(rn);
-  if (action === 'reminder') sendReminderOne(rn);
+  if (action === 'resend')        resendTicket(rn);
+  if (action === 'resend-change') resendChange(rn);
+  if (action === 'reminder')      sendReminderOne(rn);
   if (action === 'checkin') doCheckInById(rn);
   if (action === 'ticket') {
     const r = reservations.find(x => x.resNum === rn);
@@ -1331,6 +1333,10 @@ async function doResetPerformance() {
 async function resendTicket(rn) {
   const r = await callAPI({action:'resendTicket', resNum:rn});
   toast(r.success ? '티켓이 재발송됐습니다.' : '재발송 실패');
+}
+async function resendChange(rn) {
+  const r = await callAPI({action:'resendChange', resNum:rn});
+  toast(r.success ? '변경 알림이 재발송됐습니다.' : '재발송 실패');
 }
 async function doCheckInById(rn) {
   const r = await callAPI({action:'checkIn', resNum:rn});
