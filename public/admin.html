@@ -290,13 +290,20 @@ body{background:var(--bg);color:var(--white);font-family:'Noto Sans KR',sans-ser
 
     <!-- 예약 목록 -->
     <div class="tab-content" id="tab-reservations">
-      <input class="search-input" type="text" placeholder="이름 또는 예약번호 검색..." oninput="filterRes(this.value)">
-      <div class="filter-row">
+      <input class="search-input" type="text" placeholder="이름 · 예약번호 · 전화번호 검색..." oninput="filterRes(this.value)">
+      <div class="filter-row" style="margin-bottom:8px;">
         <button class="filter-btn active" onclick="setFilter('all',this)">전체</button>
+        <button class="filter-btn" onclick="setFilter('현장결제예정',this)">현장결제</button>
         <button class="filter-btn" onclick="setFilter('미입금',this)">미입금</button>
         <button class="filter-btn" onclick="setFilter('입금확인',this)">입금확인</button>
         <button class="filter-btn" onclick="setFilter('신청',this)">변경/취소신청</button>
         <button class="filter-btn" onclick="setFilter('취소',this)">취소완료</button>
+      </div>
+      <div class="filter-row" style="margin-bottom:12px;">
+        <select class="form-select" id="session-filter" onchange="setSessionFilter(this.value)"
+          style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);color:var(--gray);font-family:inherit;font-size:var(--fs-xs);padding:6px 10px;max-width:260px;">
+          <option value="">전체 회차</option>
+        </select>
       </div>
       <div id="res-list"></div>
     </div>
@@ -386,7 +393,7 @@ body{background:var(--bg);color:var(--white);font-family:'Noto Sans KR',sans-ser
         <div class="section-title">관리자 직권 예약 추가</div>
         <div style="font-size:var(--fs-xs);color:var(--gray);margin-bottom:14px;line-height:1.8;">
           초대권, 관계자 등 직접 예약을 등록합니다.<br>
-          등록 즉시 <span style="color:var(--gold)">입금확인</span> 상태로 처리됩니다.
+          기본: 등록 즉시 <span style="color:var(--gold)">입금확인</span> 처리 · 현장결제 선택 시 <span style="color:#7aabee">현장결제예정</span> 상태로 등록됩니다.
         </div>
         <div class="form-row">
           <div class="form-group"><label>이름 *</label><input type="text" class="form-input" id="m-name" placeholder="홍길동"></div>
@@ -423,10 +430,20 @@ body{background:var(--bg);color:var(--white);font-family:'Noto Sans KR',sans-ser
             </label>
           </div>
         </div>
-        <label style="display:flex;align-items:center;gap:8px;font-size:var(--fs-sm);color:var(--gray);margin-bottom:14px;cursor:pointer;">
-          <input type="checkbox" id="m-alim" checked style="width:14px;height:14px;accent-color:var(--gold);">
-          카카오 알림톡으로 티켓 발송
-        </label>
+        <!-- 현장결제 예정 -->
+        <div style="background:#0f1a2e;border:1px solid #1a3a5a;border-radius:var(--radius);padding:12px 14px;margin-bottom:12px;">
+          <label style="display:flex;align-items:center;gap:10px;font-size:var(--fs-sm);color:#7aabee;cursor:pointer;font-weight:500;">
+            <input type="checkbox" id="m-onsite" style="width:15px;height:15px;accent-color:#7aabee;" onchange="toggleOnsiteAdmin()">
+            💳 현장결제 예정
+          </label>
+          <div style="font-size:var(--fs-xs);color:var(--gray);margin-top:6px;margin-left:25px;">현장에서 결제 예정 — 당일 입금확인 버튼으로 처리. 알림톡 발송 안 됨.</div>
+        </div>
+        <div id="m-alim-wrap">
+          <label style="display:flex;align-items:center;gap:8px;font-size:var(--fs-sm);color:var(--gray);margin-bottom:14px;cursor:pointer;">
+            <input type="checkbox" id="m-alim" checked style="width:14px;height:14px;accent-color:var(--gold);">
+            카카오 알림톡으로 티켓 발송
+          </label>
+        </div>
         <button class="save-btn" onclick="addManualReservation()">직권 예약 등록</button>
       </div>
     </div>
@@ -757,7 +774,7 @@ body{background:var(--bg);color:var(--white);font-family:'Noto Sans KR',sans-ser
 const API_BASE = '/api/admin';
 let ADMIN_PW = '';
 let reservations = [], sessions = [], presets = [], performance = {};
-let currentFilter = 'all', currentSearch = '';
+let currentFilter = 'all', currentSearch = '', currentSessionFilter = '';
 let editingSessionId = null, editingPresetName = null, dragSrcIndex = null;
 let modalResNum = null, modalNewSessionId = null;
 const DAYS = ['일','월','화','수','목','금','토'];
@@ -936,6 +953,7 @@ function renderAll() {
   renderDashboard(); renderReservations(); renderSessionList(); renderPresets(); syncPerfForm();
   renderManualSessions();
   renderReminderSessions();
+  populateSessionFilter();
   loadTplTexts();
   document.getElementById('topbar-title').textContent = performance.name || '공연 관리자';
 }
@@ -1013,6 +1031,12 @@ function renderManualSessions() {
   }
 }
 
+function toggleOnsiteAdmin() {
+  const onSite = document.getElementById('m-onsite').checked;
+  const wrap   = document.getElementById('m-alim-wrap');
+  wrap.style.display = onSite ? 'none' : '';
+}
+
 function calcManualPrice() {
   const type = document.getElementById('m-type').value;
   const qty  = parseInt(document.getElementById('m-qty').value) || 1;
@@ -1030,7 +1054,8 @@ async function addManualReservation() {
   const qty      = parseInt(document.getElementById('m-qty').value) || 1;
   const type     = document.getElementById('m-type').value;
   const proof    = document.getElementById('m-proof').checked;
-  const sendAlim = document.getElementById('m-alim').checked;
+  const onSite   = document.getElementById('m-onsite').checked;
+  const sendAlim = onSite ? false : document.getElementById('m-alim').checked;
 
   const total = parseInt(document.getElementById('m-price').value) || 0;
   const price = Math.round(total / qty);
@@ -1052,6 +1077,7 @@ async function addManualReservation() {
     unitPrice: price,
     total: total,
     needProof: proof,
+    onSite,
     sendAlim,
   });
 
@@ -1062,6 +1088,9 @@ async function addManualReservation() {
     document.getElementById('m-email').value = '';
     document.getElementById('m-price').value = '0';
     document.getElementById('m-proof').checked = false;
+    document.getElementById('m-onsite').checked = false;
+    document.getElementById('m-alim').checked = true;
+    document.getElementById('m-alim-wrap').style.display = '';
     await loadData();
   } else {
     toast('오류: ' + (r.message || '실패'));
@@ -1121,9 +1150,12 @@ function renderReservations() {
   } else if (currentFilter !== 'all') {
     list = list.filter(r => currentFilter==='취소' ? r.payStatus.includes('취소') : r.payStatus===currentFilter);
   }
+  if (currentSessionFilter) {
+    list = list.filter(r => r.sessionId === currentSessionFilter);
+  }
   if (currentSearch) {
     const q = currentSearch.toLowerCase();
-    list = list.filter(r => r.name.includes(q) || (r.resNum||'').toLowerCase().includes(q));
+    list = list.filter(r => r.name.includes(q) || (r.resNum||'').toLowerCase().includes(q) || (r.phone||'').replace(/-/g,'').includes(q.replace(/-/g,'')));
   }
   const el = document.getElementById('res-list');
   if (!list.length) { el.innerHTML = '<div class="empty-state">해당하는 예약이 없습니다.</div>'; return; }
@@ -1141,7 +1173,12 @@ function buildResCard(r) {
   const rn = r.resNum || '';
 
   let actions = '';
-  if (r.payStatus === '미입금') {
+  if (r.payStatus === '현장결제예정') {
+    actions = '<div class="res-actions">'
+      + '<button class="action-btn confirm" data-action="pay" data-rn="' + rn + '">💳 입금 확인</button>'
+      + '<button class="action-btn danger" data-action="cancel-silent" data-rn="' + rn + '">예약 취소</button>'
+      + '</div>';
+  } else if (r.payStatus === '미입금') {
     actions = '<div class="res-actions">'
       + '<button class="action-btn confirm" data-action="pay" data-rn="' + rn + '">입금 확인</button>'
       + '<button class="action-btn" data-action="change" data-rn="' + rn + '">회차 변경</button>'
@@ -1231,9 +1268,10 @@ document.addEventListener('click', function(e) {
   if (!action) { console.warn('[BTN DEBUG] action 없음'); return; }
   if (!rn)     { console.warn('[BTN DEBUG] rn 없음'); return; }
 
-  if (action === 'pay')     confirmPay(rn);
-  if (action === 'change')  changeSession(rn);
-  if (action === 'cancel')  cancelRes(rn);
+  if (action === 'pay')           confirmPay(rn);
+  if (action === 'change')        changeSession(rn);
+  if (action === 'cancel')        cancelRes(rn);
+  if (action === 'cancel-silent') cancelResSilent(rn);
   if (action === 'delete')  deleteRes(rn);
   if (action === 'resend')        resendTicket(rn);
   if (action === 'resend-change') resendChange(rn);
@@ -1274,6 +1312,14 @@ function setFilter(f,b) {
   renderReservations();
 }
 function filterRes(q) { currentSearch=q.trim(); renderReservations(); }
+function setSessionFilter(v) { currentSessionFilter=v; renderReservations(); }
+function populateSessionFilter() {
+  const sel = document.getElementById('session-filter');
+  if (!sel) return;
+  const cur = sel.value;
+  sel.innerHTML = '<option value="">전체 회차</option>'
+    + sessions.map(s => '<option value="' + s.id + '"' + (s.id===cur?' selected':'') + '>' + sessLabel(s) + '</option>').join('');
+}
 
 async function confirmPay(rn) {
   if (!confirm(rn + ' 입금 확인 처리하시겠습니까?')) return;
@@ -1285,6 +1331,12 @@ async function cancelRes(rn) {
   if (!confirm(rn + ' 예약을 취소하시겠습니까?')) return;
   const r = await callAPI({action:'cancel', resNum:rn});
   if (r.success) { toast('취소됐습니다.'); await loadData(); }
+}
+async function cancelResSilent(rn) {
+  if (!confirm(rn + ' 현장결제 예약을 취소하시겠습니까?\n알림톡은 발송되지 않습니다.')) return;
+  const r = await callAPI({action:'cancel', resNum:rn, silent:true});
+  if (r.success) { toast('취소됐습니다.'); await loadData(); }
+  else toast('오류: '+(r.message||'실패'));
 }
 async function deleteRes(rn) {
   if (!confirm(rn + ' 예약을 DB에서 완전 삭제하시겠습니까?\n\n⚠ 삭제 후 복구할 수 없습니다.')) return;

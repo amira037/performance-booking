@@ -33,6 +33,19 @@ const sessLabel = (s) => {
 const sortSessions = (arr) =>
   [...arr].sort((a, b) => new Date(a.date + 'T' + (a.time||'00:00')) - new Date(b.date + 'T' + (b.time||'00:00')));
 
+const formatPhone = (v) => {
+  const d = v.replace(/\D/g, '').slice(0, 11);
+  if (d.length <= 3) return d;
+  if (d.startsWith('02')) {
+    if (d.length <= 5) return d.slice(0,2) + '-' + d.slice(2);
+    if (d.length <= 9) return d.slice(0,2) + '-' + d.slice(2,5) + '-' + d.slice(5);
+    return d.slice(0,2) + '-' + d.slice(2,6) + '-' + d.slice(6);
+  }
+  if (d.length <= 6) return d.slice(0,3) + '-' + d.slice(3);
+  if (d.length <= 10) return d.slice(0,3) + '-' + d.slice(3,6) + '-' + d.slice(6);
+  return d.slice(0,3) + '-' + d.slice(3,7) + '-' + d.slice(7);
+};
+
 const DEFAULT_SETTINGS = {
   showTitle:   "",
   festivalName:"",
@@ -59,7 +72,7 @@ const Pill = ({type}) => {
 
 const PayBadge = ({payStatus}) => {
   const map = {
-    "입금확인":    { bg:"#f0fdf4", color:"#16a34a", border:"#86efac", label:"입금확인" },
+    "입금확인":    { bg:"#f0fdf4", color:"#16a34a", border:"#86efac", label:"결제완료" },
     "미입금":      { bg:"#fff7ed", color:"#c2410c", border:"#fed7aa", label:"미입금"   },
     "현장결제예정":{ bg:"#eff6ff", color:"#1d4ed8", border:"#bfdbfe", label:"현장결제" },
     "관리자취소":  { bg:"#fef2f2", color:"#e02424", border:"#fca5a5", label:"취소"     },
@@ -121,8 +134,18 @@ function App() {
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const json = await res.json();
 
-      const { reservations, sessions, presets: ps } = json;
+      const { reservations, sessions, presets: ps, performance } = json;
       setPresets(ps || []);
+
+      // admin 공연명 자동 연동
+      if (performance?.name) {
+        setSettings(prev => {
+          if (prev.showTitle === performance.name) return prev;
+          const next = { ...prev, showTitle: performance.name };
+          localStorage.setItem(SETTINGS_KEY, JSON.stringify(next));
+          return next;
+        });
+      }
 
       const newShows = sortSessions((sessions || []).map(s => ({
         id: s.id, label: sessLabel(s), time: s.time || '', date: s.date || '', seats: s.seats || 0,
@@ -256,6 +279,23 @@ function App() {
         return nd;
       });
     } catch(e) { setSyncStatus("error"); alert("입금 확인 실패: " + e.message); }
+  };
+
+  // ── 현장결제 취소 (알림톡 없음) ──────────────────────────
+  const cancelOnSite = async (r) => {
+    if (!window.confirm(`[${r.name}] 현장결제 예약을 취소하시겠습니까?\n알림톡은 발송되지 않습니다.`)) return;
+    setSyncStatus("syncing");
+    try {
+      await apiPost({ action: 'cancel', resNum: r.id, silent: true });
+      setSyncStatus("ok");
+      setData(d => {
+        const nd = { ...d };
+        Object.keys(nd).forEach(sid => {
+          nd[sid] = nd[sid].map(x => x.id === r.id ? { ...x, cancelled: true, payStatus: '관리자취소' } : x);
+        });
+        return nd;
+      });
+    } catch(e) { setSyncStatus("error"); alert("취소 실패: " + e.message); }
   };
 
   // ── 예약 추가 ─────────────────────────────────────────────
@@ -653,7 +693,11 @@ function App() {
 
         {/* 액션 버튼 */}
         <div style={{display:"flex",gap:8,marginBottom:14,flexWrap:"wrap"}}>
-          <button onClick={()=>setShowAddModal(true)}
+          <button onClick={()=>{
+            const firstType = presets.find(p=>p.active);
+            setNewRow({name:"",phone:"",type:firstType?.name||"",qty:1,amount:firstType?.price||0,source:"직접",onSite:false,sendAlim:false});
+            setShowAddModal(true);
+          }}
             style={{background:"#1e293b",color:"#fff",border:"none",borderRadius:8,padding:"8px 16px",fontSize:13,cursor:"pointer",fontWeight:600}}>
             + 예약 추가
           </button>
@@ -758,8 +802,14 @@ function App() {
                           </button>
                         )}
                       </td>
-                      {/* 삭제 (취소된 건만) */}
+                      {/* 취소 / 삭제 */}
                       <td style={{padding:"9px 12px"}}>
+                        {r.payStatus === '현장결제예정' && !r.cancelled && (
+                          <button onClick={()=>cancelOnSite(r)}
+                            style={{color:"#c2410c",border:"1px solid #fed7aa",background:"#fff7ed",borderRadius:6,padding:"3px 8px",fontSize:11,cursor:"pointer",fontWeight:600,whiteSpace:"nowrap"}}>
+                            취소
+                          </button>
+                        )}
                         {r.cancelled && (
                           deleteConfirm === r.id ? (
                             <span>
@@ -818,15 +868,19 @@ function App() {
             {/* 연락처 */}
             <div style={{marginBottom:12}}>
               <div style={{fontSize:12,color:"#6b7280",marginBottom:4}}>연락처</div>
-              <input value={newRow.phone} onChange={e=>setNewRow(p=>({...p,phone:e.target.value}))}
-                placeholder="010-0000-0000"
+              <input value={newRow.phone} onChange={e=>setNewRow(p=>({...p,phone:formatPhone(e.target.value)}))}
+                placeholder="010-0000-0000" inputMode="numeric"
                 style={{width:"100%",border:"1px solid #d1d5db",borderRadius:6,padding:"7px 10px",fontSize:13}}/>
             </div>
             {/* 예매유형 */}
             <div style={{marginBottom:12}}>
               <div style={{fontSize:12,color:"#6b7280",marginBottom:4}}>예매유형</div>
               {typeOptions.length > 0 ? (
-                <select value={newRow.type||typeOptions[0]} onChange={e=>setNewRow(p=>({...p,type:e.target.value}))}
+                <select value={newRow.type||typeOptions[0]} onChange={e=>{
+                  const t = e.target.value;
+                  const preset = presets.find(p=>p.name===t&&p.active);
+                  setNewRow(p=>({...p, type:t, amount: preset ? (preset.price||0)*p.qty : p.amount}));
+                }}
                   style={{width:"100%",border:"1px solid #d1d5db",borderRadius:6,padding:"7px 10px",fontSize:13}}>
                   {typeOptions.map(t=><option key={t}>{t}</option>)}
                 </select>
@@ -839,12 +893,15 @@ function App() {
             {/* 매수 */}
             <div style={{marginBottom:12}}>
               <div style={{fontSize:12,color:"#6b7280",marginBottom:4}}>매수</div>
-              <NumInput value={newRow.qty} onChange={v=>setNewRow(p=>({...p,qty:v}))} min={1}
+              <NumInput value={newRow.qty} onChange={v=>{
+                const preset = presets.find(p=>p.name===(newRow.type||typeOptions[0])&&p.active);
+                setNewRow(p=>({...p, qty:v, amount: preset ? (preset.price||0)*v : p.amount}));
+              }} min={1}
                 style={{width:"100%",border:"1px solid #d1d5db",borderRadius:6,padding:"7px 10px",fontSize:13}}/>
             </div>
             {/* 결제금액 */}
             <div style={{marginBottom:12}}>
-              <div style={{fontSize:12,color:"#6b7280",marginBottom:4}}>결제금액 (원)</div>
+              <div style={{fontSize:12,color:"#6b7280",marginBottom:4}}>결제금액 (원) <span style={{fontSize:11,color:"#9ca3af"}}>— 권종 선택 시 자동 계산</span></div>
               <NumInput value={newRow.amount} onChange={v=>setNewRow(p=>({...p,amount:v}))}
                 style={{width:"100%",border:"1px solid #d1d5db",borderRadius:6,padding:"7px 10px",fontSize:13}}/>
             </div>
@@ -987,7 +1044,8 @@ function SettingsModal({settings, adminKey, shows, onSave, onClose}) {
           <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:10}}>
             <div>
               <div style={{fontSize:12,color:"#6b7280",marginBottom:4}}>공연명</div>
-              <input style={iStyle} value={form.showTitle||""} onChange={e=>setField("showTitle",e.target.value)}/>
+              <input style={{...iStyle,background:"#f9fafb",color:"#374151"}} value={form.showTitle||""} readOnly/>
+              <div style={{fontSize:11,color:"#9ca3af",marginTop:4}}>admin 공연 설정에서 연동</div>
             </div>
             <div>
               <div style={{fontSize:12,color:"#6b7280",marginBottom:4}}>페스티벌명</div>
@@ -1043,9 +1101,8 @@ function SettingsModal({settings, adminKey, shows, onSave, onClose}) {
                 </td></tr>
               )}
               {shows.map(s=>{
-                const a        = form.seatAlloc?.[s.id] || {};
-                const maxSeats = s.seats || form.totalSeats;
-                const tot      = formSources.reduce((sum,src)=>sum+(src.name==='직접'?(s.seats||0):(a[src.name]||0)),0);
+                const a   = form.seatAlloc?.[s.id] || {};
+                const tot = formSources.reduce((sum,src)=>sum+(src.name==='직접'?(s.seats||0):(a[src.name]||0)),0);
                 return (
                   <tr key={s.id} style={{borderTop:"1px solid #f3f4f6"}}>
                     <td style={{padding:"7px 10px",fontSize:12,color:"#374151",whiteSpace:"nowrap"}}>
@@ -1070,8 +1127,8 @@ function SettingsModal({settings, adminKey, shows, onSave, onClose}) {
                       );
                     })}
                     <td style={{padding:"7px 10px",textAlign:"center",fontWeight:700,
-                      color:tot>maxSeats?"#e02424":"#374151"}}>
-                      {tot}{tot>maxSeats&&<span style={{fontSize:10,marginLeft:2,color:"#e02424"}}>초과!</span>}
+                      color:tot>form.totalSeats?"#e02424":"#374151"}}>
+                      {tot}{tot>form.totalSeats&&<span style={{fontSize:10,marginLeft:2,color:"#e02424"}}>초과!</span>}
                     </td>
                   </tr>
                 );

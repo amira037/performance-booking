@@ -89,7 +89,7 @@ export default async function handler(req, res) {
 
   // ── 예약 취소 ────────────────────────────────────────────
   if (action === 'cancel') {
-    const { resNum } = payload;
+    const { resNum, silent } = payload;
     const reservation = await findReservation(resNum);
     if (!reservation) return res.status(404).json({ success: false });
 
@@ -100,8 +100,8 @@ export default async function handler(req, res) {
       await decrementBooked(reservation.sessionId, reservation.quantity);
     }
 
-    // 고객 취소 완료 알림톡
-    if (reservation.phone) {
+    // 고객 취소 완료 알림톡 (silent=true이면 발송 안 함)
+    if (!silent && reservation.phone) {
       try {
         const perf = await getPerformance();
         await sendCancelCompleteAlimtalk({
