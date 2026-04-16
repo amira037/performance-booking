@@ -95,7 +95,7 @@ const NumInput = ({value, onChange, min=0, style={}, ...props}) => {
 
 const SrcBadge = ({source, color}) => {
   const c = color || "#6b7280";
-  return <span style={{background:c+"18",color:c,border:`1px solid ${c}40`,borderRadius:999,padding:"1px 7px",fontSize:10,fontWeight:700}}>{source}</span>;
+  return <span style={{background:c+"18",color:c,border:`1px solid ${c}40`,borderRadius:999,padding:"1px 7px",fontSize:10,fontWeight:700,whiteSpace:"nowrap"}}>{source}</span>;
 };
 
 // ── 메인 앱 ─────────────────────────────────────────────────
@@ -748,7 +748,7 @@ function App() {
             {showInfo?.label} {showInfo?.time} — 예약 목록 ({rows.length}건 / 취소 {rows.filter(r=>r.cancelled).length}건)
           </div>
           <div style={{overflowX:"auto"}}>
-            <table style={{width:"100%",borderCollapse:"collapse",fontSize:13}}>
+            <table style={{width:"100%",minWidth:700,borderCollapse:"collapse",fontSize:13}}>
               <thead>
                 <tr style={{background:"#f9fafb",color:"#6b7280",fontSize:11}}>
                   {["#","예약번호","출처","예매자","연락처","예매유형","매수","결제금액","결제","입장",""].map((h,i)=>(
@@ -765,21 +765,21 @@ function App() {
                     <tr key={r.id} style={{borderTop:"1px solid #f3f4f6",background:rowBg}}
                       onMouseEnter={e=>e.currentTarget.style.background=rowHover}
                       onMouseLeave={e=>e.currentTarget.style.background=rowBg}>
-                      <td style={{padding:"9px 12px",color:"#9ca3af"}}>{idx+1}</td>
-                      <td style={{padding:"9px 12px",color:"#6b7280",fontSize:11}}>{r.id}</td>
-                      <td style={{padding:"9px 12px"}}><SrcBadge source={r.source} color={srcColorMap[r.source]}/></td>
-                      <td style={{padding:"9px 12px",fontWeight:600,color:r.cancelled?"#9ca3af":"",textDecoration:r.cancelled?"line-through":""}}>
+                      <td style={{padding:"9px 12px",color:"#9ca3af",whiteSpace:"nowrap"}}>{idx+1}</td>
+                      <td style={{padding:"9px 12px",color:"#6b7280",fontSize:11,whiteSpace:"nowrap"}}>{r.id}</td>
+                      <td style={{padding:"9px 12px",whiteSpace:"nowrap"}}><SrcBadge source={r.source} color={srcColorMap[r.source]}/></td>
+                      <td style={{padding:"9px 12px",fontWeight:600,color:r.cancelled?"#9ca3af":"",textDecoration:r.cancelled?"line-through":"",whiteSpace:"nowrap"}}>
                         {r.name}
                         {r.payStatus==='현장결제예정'&&<span style={{fontSize:10,marginLeft:4,color:"#1d4ed8",background:"#eff6ff",border:"1px solid #bfdbfe",borderRadius:4,padding:"0 4px"}}>현장</span>}
                       </td>
-                      <td style={{padding:"9px 12px",color:"#6b7280"}}>{r.phone}</td>
+                      <td style={{padding:"9px 12px",color:"#6b7280",whiteSpace:"nowrap"}}>{r.phone}</td>
                       <td style={{padding:"9px 12px"}}>
                         {r.cancelled
                           ? <span style={{background:"#fee2e2",color:"#e02424",border:"1px solid #fca5a5",borderRadius:999,padding:"1px 8px",fontSize:11,fontWeight:700}}>취소</span>
                           : <Pill type={r.type}/>}
                       </td>
-                      <td style={{padding:"9px 12px",fontWeight:700,color:r.cancelled?"#9ca3af":"#1e293b",textAlign:"center",textDecoration:r.cancelled?"line-through":""}}>{r.qty}</td>
-                      <td style={{padding:"9px 12px",color:r.cancelled?"#9ca3af":r.amount===0?"#9ca3af":"#1e293b",textDecoration:r.cancelled?"line-through":""}}>
+                      <td style={{padding:"9px 12px",fontWeight:700,color:r.cancelled?"#9ca3af":"#1e293b",textAlign:"center",textDecoration:r.cancelled?"line-through":"",whiteSpace:"nowrap"}}>{r.qty}</td>
+                      <td style={{padding:"9px 12px",color:r.cancelled?"#9ca3af":r.amount===0?"#9ca3af":"#1e293b",textDecoration:r.cancelled?"line-through":"",whiteSpace:"nowrap"}}>
                         {r.cancelled?"환불":r.amount===0?"무료":r.amount.toLocaleString()+"원"}
                       </td>
                       {/* 결제 상태 + 입금확인 버튼 */}
