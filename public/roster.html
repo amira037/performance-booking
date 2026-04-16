@@ -131,7 +131,7 @@ function App() {
     setSyncStatus("syncing");
     try {
       const res = await fetch('/api/admin', { headers: { 'x-admin-key': key } });
-      if (res.status === 401) { setSyncStatus("error"); return; }
+      if (res.status === 401) { setSyncStatus("error"); setLoading(false); setAuthenticated(false); return; }
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const json = await res.json();
 
