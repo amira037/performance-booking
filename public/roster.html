@@ -24,6 +24,15 @@ const { useState, useEffect, useRef, useCallback } = React;
 const SETTINGS_KEY  = "roster_settings_v1";
 const ADMIN_KEY_KEY = "roster_admin_key";
 
+const DAYS = ['일','월','화','수','목','금','토'];
+const sessLabel = (s) => {
+  if (!s.date) return s.label || '';
+  const d = new Date(s.date + 'T00:00:00');
+  return (d.getMonth()+1) + '월 ' + d.getDate() + '일 (' + DAYS[d.getDay()] + ')';
+};
+const sortSessions = (arr) =>
+  [...arr].sort((a, b) => new Date(a.date + 'T' + (a.time||'00:00')) - new Date(b.date + 'T' + (b.time||'00:00')));
+
 const DEFAULT_SETTINGS = {
   showTitle:   "",
   festivalName:"",
@@ -115,9 +124,9 @@ function App() {
       const { reservations, sessions, presets: ps } = json;
       setPresets(ps || []);
 
-      const newShows = (sessions || []).map(s => ({
-        id: s.id, label: s.label || '', time: s.time || '', date: s.date || '',
-      }));
+      const newShows = sortSessions((sessions || []).map(s => ({
+        id: s.id, label: sessLabel(s), time: s.time || '', date: s.date || '', seats: s.seats || 0,
+      })));
       setShows(newShows);
 
       const grouped = {};
@@ -148,16 +157,25 @@ function App() {
         return newShows.length > 0 ? newShows[0].id : null;
       });
 
-      // seatAlloc — Redis sessions에 없는 항목 자동 초기화
+      // seatAlloc — Redis sessions에 없는 항목 자동 초기화 + 직접 예약은 admin 최대인원 자동 연동
       setSettings(prev => {
         const alloc = { ...(prev.seatAlloc || {}) };
         let changed = false;
         newShows.forEach(s => {
           if (!alloc[s.id]) {
             const entry = {};
-            (prev.sources || DEFAULT_SETTINGS.sources).forEach(src => { entry[src.name] = 0; });
+            (prev.sources || DEFAULT_SETTINGS.sources).forEach(src => {
+              entry[src.name] = src.name === '직접' ? (s.seats || 0) : 0;
+            });
             alloc[s.id] = entry;
             changed = true;
+          } else {
+            // 직접 예약 배정 좌석수를 admin 최대인원과 동기화
+            const directSeats = s.seats || 0;
+            if ((alloc[s.id]['직접'] ?? -1) !== directSeats) {
+              alloc[s.id] = { ...alloc[s.id], '직접': directSeats };
+              changed = true;
+            }
           }
         });
         if (!changed) return prev;
@@ -495,11 +513,12 @@ function App() {
   const activeRows   = rows.filter(r => !r.cancelled);
   const totalPeople  = activeRows.reduce((s,r) => s + r.qty, 0);
   const totalAmount  = activeRows.reduce((s,r) => s + r.amount, 0);
-  const totalSeats   = settings.totalSeats;
-  const remaining    = totalSeats - totalPeople;
-  const pct          = Math.min(100, Math.round((totalPeople / totalSeats) * 100));
   const showInfo     = shows.find(s => s.id === activeShow);
   const alloc        = settings.seatAlloc?.[activeShow] || {};
+  const allocTotal   = Object.values(alloc).reduce((s,v) => s + v, 0);
+  const totalSeats   = allocTotal || settings.totalSeats;
+  const remaining    = totalSeats - totalPeople;
+  const pct          = Math.min(100, Math.round(totalSeats > 0 ? (totalPeople / totalSeats) * 100 : 0));
   const checkedInCount = activeRows.reduce((s,r) => s + (r.checked_in ? r.qty : 0), 0);
   const sources      = settings.sources || DEFAULT_SETTINGS.sources;
   const srcColorMap  = Object.fromEntries(sources.map(s => [s.name, s.color]));
@@ -562,6 +581,8 @@ function App() {
       <div style={{background:"#fff",borderBottom:"1px solid #e5e7eb",display:"flex",overflowX:"auto"}}>
         {shows.map(s => {
           const cnt = (data[s.id]||[]).filter(r=>!r.cancelled).reduce((sum,r)=>sum+r.qty,0);
+          const sAllocTotal = Object.values(settings.seatAlloc?.[s.id]||{}).reduce((sum,v)=>sum+v,0);
+          const sSeats = sAllocTotal || settings.totalSeats;
           const isActive = s.id === activeShow;
           return (
             <button key={s.id} onClick={()=>setActiveShow(s.id)} style={{
@@ -571,7 +592,7 @@ function App() {
               fontWeight:isActive?700:400,fontSize:13,whiteSpace:"nowrap",lineHeight:1.6,
             }}>
               {s.label} {s.time}<br/>
-              <span style={{fontSize:11,color:cnt>=totalSeats?"#e02424":"#6b7280"}}>{cnt}/{totalSeats}석</span>
+              <span style={{fontSize:11,color:cnt>=sSeats?"#e02424":"#6b7280"}}>{cnt}/{sSeats}석</span>
             </button>
           );
         })}
@@ -974,8 +995,9 @@ function SettingsModal({settings, adminKey, shows, onSave, onClose}) {
             </div>
           </div>
           <div style={{maxWidth:160}}>
-            <div style={{fontSize:12,color:"#6b7280",marginBottom:4}}>총 객석수</div>
+            <div style={{fontSize:12,color:"#6b7280",marginBottom:4}}>총 객석수 (기본값)</div>
             <NumInput style={iStyle} value={form.totalSeats} onChange={v=>setField("totalSeats",v)}/>
+            <div style={{fontSize:11,color:"#9ca3af",marginTop:4}}>회차별 좌석수는 admin 기준</div>
           </div>
         </div>
 
@@ -1021,22 +1043,35 @@ function SettingsModal({settings, adminKey, shows, onSave, onClose}) {
                 </td></tr>
               )}
               {shows.map(s=>{
-                const a   = form.seatAlloc?.[s.id] || {};
-                const tot = formSources.reduce((sum,src)=>sum+(a[src.name]||0),0);
+                const a        = form.seatAlloc?.[s.id] || {};
+                const maxSeats = s.seats || form.totalSeats;
+                const tot      = formSources.reduce((sum,src)=>sum+(src.name==='직접'?(s.seats||0):(a[src.name]||0)),0);
                 return (
                   <tr key={s.id} style={{borderTop:"1px solid #f3f4f6"}}>
                     <td style={{padding:"7px 10px",fontSize:12,color:"#374151",whiteSpace:"nowrap"}}>
                       {s.label} {s.time}
                     </td>
-                    {formSources.map(src=>(
-                      <td key={src.name} style={{padding:"5px 6px"}}>
-                        <NumInput value={a[src.name]||0} onChange={v=>setAllocVal(s.id,src.name,v)}
-                          style={{width:"100%",border:"1px solid #d1d5db",borderRadius:6,padding:"5px 8px",fontSize:13,textAlign:"center"}}/>
-                      </td>
-                    ))}
+                    {formSources.map(src=>{
+                      if (src.name === '직접') {
+                        return (
+                          <td key={src.name} style={{padding:"5px 6px",textAlign:"center"}}>
+                            <div style={{border:"1px solid #e5e7eb",borderRadius:6,padding:"5px 8px",fontSize:13,color:"#374151",background:"#f9fafb",fontWeight:600}}>
+                              {s.seats||0}
+                            </div>
+                            <div style={{fontSize:10,color:"#9ca3af",marginTop:2}}>admin 연동</div>
+                          </td>
+                        );
+                      }
+                      return (
+                        <td key={src.name} style={{padding:"5px 6px"}}>
+                          <NumInput value={a[src.name]||0} onChange={v=>setAllocVal(s.id,src.name,v)}
+                            style={{width:"100%",border:"1px solid #d1d5db",borderRadius:6,padding:"5px 8px",fontSize:13,textAlign:"center"}}/>
+                        </td>
+                      );
+                    })}
                     <td style={{padding:"7px 10px",textAlign:"center",fontWeight:700,
-                      color:tot>form.totalSeats?"#e02424":"#374151"}}>
-                      {tot}{tot>form.totalSeats&&<span style={{fontSize:10,marginLeft:2,color:"#e02424"}}>초과!</span>}
+                      color:tot>maxSeats?"#e02424":"#374151"}}>
+                      {tot}{tot>maxSeats&&<span style={{fontSize:10,marginLeft:2,color:"#e02424"}}>초과!</span>}
                     </td>
                   </tr>
                 );
