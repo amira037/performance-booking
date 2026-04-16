@@ -5,9 +5,6 @@
   ],
   "functions": {
     "api/*.js": {
-      "maxDuration": 10
-    },
-    "api/cron-reminder.js": {
       "maxDuration": 60
     }
   },
