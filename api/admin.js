@@ -5,6 +5,7 @@ import {
   getReservations, addReservation, updateReservation, findReservation,
   deleteReservation,
   getSessions, saveSessions,
+  getSeatAlloc, saveSeatAlloc,
   getPresets, savePresets,
   getPerformance, savePerformance,
   getLocks,
@@ -28,11 +29,12 @@ export default async function handler(req, res) {
 
   // 전체 데이터 조회
   if (req.method === 'GET') {
-    const [reservations, sessions, presets, performance] = await Promise.all([
+    const [reservations, sessions, presets, performance, seatAlloc] = await Promise.all([
       getReservations(),
       getSessions(),
       getPresets(),
       getPerformance(),
+      getSeatAlloc(),
     ]);
 
     // 각 회차의 실제 booked 수 계산 (입금확인 + 미입금 모두 포함)
@@ -42,7 +44,7 @@ export default async function handler(req, res) {
       return { ...s, bookedConfirmed: confirmed, bookedPending: pending, booked: confirmed + pending };
     });
 
-    return res.status(200).json({ reservations, sessions: sessionsWithBooked, presets, performance });
+    return res.status(200).json({ reservations, sessions: sessionsWithBooked, presets, performance, seatAlloc });
   }
 
   if (req.method !== 'POST')
@@ -208,25 +210,40 @@ export default async function handler(req, res) {
 
   // ── 회차 추가/수정/삭제 ──────────────────────────────────
   if (action === 'addSession') {
-    const sessions = await getSessions();
-    sessions.push(payload.session);
-    await saveSessions(sessions);
-    return res.status(200).json({ success: true });
+    try {
+      const sessions = await getSessions();
+      sessions.push(payload.session);
+      await saveSessions(sessions);
+      return res.status(200).json({ success: true });
+    } catch(e) {
+      console.error('[addSession] Redis 오류:', e.message);
+      return res.status(500).json({ success: false, message: 'Redis 저장 오류: ' + e.message });
+    }
   }
 
   if (action === 'updateSession') {
-    const sessions = await getSessions();
-    const idx = sessions.findIndex(s => s.id === payload.session.id);
-    if (idx === -1) return res.status(404).json({ success: false });
-    sessions[idx] = { ...sessions[idx], ...payload.session };
-    await saveSessions(sessions);
-    return res.status(200).json({ success: true });
+    try {
+      const sessions = await getSessions();
+      const idx = sessions.findIndex(s => s.id === payload.session.id);
+      if (idx === -1) return res.status(404).json({ success: false, message: '회차를 찾을 수 없습니다.' });
+      sessions[idx] = { ...sessions[idx], ...payload.session };
+      await saveSessions(sessions);
+      return res.status(200).json({ success: true });
+    } catch(e) {
+      console.error('[updateSession] Redis 오류:', e.message);
+      return res.status(500).json({ success: false, message: 'Redis 저장 오류: ' + e.message });
+    }
   }
 
   if (action === 'deleteSession') {
-    const sessions = await getSessions();
-    await saveSessions(sessions.filter(s => s.id !== payload.id));
-    return res.status(200).json({ success: true });
+    try {
+      const sessions = await getSessions();
+      await saveSessions(sessions.filter(s => s.id !== payload.id));
+      return res.status(200).json({ success: true });
+    } catch(e) {
+      console.error('[deleteSession] Redis 오류:', e.message);
+      return res.status(500).json({ success: false, message: 'Redis 저장 오류: ' + e.message });
+    }
   }
 
   // ── 프리셋 저장/토글 ─────────────────────────────────────
@@ -500,6 +517,12 @@ export default async function handler(req, res) {
       return res.status(400).json({ success: false, message: '취소된 예약만 삭제할 수 있습니다.' });
     }
     await deleteReservation(resNum);
+    return res.status(200).json({ success: true });
+  }
+
+  // ── 판매처별 배정 좌석수 저장 ────────────────────────────
+  if (action === 'saveSeatAlloc') {
+    await saveSeatAlloc(payload.seatAlloc || {});
     return res.status(200).json({ success: true });
   }
 

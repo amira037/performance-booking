@@ -1157,7 +1157,7 @@ function renderDashboard() {
 
 // ── 예약 목록 ──
 function renderReservations() {
-  let list = reservations;
+  let list = reservations.filter(r => !r.source || r.source === '직접');
   if (currentFilter === '신청') {
     list = list.filter(r => r.changeRequest);
   } else if (currentFilter !== 'all') {
@@ -1606,6 +1606,7 @@ async function addSession() {
   const session={id:'S'+Date.now(), date, time, seats, booked:0, status};
   const r=await callAPI({action:'addSession', session});
   if(r.success){sessions.push(session);sessions=sortSessions(sessions);resetSessionForm();renderDashboard();toast('회차가 추가됐습니다.');}
+  else{toast('회차 저장 실패: '+(r.message||'서버 오류'));}
 }
 async function updateSession() {
   if (!editingSessionId) return;
@@ -1615,12 +1616,14 @@ async function updateSession() {
   const session={id:editingSessionId, date, time, seats, status};
   const r=await callAPI({action:'updateSession', session});
   if(r.success){const idx=sessions.findIndex(s=>s.id===editingSessionId);if(idx!==-1)sessions[idx]={...sessions[idx],...session};sessions=sortSessions(sessions);resetSessionForm();renderDashboard();toast('수정됐습니다.');}
+  else{toast('수정 실패: '+(r.message||'서버 오류'));}
 }
 async function deleteSession(id) {
   const s=sessions.find(s=>s.id===id); if(!s) return;
   if(!confirm(sessLabel(s)+' 회차를 삭제하시겠습니까?')) return;
   const r=await callAPI({action:'deleteSession',id});
   if(r.success){sessions=sessions.filter(s=>s.id!==id);if(editingSessionId===id)resetSessionForm();else renderSessionList();renderDashboard();toast('삭제됐습니다.');}
+  else{toast('삭제 실패: '+(r.message||'서버 오류'));}
 }
 
 // ── 할인 프리셋 ──

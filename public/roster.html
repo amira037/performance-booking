@@ -124,6 +124,7 @@ function App() {
   const [newRow, setNewRow]           = useState({name:"",phone:"",type:"",qty:1,amount:0,source:"직접",onSite:false,sendAlim:false});
   const [deleteConfirm, setDeleteConfirm] = useState(null);
   const refreshTimerRef = useRef(null);
+  const settingsRef = useRef(settings);
 
   // ── 데이터 로드 ──────────────────────────────────────────
   const fetchAll = useCallback(async (key) => {
@@ -134,7 +135,7 @@ function App() {
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const json = await res.json();
 
-      const { reservations, sessions, presets: ps, performance } = json;
+      const { reservations, sessions, presets: ps, performance, seatAlloc: redisSeatAlloc } = json;
       setPresets(ps || []);
 
       // admin 공연명 자동 연동
@@ -180,38 +181,49 @@ function App() {
         return newShows.length > 0 ? newShows[0].id : null;
       });
 
-      // seatAlloc — Redis sessions에 없는 항목 자동 초기화 + 직접 예약은 admin 최대인원 자동 연동
-      setSettings(prev => {
-        const alloc = { ...(prev.seatAlloc || {}) };
-        let changed = false;
-        newShows.forEach(s => {
-          if (!alloc[s.id]) {
-            const entry = {};
-            (prev.sources || DEFAULT_SETTINGS.sources).forEach(src => {
-              entry[src.name] = src.name === '직접' ? (s.seats || 0) : 0;
-            });
-            alloc[s.id] = entry;
-            changed = true;
-          } else {
-            // 직접 예약 배정 좌석수를 admin 최대인원과 동기화
-            const directSeats = s.seats || 0;
-            if ((alloc[s.id]['직접'] ?? -1) !== directSeats) {
-              alloc[s.id] = { ...alloc[s.id], '직접': directSeats };
-              changed = true;
-            }
+      // seatAlloc: Redis 데이터 기준으로 merge, 새 회차 자동 초기화
+      const currentSources = settingsRef.current.sources || DEFAULT_SETTINGS.sources;
+      const baseAlloc = redisSeatAlloc || settingsRef.current.seatAlloc || {};
+      const alloc = { ...baseAlloc };
+      let allocChanged = false;
+      newShows.forEach(s => {
+        if (!alloc[s.id]) {
+          const entry = {};
+          currentSources.forEach(src => {
+            entry[src.name] = src.name === '직접' ? (s.seats || 0) : 0;
+          });
+          alloc[s.id] = entry;
+          allocChanged = true;
+        } else {
+          const directSeats = s.seats || 0;
+          if ((alloc[s.id]['직접'] ?? -1) !== directSeats) {
+            alloc[s.id] = { ...alloc[s.id], '직접': directSeats };
+            allocChanged = true;
           }
-        });
-        if (!changed) return prev;
+        }
+      });
+      setSettings(prev => {
         const next = { ...prev, seatAlloc: alloc };
         localStorage.setItem(SETTINGS_KEY, JSON.stringify(next));
         return next;
       });
+      if (allocChanged) {
+        try {
+          await fetch('/api/admin', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'x-admin-key': key },
+            body: JSON.stringify({ action: 'saveSeatAlloc', seatAlloc: alloc }),
+          });
+        } catch(e) { console.error('seatAlloc Redis 저장 오류:', e.message); }
+      }
     } catch(e) {
       console.error(e);
       setSyncStatus("error");
     }
     setLoading(false);
   }, []);
+
+  useEffect(() => { settingsRef.current = settings; }, [settings]);
 
   useEffect(() => {
     if (!authenticated || !adminKey) return;
@@ -844,13 +856,21 @@ function App() {
 
       {/* 설정 모달 */}
       {showSettings && <SettingsModal settings={settings} adminKey={adminKey} shows={shows}
-        onSave={(s, newKey) => {
+        onSave={async (s, newKey) => {
           setSettings(s);
           localStorage.setItem(SETTINGS_KEY, JSON.stringify(s));
+          const keyToUse = (newKey && newKey !== adminKey) ? newKey : adminKey;
           if (newKey && newKey !== adminKey) {
             localStorage.setItem(ADMIN_KEY_KEY, newKey);
             setAdminKey(newKey);
           }
+          try {
+            await fetch('/api/admin', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json', 'x-admin-key': keyToUse },
+              body: JSON.stringify({ action: 'saveSeatAlloc', seatAlloc: s.seatAlloc || {} }),
+            });
+          } catch(e) { console.error('seatAlloc Redis 저장 오류:', e.message); }
           setShowSettings(false);
         }}
         onClose={()=>setShowSettings(false)}/>}
