@@ -185,12 +185,19 @@ export default async function handler(req, res) {
   // ── 입장 처리 ────────────────────────────────────────────
   if (action === 'checkIn') {
     const { resNum } = payload;
+    if (!resNum) return res.status(400).json({ success: false, message: '예약번호가 없습니다.' });
     const checked = payload.checked !== undefined ? Boolean(payload.checked) : true;
-    await updateReservation(resNum, {
-      checkedIn:   checked,
-      checkedInAt: checked ? new Date().toISOString() : null,
-    });
-    return res.status(200).json({ success: true });
+    try {
+      const result = await updateReservation(resNum, {
+        checkedIn:   checked,
+        checkedInAt: checked ? new Date().toISOString() : null,
+      });
+      if (!result) return res.status(404).json({ success: false, message: `예약을 찾을 수 없습니다. (${resNum})` });
+      return res.status(200).json({ success: true });
+    } catch(e) {
+      console.error('[checkIn] 오류:', resNum, e.message);
+      return res.status(500).json({ success: false, message: '입장 처리 중 오류가 발생했습니다: ' + e.message });
+    }
   }
 
   // ── 공연 설정 저장 ───────────────────────────────────────
