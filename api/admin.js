@@ -354,6 +354,23 @@ export default async function handler(req, res) {
     return res.status(200).json({ success: true, count });
   }
 
+  // ── 결제금액 변경 ────────────────────────────────────────
+  if (action === 'changePrice') {
+    const { resNum, newTotal } = payload;
+    const total = parseInt(newTotal);
+    if (isNaN(total) || total < 0) return res.status(400).json({ success: false, message: '올바른 금액을 입력해 주세요.' });
+
+    const reservation = await findReservation(resNum);
+    if (!reservation) return res.status(404).json({ success: false, message: '예약을 찾을 수 없습니다.' });
+
+    const qty = reservation.quantity || 1;
+    const unitPrice = Math.round(total / qty);
+    await updateReservation(resNum, { total, unitPrice });
+    try { await addLog({ resNum, name: reservation.name, phone: reservation.phone, type: '금액변경', result: `${reservation.total}→${total}원` }); } catch(e) {}
+
+    return res.status(200).json({ success: true });
+  }
+
   // ── 인원(매수) 변경 ──────────────────────────────────────
   if (action === 'changeQuantity') {
     const { resNum, newQuantity } = payload;

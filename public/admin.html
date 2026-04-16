@@ -1187,9 +1187,11 @@ function buildResCard(r) {
 
   let actions = '';
   const phoneBtn = '<button class="action-btn" data-action="edit-phone" data-rn="' + rn + '">연락처 변경</button>';
+  const priceBtn = '<button class="action-btn" data-action="edit-price" data-rn="' + rn + '">금액 변경</button>';
   if (r.payStatus === '현장결제예정') {
     actions = '<div class="res-actions">'
       + '<button class="action-btn confirm" data-action="pay" data-rn="' + rn + '">💳 입금 확인</button>'
+      + priceBtn
       + phoneBtn
       + '<button class="action-btn danger" data-action="cancel-silent" data-rn="' + rn + '">예약 취소</button>'
       + '</div>';
@@ -1198,6 +1200,7 @@ function buildResCard(r) {
       + '<button class="action-btn confirm" data-action="pay" data-rn="' + rn + '">입금 확인</button>'
       + '<button class="action-btn" data-action="change" data-rn="' + rn + '">회차 변경</button>'
       + '<button class="action-btn" data-action="qty-change" data-rn="' + rn + '">인원 변경</button>'
+      + priceBtn
       + phoneBtn
       + '<button class="action-btn danger" data-action="cancel" data-rn="' + rn + '">예약 취소</button>'
       + '</div>';
@@ -1209,6 +1212,7 @@ function buildResCard(r) {
       + '<button class="action-btn" data-action="reminder" data-rn="' + rn + '">리마인드</button>'
       + '<button class="action-btn" data-action="change" data-rn="' + rn + '">회차 변경</button>'
       + '<button class="action-btn" data-action="qty-change" data-rn="' + rn + '">인원 변경</button>'
+      + priceBtn
       + phoneBtn
       + '<button class="action-btn danger" data-action="cancel" data-rn="' + rn + '">예약 취소</button>'
       + '<button class="action-btn' + (r.checkedIn ? ' checked' : '') + '" data-action="' + (r.checkedIn ? '' : 'checkin') + '" data-rn="' + rn + '">' + (r.checkedIn ? '✓입장완료' : '입장처리') + '</button>'
@@ -1315,6 +1319,7 @@ document.addEventListener('click', function(e) {
     window.open(url, '_blank');
   }
   if (action === 'qty-change') changeQuantity(rn);
+  if (action === 'edit-price') editPrice(rn);
   // 신청 처리 버튼
   if (action === 'process-change')     processChangeRequest(rn);
   if (action === 'process-cancel')     processCancelRequest(rn);
@@ -1322,6 +1327,27 @@ document.addEventListener('click', function(e) {
   if (action === 'dismiss')            dismissRequest(rn);
   if (action === 'edit-phone')         editPhone(rn);
 });
+
+async function editPrice(rn) {
+  const r = reservations.find(x => x.resNum === rn);
+  if (!r) return;
+  const current = r.total || 0;
+  const input = prompt(`[${r.name}] 새 결제금액을 입력하세요 (원)\n현재: ${current.toLocaleString()}원`, current);
+  if (input === null) return;
+  const newTotal = parseInt(input);
+  if (isNaN(newTotal) || newTotal < 0) { toast('올바른 금액을 입력해 주세요.'); return; }
+  if (newTotal === current) { toast('현재 금액과 동일합니다.'); return; }
+  if (!confirm(`결제금액을 변경하시겠습니까?\n${current.toLocaleString()}원 → ${newTotal.toLocaleString()}원`)) return;
+  const result = await callAPI({ action: 'changePrice', resNum: rn, newTotal });
+  if (result.success) {
+    r.total = newTotal;
+    r.unitPrice = Math.round(newTotal / (r.quantity || 1));
+    renderReservations();
+    toast('금액이 변경되었습니다.');
+  } else {
+    toast('변경 실패: ' + (result.message || '오류'));
+  }
+}
 
 async function editPhone(rn) {
   const r = reservations.find(x => x.resNum === rn);
