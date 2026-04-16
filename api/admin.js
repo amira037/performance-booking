@@ -538,6 +538,16 @@ export default async function handler(req, res) {
     if (Array.isArray(payload.presets)) await savePresets(payload.presets);
     return res.status(200).json({ success: true });
   }
+
+  if (action === 'updatePhone') {
+    const { resNum, phone } = payload;
+    const reservation = await findReservation(resNum);
+    if (!reservation) return res.status(404).json({ success: false, message: '예약을 찾을 수 없습니다.' });
+    await updateReservation(resNum, { phone: phone || '' });
+    try { await addLog({ resNum, name: reservation.name, phone: reservation.phone, type: '연락처변경', result: `${reservation.phone||'-'}→${phone||'-'}` }); } catch(e) {}
+    return res.status(200).json({ success: true });
+  }
+
   return res.status(400).json({ error: 'unknown action' });
 }
 

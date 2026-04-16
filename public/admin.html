@@ -1111,7 +1111,7 @@ async function addManualReservation() {
 
 // ── 현황 ──
 function renderDashboard() {
-  const confirmed  = reservations.filter(r => r.payStatus === '입금확인');
+  const confirmed  = reservations.filter(r => r.payStatus === '입금확인' && r.source === '직접');
   const pending    = reservations.filter(r => r.payStatus === '미입금');
   const revenue    = confirmed.reduce((s,r) => s+(r.total||0), 0);
   const totalSeats = sessions.reduce((s,s2) => s+(s2.seats||0), 0);
@@ -1122,7 +1122,7 @@ function renderDashboard() {
   document.getElementById('stat-pending').textContent       = pending.length + '건';
   document.getElementById('stat-revenue').textContent       = revenue.toLocaleString() + '원';
   document.getElementById('session-status-list').innerHTML  = sessions.map(s => {
-    const confirmed = reservations.filter(r=>r.sessionId===s.id&&r.payStatus==='입금확인').reduce((sum,r)=>sum+(r.quantity||0),0);
+    const confirmed = reservations.filter(r=>r.sessionId===s.id&&r.payStatus==='입금확인'&&r.source==='직접').reduce((sum,r)=>sum+(r.quantity||0),0);
     const pending   = reservations.filter(r=>r.sessionId===s.id&&r.payStatus==='미입금').reduce((sum,r)=>sum+(r.quantity||0),0);
     const booked    = s.booked !== undefined ? s.booked : (confirmed + pending); // DB 실제값 우선
     const total     = confirmed + pending;
@@ -1185,9 +1185,11 @@ function buildResCard(r) {
   const rn = r.resNum || '';
 
   let actions = '';
+  const phoneBtn = '<button class="action-btn" data-action="edit-phone" data-rn="' + rn + '">연락처 변경</button>';
   if (r.payStatus === '현장결제예정') {
     actions = '<div class="res-actions">'
       + '<button class="action-btn confirm" data-action="pay" data-rn="' + rn + '">💳 입금 확인</button>'
+      + phoneBtn
       + '<button class="action-btn danger" data-action="cancel-silent" data-rn="' + rn + '">예약 취소</button>'
       + '</div>';
   } else if (r.payStatus === '미입금') {
@@ -1195,6 +1197,7 @@ function buildResCard(r) {
       + '<button class="action-btn confirm" data-action="pay" data-rn="' + rn + '">입금 확인</button>'
       + '<button class="action-btn" data-action="change" data-rn="' + rn + '">회차 변경</button>'
       + '<button class="action-btn" data-action="qty-change" data-rn="' + rn + '">인원 변경</button>'
+      + phoneBtn
       + '<button class="action-btn danger" data-action="cancel" data-rn="' + rn + '">예약 취소</button>'
       + '</div>';
   } else if (r.payStatus === '입금확인') {
@@ -1205,12 +1208,14 @@ function buildResCard(r) {
       + '<button class="action-btn" data-action="reminder" data-rn="' + rn + '">리마인드</button>'
       + '<button class="action-btn" data-action="change" data-rn="' + rn + '">회차 변경</button>'
       + '<button class="action-btn" data-action="qty-change" data-rn="' + rn + '">인원 변경</button>'
+      + phoneBtn
       + '<button class="action-btn danger" data-action="cancel" data-rn="' + rn + '">예약 취소</button>'
       + '<button class="action-btn' + (r.checkedIn ? ' checked' : '') + '" data-action="' + (r.checkedIn ? '' : 'checkin') + '" data-rn="' + rn + '">' + (r.checkedIn ? '✓입장완료' : '입장처리') + '</button>'
       + '</div>';
   } else {
     // 취소 상태에만 삭제 버튼 표시
     actions = '<div class="res-actions">'
+      + phoneBtn
       + '<button class="action-btn danger" data-action="delete" data-rn="' + rn + '" style="border-color:#5a1a1a;color:#c06060;">삭제</button>'
       + '</div>';
   }
@@ -1314,8 +1319,24 @@ document.addEventListener('click', function(e) {
   if (action === 'process-cancel')     processCancelRequest(rn);
   if (action === 'process-qty-change') processQuantityChangeRequest(rn);
   if (action === 'dismiss')            dismissRequest(rn);
+  if (action === 'edit-phone')         editPhone(rn);
 });
 
+async function editPhone(rn) {
+  const r = reservations.find(x => x.resNum === rn);
+  if (!r) return;
+  const current = r.phone || '';
+  const input = prompt(`[${r.name}] 새 연락처를 입력하세요`, current);
+  if (input === null) return;                          // 취소
+  const formatted = formatPhone(input);
+  if (!confirm(`연락처를 변경하시겠습니까?\n${current || '(없음)'} → ${formatted || '(없음)'}`)) return;
+  const result = await callAPI({ action: 'updatePhone', resNum: rn, phone: formatted });
+  if (result.success) {
+    r.phone = formatted;
+    renderReservations();
+    toast('연락처가 변경되었습니다.');
+  }
+}
 function toggleCard(rn) { document.getElementById('body-'+rn).classList.toggle('open'); }
 function setFilter(f,b) {
   currentFilter=f;
