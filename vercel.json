@@ -6,6 +6,15 @@
   "functions": {
     "api/*.js": {
       "maxDuration": 10
+    },
+    "api/cron-reminder.js": {
+      "maxDuration": 60
     }
-  }
+  },
+  "crons": [
+    {
+      "path": "/api/cron-reminder",
+      "schedule": "0 0 * * *"
+    }
+  ]
 }
