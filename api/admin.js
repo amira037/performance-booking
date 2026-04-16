@@ -38,7 +38,7 @@ export default async function handler(req, res) {
     // 각 회차의 실제 booked 수 계산 (입금확인 + 미입금 모두 포함)
     const sessionsWithBooked = sessions.map(s => {
       const confirmed = reservations.filter(r => r.sessionId === s.id && r.payStatus === '입금확인').reduce((sum, r) => sum + (r.quantity||0), 0);
-      const pending   = reservations.filter(r => r.sessionId === s.id && r.payStatus === '미입금').reduce((sum, r) => sum + (r.quantity||0), 0);
+      const pending   = reservations.filter(r => r.sessionId === s.id && (r.payStatus === '미입금' || r.payStatus === '현장결제예정')).reduce((sum, r) => sum + (r.quantity||0), 0);
       return { ...s, bookedConfirmed: confirmed, bookedPending: pending, booked: confirmed + pending };
     });
 
@@ -185,9 +185,10 @@ export default async function handler(req, res) {
   // ── 입장 처리 ────────────────────────────────────────────
   if (action === 'checkIn') {
     const { resNum } = payload;
+    const checked = payload.checked !== undefined ? Boolean(payload.checked) : true;
     await updateReservation(resNum, {
-      checkedIn:   true,
-      checkedInAt: new Date().toISOString(),
+      checkedIn:   checked,
+      checkedInAt: checked ? new Date().toISOString() : null,
     });
     return res.status(200).json({ success: true });
   }
@@ -242,7 +243,7 @@ export default async function handler(req, res) {
 
   // ── 직권 예약 추가 ──────────────────────────────────────────
   if (action === 'addManualReservation') {
-    const { name, phone, email, sessionId, sessionLabel, ticketType, quantity, unitPrice, total, needProof, sendAlim } = payload;
+    const { name, phone, email, sessionId, sessionLabel, ticketType, quantity, unitPrice, total, needProof, sendAlim, onSite } = payload;
     if (!name || !sessionId)
       return res.status(400).json({ success: false, message: '이름과 회차는 필수입니다.' });
 
@@ -257,18 +258,18 @@ export default async function handler(req, res) {
       ticketType: ticketType||'초대권', quantity: quantity||1,
       unitPrice: unitPrice||0, total: total||0,
       needProof: needProof||false,
-      payStatus:  '입금확인',
+      payStatus:  onSite ? '현장결제예정' : '입금확인',
       ticketSent: false, checkedIn: false,
       createdAt:  now.toISOString(),
-      processedAt: now.toISOString(),
-      note: '관리자 직권 등록',
+      processedAt: onSite ? null : now.toISOString(),
+      note: onSite ? '현장결제 예정 (관리자 등록)' : '관리자 직권 등록',
     };
 
     await addReservation(reservation);
     await incrementBooked(sessionId, quantity||1);
 
-    // 알림톡 발송 여부
-    if (sendAlim && phone) {
+    // 알림톡 발송: 현장결제예정이면 발송하지 않음
+    if (sendAlim && phone && !onSite) {
       try {
         const perf = await getPerformance();
         const ticketUrl = generateTicketUrl(resNum, reservation, perf);
