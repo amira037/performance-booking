@@ -397,7 +397,7 @@ body{background:var(--bg);color:var(--white);font-family:'Noto Sans KR',sans-ser
         </div>
         <div class="form-row">
           <div class="form-group"><label>이름 *</label><input type="text" class="form-input" id="m-name" placeholder="홍길동"></div>
-          <div class="form-group"><label>연락처</label><input type="tel" class="form-input" id="m-phone" placeholder="010-0000-0000"></div>
+          <div class="form-group"><label>연락처</label><input type="tel" class="form-input" id="m-phone" placeholder="010-0000-0000" oninput="this.value=formatPhone(this.value)" inputmode="numeric"></div>
         </div>
         <div class="form-row">
           <div class="form-group"><label>이메일 (선택)</label><input type="email" class="form-input" id="m-email" placeholder="example@email.com"></div>
@@ -779,6 +779,18 @@ let editingSessionId = null, editingPresetName = null, dragSrcIndex = null;
 let modalResNum = null, modalNewSessionId = null;
 const DAYS = ['일','월','화','수','목','금','토'];
 
+function formatPhone(v) {
+  const d = v.replace(/\D/g, '').slice(0, 11);
+  if (d.length <= 3) return d;
+  if (d.startsWith('02')) {
+    if (d.length <= 5) return d.slice(0,2) + '-' + d.slice(2);
+    if (d.length <= 9) return d.slice(0,2) + '-' + d.slice(2,5) + '-' + d.slice(5);
+    return d.slice(0,2) + '-' + d.slice(2,6) + '-' + d.slice(6);
+  }
+  if (d.length <= 6) return d.slice(0,3) + '-' + d.slice(3);
+  if (d.length <= 10) return d.slice(0,3) + '-' + d.slice(3,6) + '-' + d.slice(6);
+  return d.slice(0,3) + '-' + d.slice(3,7) + '-' + d.slice(7);
+}
 function toast(msg) {
   const t = document.getElementById('toast');
   t.textContent = msg; t.classList.add('show');

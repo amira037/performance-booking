@@ -565,6 +565,7 @@ function App() {
   const syncDot      = syncStatus==="syncing"?"🔄":syncStatus==="ok"?"🟢":syncStatus==="error"?"🔴":"⚪";
 
   const typeOptions  = presets.filter(p => p.active).map(p => p.name);
+  const allTypePresets = presets; // 비활성 포함 전체 권종
 
   // ── Admin Key 입력 화면 ───────────────────────────────────
   if (!authenticated) return (
@@ -694,7 +695,7 @@ function App() {
         {/* 액션 버튼 */}
         <div style={{display:"flex",gap:8,marginBottom:14,flexWrap:"wrap"}}>
           <button onClick={()=>{
-            const firstType = presets.find(p=>p.active);
+            const firstType = presets.find(p=>p.active) || presets[0];
             setNewRow({name:"",phone:"",type:firstType?.name||"",qty:1,amount:firstType?.price||0,source:"직접",onSite:false,sendAlim:false});
             setShowAddModal(true);
           }}
@@ -875,14 +876,23 @@ function App() {
             {/* 예매유형 */}
             <div style={{marginBottom:12}}>
               <div style={{fontSize:12,color:"#6b7280",marginBottom:4}}>예매유형</div>
-              {typeOptions.length > 0 ? (
-                <select value={newRow.type||typeOptions[0]} onChange={e=>{
+              {allTypePresets.length > 0 ? (
+                <select value={newRow.type||(typeOptions[0]||allTypePresets[0]?.name||"")} onChange={e=>{
                   const t = e.target.value;
-                  const preset = presets.find(p=>p.name===t&&p.active);
+                  const preset = presets.find(p=>p.name===t);
                   setNewRow(p=>({...p, type:t, amount: preset ? (preset.price||0)*p.qty : p.amount}));
                 }}
                   style={{width:"100%",border:"1px solid #d1d5db",borderRadius:6,padding:"7px 10px",fontSize:13}}>
-                  {typeOptions.map(t=><option key={t}>{t}</option>)}
+                  {allTypePresets.filter(p=>p.active).length > 0 && (
+                    <optgroup label="활성">
+                      {allTypePresets.filter(p=>p.active).map(p=><option key={p.name} value={p.name}>{p.name}</option>)}
+                    </optgroup>
+                  )}
+                  {allTypePresets.filter(p=>!p.active).length > 0 && (
+                    <optgroup label="비활성">
+                      {allTypePresets.filter(p=>!p.active).map(p=><option key={p.name} value={p.name}>{p.name}</option>)}
+                    </optgroup>
+                  )}
                 </select>
               ) : (
                 <input value={newRow.type} onChange={e=>setNewRow(p=>({...p,type:e.target.value}))}
@@ -894,7 +904,7 @@ function App() {
             <div style={{marginBottom:12}}>
               <div style={{fontSize:12,color:"#6b7280",marginBottom:4}}>매수</div>
               <NumInput value={newRow.qty} onChange={v=>{
-                const preset = presets.find(p=>p.name===(newRow.type||typeOptions[0])&&p.active);
+                const preset = presets.find(p=>p.name===(newRow.type||typeOptions[0]||allTypePresets[0]?.name));
                 setNewRow(p=>({...p, qty:v, amount: preset ? (preset.price||0)*v : p.amount}));
               }} min={1}
                 style={{width:"100%",border:"1px solid #d1d5db",borderRadius:6,padding:"7px 10px",fontSize:13}}/>
