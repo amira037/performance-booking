@@ -1111,7 +1111,8 @@ async function addManualReservation() {
 
 // ── 현황 ──
 function renderDashboard() {
-  const confirmed  = reservations.filter(r => r.payStatus === '입금확인' && r.source === '직접');
+  const isDirectSrc = r => !r.source || r.source === '직접';
+  const confirmed  = reservations.filter(r => r.payStatus === '입금확인' && isDirectSrc(r));
   const pending    = reservations.filter(r => r.payStatus === '미입금');
   const revenue    = confirmed.reduce((s,r) => s+(r.total||0), 0);
   const totalSeats = sessions.reduce((s,s2) => s+(s2.seats||0), 0);
@@ -1122,7 +1123,7 @@ function renderDashboard() {
   document.getElementById('stat-pending').textContent       = pending.length + '건';
   document.getElementById('stat-revenue').textContent       = revenue.toLocaleString() + '원';
   document.getElementById('session-status-list').innerHTML  = sessions.map(s => {
-    const confirmed = reservations.filter(r=>r.sessionId===s.id&&r.payStatus==='입금확인'&&r.source==='직접').reduce((sum,r)=>sum+(r.quantity||0),0);
+    const confirmed = reservations.filter(r=>r.sessionId===s.id&&r.payStatus==='입금확인'&&isDirectSrc(r)).reduce((sum,r)=>sum+(r.quantity||0),0);
     const pending   = reservations.filter(r=>r.sessionId===s.id&&r.payStatus==='미입금').reduce((sum,r)=>sum+(r.quantity||0),0);
     const booked    = s.booked !== undefined ? s.booked : (confirmed + pending); // DB 실제값 우선
     const total     = confirmed + pending;

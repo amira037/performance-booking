@@ -260,6 +260,7 @@ export default async function handler(req, res) {
       needProof: needProof||false,
       payStatus:  onSite ? '현장결제예정' : '입금확인',
       ticketSent: false, checkedIn: false,
+      source: '직접',
       createdAt:  now.toISOString(),
       processedAt: onSite ? null : now.toISOString(),
       note: onSite ? '현장결제 예정 (관리자 등록)' : '관리자 직권 등록',
