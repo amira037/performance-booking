@@ -147,6 +147,24 @@ function App() {
         if (prev) return prev;
         return newShows.length > 0 ? newShows[0].id : null;
       });
+
+      // seatAlloc — Redis sessions에 없는 항목 자동 초기화
+      setSettings(prev => {
+        const alloc = { ...(prev.seatAlloc || {}) };
+        let changed = false;
+        newShows.forEach(s => {
+          if (!alloc[s.id]) {
+            const entry = {};
+            (prev.sources || DEFAULT_SETTINGS.sources).forEach(src => { entry[src.name] = 0; });
+            alloc[s.id] = entry;
+            changed = true;
+          }
+        });
+        if (!changed) return prev;
+        const next = { ...prev, seatAlloc: alloc };
+        localStorage.setItem(SETTINGS_KEY, JSON.stringify(next));
+        return next;
+      });
     } catch(e) {
       console.error(e);
       setSyncStatus("error");
@@ -753,7 +771,7 @@ function App() {
       </div>
 
       {/* 설정 모달 */}
-      {showSettings && <SettingsModal settings={settings} adminKey={adminKey}
+      {showSettings && <SettingsModal settings={settings} adminKey={adminKey} shows={shows}
         onSave={(s, newKey) => {
           setSettings(s);
           localStorage.setItem(SETTINGS_KEY, JSON.stringify(s));
@@ -900,7 +918,7 @@ function App() {
 }
 
 // ── 설정 모달 ────────────────────────────────────────────────
-function SettingsModal({settings, adminKey, onSave, onClose}) {
+function SettingsModal({settings, adminKey, shows, onSave, onClose}) {
   const [form, setForm]       = useState(() => JSON.parse(JSON.stringify(settings)));
   const [newAdminKey, setNewAdminKey] = useState(adminKey);
   const iStyle = {width:"100%",border:"1px solid #d1d5db",borderRadius:6,padding:"7px 10px",fontSize:13};
@@ -993,26 +1011,33 @@ function SettingsModal({settings, adminKey, onSave, onClose}) {
                 {formSources.map(src=>(
                   <th key={src.name} style={{padding:"8px 10px",textAlign:"center",fontWeight:600,fontSize:11,color:src.color}}>{src.name}</th>
                 ))}
+                <th style={{padding:"8px 10px",textAlign:"center",fontWeight:600,fontSize:11,color:"#9ca3af"}}>합계</th>
               </tr>
             </thead>
             <tbody>
-              {/* 실제 shows는 부모 컴포넌트에서 prop으로 받아야 하지만, 설정 모달에선 seatAlloc 키 목록으로 표시 */}
-              {Object.keys(form.seatAlloc||{}).length === 0 && (
-                <tr><td colSpan={formSources.length+1} style={{padding:"12px 10px",color:"#9ca3af",fontSize:12}}>
-                  저장 후 회차 탭에서 자동 구성됩니다
+              {shows.length === 0 && (
+                <tr><td colSpan={formSources.length+2} style={{padding:"12px 10px",color:"#9ca3af",fontSize:12}}>
+                  Redis에 회차가 없습니다 — 예약 관리에서 회차를 먼저 추가하세요
                 </td></tr>
               )}
-              {Object.keys(form.seatAlloc||{}).map(sid=>{
-                const a = form.seatAlloc[sid]||{};
+              {shows.map(s=>{
+                const a   = form.seatAlloc?.[s.id] || {};
+                const tot = formSources.reduce((sum,src)=>sum+(a[src.name]||0),0);
                 return (
-                  <tr key={sid} style={{borderTop:"1px solid #f3f4f6"}}>
-                    <td style={{padding:"7px 10px",fontSize:12,color:"#374151"}}>{sid}</td>
+                  <tr key={s.id} style={{borderTop:"1px solid #f3f4f6"}}>
+                    <td style={{padding:"7px 10px",fontSize:12,color:"#374151",whiteSpace:"nowrap"}}>
+                      {s.label} {s.time}
+                    </td>
                     {formSources.map(src=>(
                       <td key={src.name} style={{padding:"5px 6px"}}>
-                        <NumInput value={a[src.name]||0} onChange={v=>setAllocVal(sid,src.name,v)}
+                        <NumInput value={a[src.name]||0} onChange={v=>setAllocVal(s.id,src.name,v)}
                           style={{width:"100%",border:"1px solid #d1d5db",borderRadius:6,padding:"5px 8px",fontSize:13,textAlign:"center"}}/>
                       </td>
                     ))}
+                    <td style={{padding:"7px 10px",textAlign:"center",fontWeight:700,
+                      color:tot>form.totalSeats?"#e02424":"#374151"}}>
+                      {tot}{tot>form.totalSeats&&<span style={{fontSize:10,marginLeft:2,color:"#e02424"}}>초과!</span>}
+                    </td>
                   </tr>
                 );
               })}
