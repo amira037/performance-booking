@@ -401,11 +401,11 @@ function App() {
       if (isNaver) {
         id=get("예약번호"); name=get("예매자"); phone=get("전화번호");
         statusRaw=get("상태"); dateRaw=get("이용일시"); source="네이버";
-        const g1=parseInt(get("가격분류1-일반"))||0, g2=parseInt(get("가격분류2-페스티벌 패키지 할인"))||0;
-        const g3=parseInt(get("가격분류3-삼일로창고극장 맴버쉽 할인"))||0, g4=parseInt(get("가격분류4-예술인패스"))||0;
-        qty=g1+g2+g3+g4||1; amount=parseInt(get("실결제금액"))||0;
-        if (g1>0) typeLabel="일반"; else if (g2>0) typeLabel="페스티벌 패키지 할인";
-        else if (g3>0) typeLabel="삼일로창고극장 맴버쉽 할인"; else typeLabel="예술인패스";
+        const priceCols = Object.keys(row).filter(k => /^가격분류\d+-/.test(k) && !/결제금액/.test(k));
+        const active = priceCols.map(k => ({ name: k.replace(/^가격분류\d+-/, ''), qty: parseInt(get(k))||0 })).filter(c => c.qty > 0);
+        qty = active.reduce((s, c) => s + c.qty, 0) || 1;
+        amount = parseInt(get("실결제금액"))||0;
+        typeLabel = active.length > 0 ? active[0].name : '일반';
       } else if (isDirect) {
         id=get("예약번호"); name=get("이름"); phone=get("연락처");
         statusRaw=get("입금상태"); dateRaw=get("회차");

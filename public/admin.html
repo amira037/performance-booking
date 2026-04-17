@@ -244,10 +244,7 @@ body{background:var(--bg);color:var(--white);font-family:'Noto Sans KR',sans-ser
       <div class="session-status">
         <div class="session-status-header" style="display:flex;align-items:center;justify-content:space-between;">
           회차별 현황
-          <div style="display:flex;gap:6px;">
-            <button class="action-btn" onclick="syncSeats()" style="font-size:11px;padding:4px 10px;">좌석 캐시 재동기화</button>
-            <button class="action-btn" onclick="clearLocks()" style="font-size:11px;padding:4px 10px;border-color:var(--orange);color:var(--orange);">선점 초기화</button>
-          </div>
+          <button class="action-btn" onclick="clearLocks()" style="font-size:11px;padding:4px 10px;border-color:var(--orange);color:var(--orange);">선점 초기화</button>
         </div>
         <div id="session-status-list"></div>
       </div>
@@ -1193,12 +1190,6 @@ async function clearLocks() {
   else toast('초기화 실패');
 }
 
-async function syncSeats() {
-  if (!confirm('좌석 캐시를 실제 예약 기록 기준으로 재동기화합니다.')) return;
-  const r = await callAPI({ action: 'syncSeats' });
-  if (r.success) { toast('좌석 캐시가 재동기화됐습니다.'); }
-  else toast('재동기화 실패');
-}
 
 function renderDashboard() {
   const isDirectSrc = r => !r.source || r.source === '직접';

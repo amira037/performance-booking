@@ -9,7 +9,7 @@ import {
   getPresets, savePresets,
   getPerformance, savePerformance,
   getLocks,
-  decrementBooked, incrementBooked, setBookedCount, addLog, getLogs,
+  decrementBooked, incrementBooked, addLog, getLogs,
   clearReservations, clearSessions, clearLocks, clearSeatsForSessions,
 } from '../lib/db.js';
 import { sendTicketAlimtalk, sendReminderAlimtalk, sendChangeCompleteAlimtalk, sendCancelCompleteAlimtalk } from '../lib/alimtalk.js';
@@ -557,17 +557,6 @@ export default async function handler(req, res) {
     });
   }
 
-  // ── 좌석 캐시 재동기화 ───────────────────────────────────────
-  if (action === 'syncSeats') {
-    const [reservations, sessions] = await Promise.all([getReservations(), getSessions()]);
-    await Promise.all(sessions.map(s => {
-      const count = reservations
-        .filter(r => r.sessionId === s.id && (r.payStatus === '입금확인' || r.payStatus === '미입금' || r.payStatus === '현장결제예정'))
-        .reduce((sum, r) => sum + (r.quantity || 0), 0);
-      return setBookedCount(s.id, count);
-    }));
-    return res.status(200).json({ success: true });
-  }
 
   // ── 선점(lock) 전체 초기화 ──────────────────────────────────
   if (action === 'clearLocks') {
