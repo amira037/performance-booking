@@ -569,6 +569,12 @@ export default async function handler(req, res) {
     return res.status(200).json({ success: true });
   }
 
+  // ── 선점(lock) 전체 초기화 ──────────────────────────────────
+  if (action === 'clearLocks') {
+    await clearLocks();
+    return res.status(200).json({ success: true });
+  }
+
   // ── 새 공연 초기화 ────────────────────────────────────────
   if (action === 'resetPerformance') {
     const { keepPresets = true, keepPerformance = true } = payload;
