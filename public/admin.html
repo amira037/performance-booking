@@ -1113,7 +1113,7 @@ async function addManualReservation() {
 function renderDashboard() {
   const isDirectSrc = r => !r.source || r.source === '직접';
   const confirmed  = reservations.filter(r => r.payStatus === '입금확인' && isDirectSrc(r));
-  const pending    = reservations.filter(r => r.payStatus === '미입금');
+  const pending    = reservations.filter(r => r.payStatus === '미입금' || r.payStatus === '현장결제예정');
   const revenue    = confirmed.reduce((s,r) => s+(r.total||0), 0);
   const totalSeats = sessions.reduce((s,s2) => s+(s2.seats||0), 0);
   document.getElementById('stat-total').textContent         = reservations.length + '건';
@@ -1124,7 +1124,7 @@ function renderDashboard() {
   document.getElementById('stat-revenue').textContent       = revenue.toLocaleString() + '원';
   document.getElementById('session-status-list').innerHTML  = sessions.map(s => {
     const confirmed = reservations.filter(r=>r.sessionId===s.id&&r.payStatus==='입금확인'&&isDirectSrc(r)).reduce((sum,r)=>sum+(r.quantity||0),0);
-    const pending   = reservations.filter(r=>r.sessionId===s.id&&r.payStatus==='미입금').reduce((sum,r)=>sum+(r.quantity||0),0);
+    const pending   = reservations.filter(r=>r.sessionId===s.id&&(r.payStatus==='미입금'||r.payStatus==='현장결제예정')).reduce((sum,r)=>sum+(r.quantity||0),0);
     const booked    = s.booked !== undefined ? s.booked : (confirmed + pending); // DB 실제값 우선
     const total     = confirmed + pending;
     const pctConf   = s.seats>0 ? Math.round(confirmed/s.seats*100) : 0;
@@ -1176,7 +1176,7 @@ function renderReservations() {
 }
 
 function buildResCard(r) {
-  const bc = r.payStatus==='입금확인'?'pay-confirmed':r.payStatus==='미입금'?'pay-pending':'pay-cancelled';
+  const bc = r.payStatus==='입금확인'?'pay-confirmed':(r.payStatus==='미입금'||r.payStatus==='현장결제예정')?'pay-pending':'pay-cancelled';
   const hasRequest = r.changeRequest;
   const reqType    = hasRequest
     ? (r.changeRequest.type === 'cancel' ? '취소신청'
