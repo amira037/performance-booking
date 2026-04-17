@@ -30,7 +30,7 @@ export default async function handler(req, res) {
     if (session.date && session.time) {
       const [h, m]  = session.time.split(':').map(Number);
       const perfTime = new Date(session.date + 'T' + String(h).padStart(2,'0') + ':' + String(m).padStart(2,'0') + ':00+09:00');
-      const cutoff   = perfTime.getTime() - 4 * 60 * 60 * 1000;
+      const cutoff   = perfTime.getTime() - 3 * 60 * 60 * 1000;
       if (Date.now() >= cutoff) {
         return res.status(400).json({ success: false, message: '공연 4시간 전부터는 예매가 마감됩니다.' });
       }

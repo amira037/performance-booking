@@ -14,8 +14,8 @@ export default async function handler(req, res) {
     getReservations(),
   ]);
 
-  // 공연 4시간 전 자동 마감 체크
-  const CUTOFF_HOURS = 4;
+  // 공연 3시간 전 자동 마감 체크
+  const CUTOFF_HOURS = 3;
   const now = Date.now();
 
   function isClosedByTime(s) {
@@ -32,8 +32,13 @@ export default async function handler(req, res) {
     return perf.getTime() - CUTOFF_HOURS * 60 * 60 * 1000;
   }
 
+  // 지난 날짜 회차 제거 (공연일이 오늘 이전이면 목록에서 제외)
+  const todayStr = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Seoul' }))
+    .toISOString().slice(0, 10);
+  const upcomingSessions = sessions.filter(s => s.date >= todayStr);
+
   // 회차별 잔여석 계산 (실제 예약 기록 기준)
-  const sessionsWithRemain = sessions.map(s => {
+  const sessionsWithRemain = upcomingSessions.map(s => {
       const isDirectSrc = r => !r.source || r.source === '직접';
       const booked = reservations
         .filter(r => r.sessionId === s.id && (
