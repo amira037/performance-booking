@@ -229,6 +229,7 @@ body{background:var(--bg);color:var(--white);font-family:'Noto Sans KR',sans-ser
     <div class="tab" onclick="switchTab('manual',this)">직권 예약</div>
     <div class="tab" onclick="switchTab('alimtalk',this)">알림톡 편집</div>
     <div class="tab" onclick="switchTab('performance',this)">공연 설정</div>
+    <div class="tab" onclick="switchTab('logs',this);loadLogs()">발송 로그</div>
   </div>
   <div class="content">
 
@@ -762,6 +763,34 @@ body{background:var(--bg);color:var(--white);font-family:'Noto Sans KR',sans-ser
         <div class="check-result" id="check-result">
           <div class="check-status" id="check-status"></div>
           <div id="check-detail"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 발송 로그 -->
+    <div class="tab-content" id="tab-logs">
+      <div class="section-box">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+          <div class="section-title" style="margin-bottom:0;">발송 로그</div>
+          <div style="display:flex;gap:8px;align-items:center;">
+            <select id="log-filter" class="form-select" style="font-size:var(--fs-xs);padding:5px 8px;width:auto;" onchange="renderLogs()">
+              <option value="all">전체</option>
+              <option value="예약확인">예약확인</option>
+              <option value="티켓발송">티켓발송</option>
+              <option value="티켓재발송">티켓재발송</option>
+              <option value="변경알림재발송">변경알림</option>
+              <option value="당일리마인드(자동)">리마인드</option>
+              <option value="금액변경">금액변경</option>
+              <option value="인원변경">인원변경</option>
+              <option value="회차변경">회차변경</option>
+              <option value="연락처변경">연락처변경</option>
+            </select>
+            <button onclick="dismissAllLogs()" style="font-size:var(--fs-xs);padding:5px 10px;background:#2a1a1a;color:#e07b7b;border:1px solid #4a2a2a;border-radius:var(--radius);cursor:pointer;">전체 지우기</button>
+            <button onclick="loadLogs()" style="font-size:var(--fs-xs);padding:5px 10px;background:var(--surface);color:var(--gray);border:1px solid var(--border);border-radius:var(--radius);cursor:pointer;">새로고침</button>
+          </div>
+        </div>
+        <div id="log-list" style="display:flex;flex-direction:column;gap:8px;">
+          <div style="color:var(--gray);font-size:var(--fs-sm);text-align:center;padding:32px 0;">로딩 중...</div>
         </div>
       </div>
     </div>
@@ -1905,6 +1934,92 @@ function switchTab(tab,el){
   document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));
   el.classList.add('active');
   document.getElementById('tab-'+tab).classList.add('active');
+}
+
+// ── 발송 로그 ──
+const LOG_DISMISS_KEY = 'dismissed_logs';
+let allLogs = [];
+
+function getDismissed() {
+  try { return new Set(JSON.parse(localStorage.getItem(LOG_DISMISS_KEY) || '[]')); }
+  catch { return new Set(); }
+}
+function saveDismissed(set) {
+  localStorage.setItem(LOG_DISMISS_KEY, JSON.stringify([...set]));
+}
+function logId(log) {
+  return log.ts + '_' + (log.resNum || '');
+}
+
+async function loadLogs() {
+  document.getElementById('log-list').innerHTML = '<div style="color:var(--gray);font-size:var(--fs-sm);text-align:center;padding:32px 0;">로딩 중...</div>';
+  try {
+    const r = await callAPI({ action: 'getLogs' });
+    allLogs = (r.logs || []).reverse();
+    renderLogs();
+  } catch(e) {
+    document.getElementById('log-list').innerHTML = '<div style="color:#e07b7b;font-size:var(--fs-sm);text-align:center;padding:32px 0;">불러오기 실패</div>';
+  }
+}
+
+function renderLogs() {
+  const dismissed = getDismissed();
+  const filter = document.getElementById('log-filter').value;
+  const typeStyle = {
+    '예약확인':         { bg:'#0d1f38', color:'#60a5fa', border:'#1e3a5f' },
+    '티켓발송':         { bg:'#0f2d1f', color:'#4ade80', border:'#1a4a30' },
+    '티켓재발송':       { bg:'#0f2d1f', color:'#4ade80', border:'#1a4a30' },
+    '변경알림재발송':   { bg:'#1e1c0f', color:'#facc15', border:'#3a3010' },
+    '당일리마인드(자동)':{ bg:'#0f2d2a', color:'#2dd4bf', border:'#1a4a45' },
+    '금액변경':         { bg:'#1e1a0f', color:'#fb923c', border:'#3a2e10' },
+    '인원변경':         { bg:'#1e1a0f', color:'#fb923c', border:'#3a2e10' },
+    '회차변경':         { bg:'#1e1a0f', color:'#fb923c', border:'#3a2e10' },
+    '연락처변경':       { bg:'#1e1a0f', color:'#fb923c', border:'#3a2e10' },
+  };
+  const visible = allLogs.filter(log => {
+    if (dismissed.has(logId(log))) return false;
+    if (filter !== 'all' && log.type !== filter) return false;
+    return true;
+  });
+  const el = document.getElementById('log-list');
+  if (!visible.length) {
+    el.innerHTML = '<div style="color:var(--gray);font-size:var(--fs-sm);text-align:center;padding:32px 0;">표시할 로그가 없습니다.</div>';
+    return;
+  }
+  el.innerHTML = visible.map(log => {
+    const id  = logId(log);
+    const st  = typeStyle[log.type] || { bg:'var(--surface)', color:'var(--gray)', border:'var(--border)' };
+    const dt  = log.ts ? new Date(log.ts).toLocaleString('ko-KR', { month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit' }) : '-';
+    const ok  = log.result && (log.result === '성공' || log.result === '완료');
+    const fail= log.result === '실패';
+    return `<div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:12px 14px;display:flex;align-items:center;gap:12px;">
+      <span style="background:${st.bg};color:${st.color};border:1px solid ${st.border};border-radius:4px;padding:3px 8px;font-size:10px;font-weight:600;white-space:nowrap;">${log.type||'-'}</span>
+      <div style="flex:1;min-width:0;">
+        <div style="font-size:var(--fs-sm);font-weight:500;">${log.name||'-'} <span style="color:var(--gray);font-weight:400;font-size:var(--fs-xs);">${log.phone||''}</span></div>
+        <div style="font-size:var(--fs-xs);color:var(--gray);margin-top:2px;">${log.resNum||'-'} · ${dt}</div>
+      </div>
+      ${log.result ? `<span style="font-size:11px;font-weight:600;color:${ok?'#4caf7d':fail?'#e07b7b':'var(--gray)'};">${log.result}</span>` : ''}
+      <button onclick="dismissLog('${id}')" style="background:none;border:none;color:var(--gray);font-size:16px;cursor:pointer;padding:0 2px;line-height:1;" title="지우기">×</button>
+    </div>`;
+  }).join('');
+}
+
+function dismissLog(id) {
+  const set = getDismissed();
+  set.add(id);
+  saveDismissed(set);
+  renderLogs();
+}
+
+function dismissAllLogs() {
+  const dismissed = getDismissed();
+  const filter = document.getElementById('log-filter').value;
+  allLogs.forEach(log => {
+    if (filter !== 'all' && log.type !== filter) return;
+    dismissed.add(logId(log));
+  });
+  saveDismissed(dismissed);
+  renderLogs();
 }
 
 // ── API ──

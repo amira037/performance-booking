@@ -9,7 +9,7 @@ import {
   getPresets, savePresets,
   getPerformance, savePerformance,
   getLocks,
-  decrementBooked, incrementBooked, addLog,
+  decrementBooked, incrementBooked, addLog, getLogs,
   clearReservations, clearSessions, clearLocks, clearSeatsForSessions,
 } from '../lib/db.js';
 import { sendTicketAlimtalk, sendReminderAlimtalk, sendChangeCompleteAlimtalk, sendCancelCompleteAlimtalk } from '../lib/alimtalk.js';
@@ -594,6 +594,11 @@ export default async function handler(req, res) {
     await updateReservation(resNum, { phone: phone || '' });
     try { await addLog({ resNum, name: reservation.name, phone: reservation.phone, type: '연락처변경', result: `${reservation.phone||'-'}→${phone||'-'}` }); } catch(e) {}
     return res.status(200).json({ success: true });
+  }
+
+  if (action === 'getLogs') {
+    const logs = await getLogs();
+    return res.status(200).json({ success: true, logs });
   }
 
   return res.status(400).json({ error: 'unknown action' });
