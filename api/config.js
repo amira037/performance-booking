@@ -1,7 +1,7 @@
 // api/config.js — 예매 페이지용 공개 설정 조회
 // GET /api/config
 
-import { getSessions, getPresets, getPerformance, getReservations, getLockedSeats } from '../lib/db.js';
+import { getSessions, getPresets, getPerformance, getReservations } from '../lib/db.js';
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -32,20 +32,17 @@ export default async function handler(req, res) {
     return perf.getTime() - CUTOFF_HOURS * 60 * 60 * 1000;
   }
 
-  // 회차별 잔여석 계산 (실제 예약 기록 기준 + 선점)
-  const sessionsWithRemain = await Promise.all(
-    sessions.map(async s => {
+  // 회차별 잔여석 계산 (실제 예약 기록 기준)
+  const sessionsWithRemain = sessions.map(s => {
       const booked = reservations
         .filter(r => r.sessionId === s.id && (r.payStatus === '입금확인' || r.payStatus === '미입금' || r.payStatus === '현장결제예정'))
         .reduce((sum, r) => sum + (r.quantity || 0), 0);
-      const locked     = await getLockedSeats(s.id);
-      const remain     = Math.max(0, s.seats - booked - locked);
+      const remain = Math.max(0, s.seats - booked);
       const timeClosed = isClosedByTime(s);
       // 관리자 수동 마감 or 시간 마감이면 closed
       const effectiveStatus = (s.status === "closed" || timeClosed) ? "closed" : s.status;
-      return { ...s, booked, locked, remain, status: effectiveStatus, timeClosed, closesAt: getClosesAt(s) };
-    })
-  );
+      return { ...s, booked, remain, status: effectiveStatus, timeClosed, closesAt: getClosesAt(s) };
+    });
 
   // 날짜/시간 순으로 정렬
   sessionsWithRemain.sort((a, b) => {
