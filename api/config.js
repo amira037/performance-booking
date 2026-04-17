@@ -34,8 +34,13 @@ export default async function handler(req, res) {
 
   // 회차별 잔여석 계산 (실제 예약 기록 기준)
   const sessionsWithRemain = sessions.map(s => {
+      const isDirectSrc = r => !r.source || r.source === '직접';
       const booked = reservations
-        .filter(r => r.sessionId === s.id && (r.payStatus === '입금확인' || r.payStatus === '미입금' || r.payStatus === '현장결제예정'))
+        .filter(r => r.sessionId === s.id && (
+          (r.payStatus === '입금확인' && isDirectSrc(r)) ||
+          r.payStatus === '미입금' ||
+          r.payStatus === '현장결제예정'
+        ))
         .reduce((sum, r) => sum + (r.quantity || 0), 0);
       const remain = Math.max(0, s.seats - booked);
       const timeClosed = isClosedByTime(s);
