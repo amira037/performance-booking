@@ -242,7 +242,10 @@ body{background:var(--bg);color:var(--white);font-family:'Noto Sans KR',sans-ser
         <div class="stat-card"><div class="stat-label">예상 수입</div><div class="stat-value gold" id="stat-revenue">—</div><div class="stat-sub">입금확인 기준</div></div>
       </div>
       <div class="session-status">
-        <div class="session-status-header">회차별 현황</div>
+        <div class="session-status-header" style="display:flex;align-items:center;justify-content:space-between;">
+          회차별 현황
+          <button class="action-btn" onclick="syncSeats()" style="font-size:11px;padding:4px 10px;">좌석 캐시 재동기화</button>
+        </div>
         <div id="session-status-list"></div>
       </div>
       <div class="section-box">
@@ -599,7 +602,7 @@ body{background:var(--bg);color:var(--white);font-family:'Noto Sans KR',sans-ser
         </div>
       </div>
 
-      <button class="save-btn" onclick="saveTplTexts()">알림톡 문자 · 버튼 저장</button>
+      <button class="save-btn" onclick="saveTplTexts()">알림톡 설정 저장</button>
     </div>
 
     <!-- 공연 설정 -->
@@ -1180,6 +1183,13 @@ async function addManualReservation() {
 }
 
 // ── 현황 ──
+async function syncSeats() {
+  if (!confirm('좌석 캐시를 실제 예약 기록 기준으로 재동기화합니다.')) return;
+  const r = await callAPI({ action: 'syncSeats' });
+  if (r.success) { toast('좌석 캐시가 재동기화됐습니다.'); }
+  else toast('재동기화 실패');
+}
+
 function renderDashboard() {
   const isDirectSrc = r => !r.source || r.source === '직접';
   const confirmed  = reservations.filter(r => r.payStatus === '입금확인' && isDirectSrc(r));
@@ -1594,12 +1604,15 @@ function changeSession(resNum) {
     + '<span style="color:var(--gold)">' + reservation.session + '</span>';
   document.getElementById('modal-sess-list').innerHTML = sessions.map(s => {
     const isCurrent = reservation.session === sessLabel(s);
-    const isFull    = s.status === 'closed';
+    const remain    = s.seats - (s.booked || 0);
+    const isFull    = s.status === 'closed' || remain <= 0;
+    const remainTxt = isFull ? '마감' : '잔여 ' + remain + '석';
     return '<div class="modal-sess-item' + (isCurrent?' sel':'') + (isFull?' disabled':'') + '" '
       + (isFull ? '' : 'onclick="selectModalSession(\'' + s.id + '\', this)"') + '>'
       + '<div style="font-size:var(--fs-sm);font-weight:500">' + sessLabel(s) + '</div>'
-      + '<div style="font-size:var(--fs-xs);color:var(--gray);margin-top:2px">' + s.seats + '석'
-      + (isFull?' · 마감':'') + (isCurrent?' · 현재':'') + '</div>'
+      + '<div style="font-size:var(--fs-xs);color:var(--gray);margin-top:2px">'
+      + remainTxt + ' / ' + s.seats + '석'
+      + (isCurrent?' · 현재':'') + '</div>'
       + '</div>';
   }).join('');
   document.getElementById('modal-bg').classList.add('show');
@@ -2033,8 +2046,8 @@ function renderLogs() {
     const id  = logId(log);
     const st  = typeStyle[log.type] || { bg:'var(--surface)', color:'var(--gray)', border:'var(--border)' };
     const dt  = log.ts ? new Date(log.ts).toLocaleString('ko-KR', { month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit' }) : '-';
-    const ok  = log.result && (log.result === '성공' || log.result === '완료');
-    const fail= log.result === '실패';
+    const ok  = log.result && (log.result === '성공' || log.result === '완료' || log.result.includes('· 성공'));
+    const fail= log.result === '실패' || (log.result && log.result.includes('· 실패'));
     return `<div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:12px 14px;display:flex;align-items:center;gap:12px;">
       <span style="background:${st.bg};color:${st.color};border:1px solid ${st.border};border-radius:4px;padding:3px 8px;font-size:10px;font-weight:600;white-space:nowrap;">${log.type||'-'}</span>
       <div style="flex:1;min-width:0;">

@@ -9,7 +9,7 @@ import {
   getPresets, savePresets,
   getPerformance, savePerformance,
   getLocks,
-  decrementBooked, incrementBooked, addLog, getLogs,
+  decrementBooked, incrementBooked, setBookedCount, addLog, getLogs,
   clearReservations, clearSessions, clearLocks, clearSeatsForSessions,
 } from '../lib/db.js';
 import { sendTicketAlimtalk, sendReminderAlimtalk, sendChangeCompleteAlimtalk, sendCancelCompleteAlimtalk } from '../lib/alimtalk.js';
@@ -97,8 +97,8 @@ export default async function handler(req, res) {
 
     await updateReservation(resNum, { payStatus: '관리자취소' });
 
-    // 입금확인 전 취소면 좌석 복구
-    if (reservation.payStatus !== '입금확인') {
+    // 취소 시 항상 좌석 복구
+    if (!reservation.payStatus.includes('취소')) {
       await decrementBooked(reservation.sessionId, reservation.quantity);
     }
 
@@ -180,7 +180,7 @@ export default async function handler(req, res) {
       console.error('[RESEND DEBUG] ❌ 예외:', alimErr.message);
       console.error('[RESEND DEBUG] 스택:', alimErr.stack);
     }
-    try { await addLog({ resNum, name: reservation.name, phone: reservation.phone, type: '티켓재발송', result: '완료' }); } catch(e) {}
+    try { await addLog({ resNum, name: reservation.name, phone: reservation.phone, type: '티켓재발송', result: '성공' }); } catch(e) {}
     return res.status(200).json({ success: true });
   }
 
@@ -413,13 +413,13 @@ export default async function handler(req, res) {
 
     const newTotal = Math.round((reservation.unitPrice || 0) * qty);
     await updateReservation(resNum, { quantity: qty, total: newTotal, changeRequest: null });
-    try { await addLog({ resNum, name: reservation.name, phone: reservation.phone, type: '인원변경', result: `${reservation.quantity}→${qty}매` }); } catch(e) {}
 
     // 고객 변경완료 알림톡 + 변경티켓 발송
+    let alimSent = false;
     if (reservation.phone) {
       try {
         const perf = await getPerformance();
-        const alimSent = await sendChangeCompleteAlimtalk({
+        alimSent = await sendChangeCompleteAlimtalk({
           customText:   perf.tpl04      || '',
           btn1Name:     perf.tplBtn04_1 || '',
           templateCode: perf.tplCode04  || '',
@@ -427,12 +427,11 @@ export default async function handler(req, res) {
           session: reservation.session, quantity: qty,
           perfName: perf.name || '공연',
         });
-        await addLog({ resNum, name: reservation.name, phone: reservation.phone, type: '인원변경알림', result: alimSent ? '성공' : '실패' });
       } catch(e) {
         console.error('변경완료 알림 오류(인원):', e.message);
-        await addLog({ resNum, name: reservation.name, phone: reservation.phone, type: '인원변경알림', result: '오류:' + e.message });
       }
     }
+    try { await addLog({ resNum, name: reservation.name, phone: reservation.phone, type: '인원변경', result: `${reservation.quantity}→${qty}매 · ${reservation.phone ? (alimSent ? '성공' : '실패') : '-'}` }); } catch(e) {}
 
     return res.status(200).json({ success: true });
   }
@@ -462,13 +461,12 @@ export default async function handler(req, res) {
       session:   newSessionLabel,
       changeRequest: null,
     });
-    try { await addLog({ resNum, name: reservation.name, phone: reservation.phone, type: '회차변경', result: `${reservation.session}→${newSessionLabel}` }); } catch(e) {}
-
     // 고객 변경완료 알림톡 + 변경티켓 발송
+    let alimSentSession = false;
     if (reservation.phone) {
       try {
         const perf = await getPerformance();
-        const alimSent = await sendChangeCompleteAlimtalk({
+        alimSentSession = await sendChangeCompleteAlimtalk({
           customText:   perf.tpl04      || '',
           btn1Name:     perf.tplBtn04_1 || '',
           templateCode: perf.tplCode04  || '',
@@ -476,12 +474,11 @@ export default async function handler(req, res) {
           session: newSessionLabel, quantity: reservation.quantity,
           perfName: perf.name || '공연',
         });
-        await addLog({ resNum, name: reservation.name, phone: reservation.phone, type: '회차변경알림', result: alimSent ? '성공' : '실패' });
       } catch(e) {
         console.error('변경완료 알림 오류(회차):', e.message);
-        await addLog({ resNum, name: reservation.name, phone: reservation.phone, type: '회차변경알림', result: '오류:' + e.message });
       }
     }
+    try { await addLog({ resNum, name: reservation.name, phone: reservation.phone, type: '회차변경', result: `${reservation.session}→${newSessionLabel} · ${reservation.phone ? (alimSentSession ? '성공' : '실패') : '-'}` }); } catch(e) {}
 
     return res.status(200).json({ success: true });
   }
@@ -558,6 +555,18 @@ export default async function handler(req, res) {
         locks,
       },
     });
+  }
+
+  // ── 좌석 캐시 재동기화 ───────────────────────────────────────
+  if (action === 'syncSeats') {
+    const [reservations, sessions] = await Promise.all([getReservations(), getSessions()]);
+    await Promise.all(sessions.map(s => {
+      const count = reservations
+        .filter(r => r.sessionId === s.id && (r.payStatus === '입금확인' || r.payStatus === '미입금' || r.payStatus === '현장결제예정'))
+        .reduce((sum, r) => sum + (r.quantity || 0), 0);
+      return setBookedCount(s.id, count);
+    }));
+    return res.status(200).json({ success: true });
   }
 
   // ── 새 공연 초기화 ────────────────────────────────────────

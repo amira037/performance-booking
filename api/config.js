@@ -1,16 +1,17 @@
 // api/config.js — 예매 페이지용 공개 설정 조회
 // GET /api/config
 
-import { getSessions, getPresets, getPerformance, getBookedCount, getLockedSeats } from '../lib/db.js';
+import { getSessions, getPresets, getPerformance, getReservations, getLockedSeats } from '../lib/db.js';
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   if (req.method !== 'GET') return res.status(405).end();
 
-  const [sessions, presets, performance] = await Promise.all([
+  const [sessions, presets, performance, reservations] = await Promise.all([
     getSessions(),
     getPresets(),
     getPerformance(),
+    getReservations(),
   ]);
 
   // 공연 4시간 전 자동 마감 체크
@@ -31,10 +32,12 @@ export default async function handler(req, res) {
     return perf.getTime() - CUTOFF_HOURS * 60 * 60 * 1000;
   }
 
-  // 회차별 잔여석 계산 (예약완료 + 선점 + 시간 마감 포함)
+  // 회차별 잔여석 계산 (실제 예약 기록 기준 + 선점)
   const sessionsWithRemain = await Promise.all(
     sessions.map(async s => {
-      const booked     = await getBookedCount(s.id);
+      const booked = reservations
+        .filter(r => r.sessionId === s.id && (r.payStatus === '입금확인' || r.payStatus === '미입금' || r.payStatus === '현장결제예정'))
+        .reduce((sum, r) => sum + (r.quantity || 0), 0);
       const locked     = await getLockedSeats(s.id);
       const remain     = Math.max(0, s.seats - booked - locked);
       const timeClosed = isClosedByTime(s);
