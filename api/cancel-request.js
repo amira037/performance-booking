@@ -87,12 +87,14 @@ export default async function handler(req, res) {
       try {
         const { sendCancelRequestAlimtalk } = await import('../lib/alimtalk.js');
         await sendCancelRequestAlimtalk({
-          adminPhone: perf3.adminPhone || perf3.tel,
+          adminPhone:   perf3.adminPhone || perf3.tel,
           resNum, name: reservation.name,
-          session: reservation.session,
-          total:   reservation.total,
-          reason:  `인원변경 신청 ${reservation.quantity}매 → ${qty}매`,
-          perfName: perf3.name || '공연',
+          session:      reservation.session,
+          total:        reservation.total,
+          reason:       `인원변경 신청 ${reservation.quantity}매 → ${qty}매`,
+          perfName:     perf3.name || '공연',
+          customText:   perf3.tplCancel   || '',
+          templateCode: perf3.tplCodeCancel || '',
         });
       } catch(e) {}
     }
@@ -124,12 +126,14 @@ export default async function handler(req, res) {
       try {
         const { sendCancelRequestAlimtalk } = await import('../lib/alimtalk.js');
         await sendCancelRequestAlimtalk({
-          adminPhone: perf2.adminPhone || perf2.tel,
+          adminPhone:   perf2.adminPhone || perf2.tel,
           resNum, name: reservation.name,
-          session: reservation.session,
-          total:   reservation.total,
-          reason:  '날짜변경 신청 → ' + newSessionLabel,
-          perfName: perf2.name || '공연',
+          session:      reservation.session,
+          total:        reservation.total,
+          reason:       '날짜변경 신청 → ' + newSessionLabel,
+          perfName:     perf2.name || '공연',
+          customText:   perf2.tplCancel   || '',
+          templateCode: perf2.tplCodeCancel || '',
         });
       } catch(e) {}
     }
@@ -165,13 +169,15 @@ export default async function handler(req, res) {
     try {
       const { sendCancelRequestAlimtalk } = await import('../lib/alimtalk.js');
       await sendCancelRequestAlimtalk({
-        adminPhone: notifyPhone,
+        adminPhone:   notifyPhone,
         resNum,
-        name:    reservation.name,
-        session: reservation.session,
-        total:   reservation.total,
-        reason:  reason || '사유 없음',
-        perfName: perf.name || '공연',
+        name:         reservation.name,
+        session:      reservation.session,
+        total:        reservation.total,
+        reason:       reason || '사유 없음',
+        perfName:     perf.name || '공연',
+        customText:   perf.tplCancel    || '',
+        templateCode: perf.tplCodeCancel || '',
       });
     } catch(e) {
       console.error('관리자 알림 오류:', e.message);

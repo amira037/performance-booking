@@ -416,17 +416,23 @@ export default async function handler(req, res) {
     try { await addLog({ resNum, name: reservation.name, phone: reservation.phone, type: '인원변경', result: `${reservation.quantity}→${qty}매` }); } catch(e) {}
 
     // 고객 변경완료 알림톡 + 변경티켓 발송
-    try {
-      const perf = await getPerformance();
-      await sendChangeCompleteAlimtalk({
-        customText:   perf.tpl04     || '',
-        btn1Name:     perf.tplBtn04_1 || '',
-        templateCode: perf.tplCode04 || '',
-        name: reservation.name, phone: reservation.phone, resNum,
-        session: reservation.session, quantity: qty,
-        perfName: perf.name || '공연',
-      });
-    } catch(e) { console.error('변경완료 알림 오류:', e.message); }
+    if (reservation.phone) {
+      try {
+        const perf = await getPerformance();
+        const alimSent = await sendChangeCompleteAlimtalk({
+          customText:   perf.tpl04      || '',
+          btn1Name:     perf.tplBtn04_1 || '',
+          templateCode: perf.tplCode04  || '',
+          name: reservation.name, phone: reservation.phone, resNum,
+          session: reservation.session, quantity: qty,
+          perfName: perf.name || '공연',
+        });
+        await addLog({ resNum, name: reservation.name, phone: reservation.phone, type: '인원변경알림', result: alimSent ? '성공' : '실패' });
+      } catch(e) {
+        console.error('변경완료 알림 오류(인원):', e.message);
+        await addLog({ resNum, name: reservation.name, phone: reservation.phone, type: '인원변경알림', result: '오류:' + e.message });
+      }
+    }
 
     return res.status(200).json({ success: true });
   }
@@ -459,17 +465,23 @@ export default async function handler(req, res) {
     try { await addLog({ resNum, name: reservation.name, phone: reservation.phone, type: '회차변경', result: `${reservation.session}→${newSessionLabel}` }); } catch(e) {}
 
     // 고객 변경완료 알림톡 + 변경티켓 발송
-    try {
-      const perf = await getPerformance();
-      await sendChangeCompleteAlimtalk({
-        customText:   perf.tpl04     || '',
-        btn1Name:     perf.tplBtn04_1 || '',
-        templateCode: perf.tplCode04 || '',
-        name: reservation.name, phone: reservation.phone, resNum,
-        session: newSessionLabel, quantity: reservation.quantity,
-        perfName: perf.name || '공연',
-      });
-    } catch(e) { console.error('변경완료 알림 오류:', e.message); }
+    if (reservation.phone) {
+      try {
+        const perf = await getPerformance();
+        const alimSent = await sendChangeCompleteAlimtalk({
+          customText:   perf.tpl04      || '',
+          btn1Name:     perf.tplBtn04_1 || '',
+          templateCode: perf.tplCode04  || '',
+          name: reservation.name, phone: reservation.phone, resNum,
+          session: newSessionLabel, quantity: reservation.quantity,
+          perfName: perf.name || '공연',
+        });
+        await addLog({ resNum, name: reservation.name, phone: reservation.phone, type: '회차변경알림', result: alimSent ? '성공' : '실패' });
+      } catch(e) {
+        console.error('변경완료 알림 오류(회차):', e.message);
+        await addLog({ resNum, name: reservation.name, phone: reservation.phone, type: '회차변경알림', result: '오류:' + e.message });
+      }
+    }
 
     return res.status(200).json({ success: true });
   }

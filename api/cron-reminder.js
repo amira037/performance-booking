@@ -38,7 +38,8 @@ export default async function handler(req, res) {
     const targets = reservations.filter(r =>
       r.sessionId === session.id &&
       r.payStatus === '입금확인' &&
-      r.source    === '직접'
+      (!r.source || r.source === '직접') &&
+      r.phone
     );
 
     console.log(`[CRON-REMINDER] 회차: ${session.id} (${session.date}) — 대상 ${targets.length}명`);

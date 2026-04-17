@@ -463,9 +463,9 @@ body{background:var(--bg);color:var(--white);font-family:'Noto Sans KR',sans-ser
           <button class="icon-btn" onclick="copyTpl('tpl01')">복사</button>
         </div>
         <div class="form-group" style="margin-bottom:10px;">
-          <label>솔라피 템플릿 코드</label>
-          <input type="text" class="form-input" id="tplCode01" placeholder="예: KA01TP250101XXXXXXXXXXXXXXXX" style="font-family:monospace;letter-spacing:.05em;">
-          <div class="hint">솔라피 콘솔에서 발급받은 템플릿 코드를 입력하세요. 없으면 환경변수(ALIMTALK_TEMPLATE_RESERVE)를 사용합니다.</div>
+          <label>솔라피 템플릿 코드 <span id="warn-tplCode01" style="display:none;font-size:10px;background:#4a1a1a;color:#e07b7b;border-radius:3px;padding:2px 6px;margin-left:6px;">미설정 — 발송 안 됨</span></label>
+          <input type="text" class="form-input" id="tplCode01" placeholder="예: KA01TP250101XXXXXXXXXXXXXXXX" style="font-family:monospace;letter-spacing:.05em;" oninput="updateTplWarnings()">
+          <div class="hint">미설정 시 발송하지 않습니다.</div>
         </div>
         <textarea class="form-input" id="tpl01" rows="14" style="resize:vertical;line-height:1.7;font-size:var(--fs-xs);font-family:monospace;"></textarea>
         <div class="hint">변수: #{공연명} #{예약번호} #{이름} #{회차} #{예매유형} #{매수} #{결제금액} #{계좌번호} #{예금주} #{카카오페이링크}</div>
@@ -478,9 +478,9 @@ body{background:var(--bg);color:var(--white);font-family:'Noto Sans KR',sans-ser
           <button class="icon-btn" onclick="copyTpl('tpl02')">복사</button>
         </div>
         <div class="form-group" style="margin-bottom:10px;">
-          <label>솔라피 템플릿 코드</label>
-          <input type="text" class="form-input" id="tplCode02" placeholder="예: KA01TP250101XXXXXXXXXXXXXXXX" style="font-family:monospace;letter-spacing:.05em;">
-          <div class="hint">솔라피 콘솔에서 발급받은 템플릿 코드를 입력하세요. 없으면 환경변수(ALIMTALK_TEMPLATE_TICKET)를 사용합니다.</div>
+          <label>솔라피 템플릿 코드 <span id="warn-tplCode02" style="display:none;font-size:10px;background:#4a1a1a;color:#e07b7b;border-radius:3px;padding:2px 6px;margin-left:6px;">미설정 — 발송 안 됨</span></label>
+          <input type="text" class="form-input" id="tplCode02" placeholder="예: KA01TP250101XXXXXXXXXXXXXXXX" style="font-family:monospace;letter-spacing:.05em;" oninput="updateTplWarnings()">
+          <div class="hint">미설정 시 발송하지 않습니다.</div>
         </div>
         <textarea class="form-input" id="tpl02" rows="10" style="resize:vertical;line-height:1.7;font-size:var(--fs-xs);font-family:monospace;"></textarea>
         <div class="hint">변수: #{공연명} #{예약번호} #{이름} #{회차} #{매수} #{티켓링크}</div>
@@ -493,9 +493,9 @@ body{background:var(--bg);color:var(--white);font-family:'Noto Sans KR',sans-ser
           <button class="icon-btn" onclick="copyTpl('tpl03')">복사</button>
         </div>
         <div class="form-group" style="margin-bottom:10px;">
-          <label>솔라피 템플릿 코드</label>
-          <input type="text" class="form-input" id="tplCode03" placeholder="예: KA01TP250101XXXXXXXXXXXXXXXX" style="font-family:monospace;letter-spacing:.05em;">
-          <div class="hint">솔라피 콘솔에서 발급받은 템플릿 코드를 입력하세요. 없으면 환경변수(ALIMTALK_TEMPLATE_REMINDER)를 사용합니다.</div>
+          <label>솔라피 템플릿 코드 <span id="warn-tplCode03" style="display:none;font-size:10px;background:#4a1a1a;color:#e07b7b;border-radius:3px;padding:2px 6px;margin-left:6px;">미설정 — 발송 안 됨</span></label>
+          <input type="text" class="form-input" id="tplCode03" placeholder="예: KA01TP250101XXXXXXXXXXXXXXXX" style="font-family:monospace;letter-spacing:.05em;" oninput="updateTplWarnings()">
+          <div class="hint">미설정 시 발송하지 않습니다.</div>
         </div>
         <textarea class="form-input" id="tpl03" rows="8" style="resize:vertical;line-height:1.7;font-size:var(--fs-xs);font-family:monospace;"></textarea>
         <div class="hint">변수: #{공연명} #{이름} #{회차} #{예약번호}</div>
@@ -508,27 +508,43 @@ body{background:var(--bg);color:var(--white);font-family:'Noto Sans KR',sans-ser
           <button class="icon-btn" onclick="copyTpl('tpl04')">복사</button>
         </div>
         <div class="form-group" style="margin-bottom:10px;">
-          <label>솔라피 템플릿 코드</label>
-          <input type="text" class="form-input" id="tplCode04" placeholder="예: KA01TP250101XXXXXXXXXXXXXXXX" style="font-family:monospace;letter-spacing:.05em;">
-          <div class="hint">솔라피 콘솔에서 발급받은 템플릿 코드를 입력하세요. 없으면 환경변수(ALIMTALK_TEMPLATE_CHANGE)를 사용합니다.</div>
+          <label>솔라피 템플릿 코드 <span id="warn-tplCode04" style="display:none;font-size:10px;background:#4a1a1a;color:#e07b7b;border-radius:3px;padding:2px 6px;margin-left:6px;">미설정 — 발송 안 됨</span></label>
+          <input type="text" class="form-input" id="tplCode04" placeholder="예: KA01TP250101XXXXXXXXXXXXXXXX" style="font-family:monospace;letter-spacing:.05em;" oninput="updateTplWarnings()">
+          <div class="hint">미설정 시 발송하지 않습니다.</div>
         </div>
         <textarea class="form-input" id="tpl04" rows="9" style="resize:vertical;line-height:1.7;font-size:var(--fs-xs);font-family:monospace;"></textarea>
         <div class="hint">변수: #{공연명} #{예약번호} #{이름} #{회차} #{매수} #{티켓링크}</div>
       </div>
 
-      <!-- 템플릿 5 — 취소 완료 -->
+      <!-- 템플릿 5 — 취소 완료 (고객) -->
       <div class="section-box">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
-          <div class="section-title" style="margin-bottom:0;">취소 완료 알림 (TEMPLATE_CANCEL_DONE)</div>
+          <div class="section-title" style="margin-bottom:0;">취소 완료 알림 — 고객용 (TEMPLATE_CANCEL_DONE)</div>
           <button class="icon-btn" onclick="copyTpl('tpl05')">복사</button>
         </div>
         <div class="form-group" style="margin-bottom:10px;">
-          <label>솔라피 템플릿 코드</label>
-          <input type="text" class="form-input" id="tplCode05" placeholder="예: KA01TP250101XXXXXXXXXXXXXXXX" style="font-family:monospace;letter-spacing:.05em;">
-          <div class="hint">솔라피 콘솔에서 발급받은 템플릿 코드를 입력하세요. 없으면 환경변수(ALIMTALK_TEMPLATE_CANCEL_DONE)를 사용합니다.</div>
+          <label>솔라피 템플릿 코드 <span id="warn-tplCode05" style="display:none;font-size:10px;background:#4a1a1a;color:#e07b7b;border-radius:3px;padding:2px 6px;margin-left:6px;">미설정 — 발송 안 됨</span></label>
+          <input type="text" class="form-input" id="tplCode05" placeholder="예: KA01TP250101XXXXXXXXXXXXXXXX" style="font-family:monospace;letter-spacing:.05em;" oninput="updateTplWarnings()">
+          <div class="hint">미설정 시 발송하지 않습니다.</div>
         </div>
         <textarea class="form-input" id="tpl05" rows="8" style="resize:vertical;line-height:1.7;font-size:var(--fs-xs);font-family:monospace;"></textarea>
         <div class="hint">변수: #{공연명} #{예약번호} #{이름} #{회차}</div>
+      </div>
+
+      <!-- 템플릿 CANCEL — 취소/변경 신청 알림 (관리자) -->
+      <div class="section-box">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+          <div class="section-title" style="margin-bottom:0;">취소/변경 신청 알림 — 관리자용 (TEMPLATE_CANCEL)</div>
+          <button class="icon-btn" onclick="copyTpl('tplCancel')">복사</button>
+        </div>
+        <div style="font-size:var(--fs-xs);color:var(--gray);margin-bottom:10px;line-height:1.7;">고객이 취소·인원변경·날짜변경을 신청할 때 <span style="color:var(--gold);">관리자 연락처</span>로 발송됩니다.<br>수신 번호는 공연 설정의 <b>관리자 연락처(알림톡 수신번호)</b>를 사용합니다.</div>
+        <div class="form-group" style="margin-bottom:10px;">
+          <label>솔라피 템플릿 코드 <span id="warn-tplCodeCancel" style="display:none;font-size:10px;background:#4a1a1a;color:#e07b7b;border-radius:3px;padding:2px 6px;margin-left:6px;">미설정 — 발송 안 됨</span></label>
+          <input type="text" class="form-input" id="tplCodeCancel" placeholder="예: KA01TP250101XXXXXXXXXXXXXXXX" style="font-family:monospace;letter-spacing:.05em;" oninput="updateTplWarnings()">
+          <div class="hint">미설정 시 발송하지 않습니다.</div>
+        </div>
+        <textarea class="form-input" id="tplCancel" rows="9" style="resize:vertical;line-height:1.7;font-size:var(--fs-xs);font-family:monospace;"></textarea>
+        <div class="hint">변수: #{공연명} #{예약번호} #{이름} #{회차} #{결제금액} #{취소사유}</div>
       </div>
 
       <!-- 버튼 설정 -->
@@ -782,7 +798,9 @@ body{background:var(--bg);color:var(--white);font-family:'Noto Sans KR',sans-ser
               <option value="당일리마인드(자동)">리마인드</option>
               <option value="금액변경">금액변경</option>
               <option value="인원변경">인원변경</option>
+              <option value="인원변경알림">인원변경알림</option>
               <option value="회차변경">회차변경</option>
+              <option value="회차변경알림">회차변경알림</option>
               <option value="연락처변경">연락처변경</option>
             </select>
             <button onclick="dismissAllLogs()" style="font-size:var(--fs-xs);padding:5px 10px;background:#2a1a1a;color:#e07b7b;border:1px solid #4a2a2a;border-radius:var(--radius);cursor:pointer;">전체 지우기</button>
@@ -893,6 +911,24 @@ const DEFAULT_TPL05 = `[#{공연명}] 예약이 취소되었습니다.
 취소 처리가 완료되었습니다.
 문의사항은 카카오톡 채널로 연락해 주세요.`;
 
+const DEFAULT_TPL_CANCEL = `[#{공연명}] 취소/변경 신청이 접수되었습니다.
+
+■ 예약번호: #{예약번호}
+■ 예매자: #{이름}
+■ 회차: #{회차}
+■ 결제금액: #{결제금액}
+■ 사유: #{취소사유}
+
+관리자 페이지에서 확인해 주세요.`;
+
+function updateTplWarnings() {
+  ['tplCode01','tplCode02','tplCode03','tplCode04','tplCode05','tplCodeCancel'].forEach(id => {
+    const val  = (document.getElementById(id)?.value || '').trim();
+    const warn = document.getElementById('warn-' + id);
+    if (warn) warn.style.display = val ? 'none' : 'inline';
+  });
+}
+
 function loadTplTexts() {
   document.getElementById('tpl01').value = performance.tpl01 || DEFAULT_TPL01;
   document.getElementById('tpl02').value = performance.tpl02 || DEFAULT_TPL02;
@@ -901,11 +937,14 @@ function loadTplTexts() {
   document.getElementById('tpl05').value = performance.tpl05 || DEFAULT_TPL05;
 
   // 솔라피 템플릿 코드 로드
-  document.getElementById('tplCode01').value = performance.tplCode01 || '';
-  document.getElementById('tplCode02').value = performance.tplCode02 || '';
-  document.getElementById('tplCode03').value = performance.tplCode03 || '';
-  document.getElementById('tplCode04').value = performance.tplCode04 || '';
-  document.getElementById('tplCode05').value = performance.tplCode05 || '';
+  document.getElementById('tplCode01').value    = performance.tplCode01    || '';
+  document.getElementById('tplCode02').value    = performance.tplCode02    || '';
+  document.getElementById('tplCode03').value    = performance.tplCode03    || '';
+  document.getElementById('tplCode04').value    = performance.tplCode04    || '';
+  document.getElementById('tplCode05').value    = performance.tplCode05    || '';
+  document.getElementById('tplCodeCancel').value = performance.tplCodeCancel || '';
+  document.getElementById('tplCancel').value     = performance.tplCancel    || DEFAULT_TPL_CANCEL;
+  updateTplWarnings();
 
   // 버튼 이름 로드 (저장된 값 or 기본값)
   document.getElementById('tplBtn01_1').value = performance.tplBtn01_1 || '입금완료알리기';
@@ -949,6 +988,8 @@ async function saveTplTexts() {
     tplCode03: document.getElementById('tplCode03').value.trim(),
     tplCode04: document.getElementById('tplCode04').value.trim(),
     tplCode05: document.getElementById('tplCode05').value.trim(),
+    tplCodeCancel: document.getElementById('tplCodeCancel').value.trim(),
+    tplCancel:     document.getElementById('tplCancel').value,
     tplBtn01_1: document.getElementById('tplBtn01_1').value.trim() || '입금완료알리기',
     tplBtn01_2: document.getElementById('tplBtn01_2').value.trim() || '예매변경/취소신청',
     tplBtn02_1: document.getElementById('tplBtn02_1').value.trim() || '모바일티켓',
@@ -1870,6 +1911,7 @@ function syncPerfForm(){
 }
 async function savePerf(){
   const data={
+    ...performance,
     notice:              document.getElementById('perf-notice').value.trim(),
     checkinCode:         document.getElementById('checkin-code-input').value.trim(),
     cancelDeadlineDay:   parseInt(document.getElementById('cancel-deadline-day').value),
@@ -1877,20 +1919,21 @@ async function savePerf(){
     changeDeadlineDay:   parseInt(document.getElementById('change-deadline-day').value),
     changeDeadlineHour:  parseInt(document.getElementById('change-deadline-hour').value),
     cancelPolicyText:    document.getElementById('cancel-policy-text').value.trim(),
-    posterUrl:   document.getElementById('poster-url-input').value.trim(),
-    agency:      document.getElementById('agency-name').value.trim(),
-    tel:document.getElementById('agency-tel').value.trim(),
-    email:document.getElementById('agency-email').value.trim(),
-    kakaopayLink:document.getElementById('kakaopay-link').value.trim(),
-    name:document.getElementById('perf-name').value.trim(),
-    subtitle:document.getElementById('perf-subtitle').value.trim(),
-    host:document.getElementById('perf-host').value.trim(),
-    organizer:document.getElementById('perf-organizer').value.trim(),
-    sponsor:document.getElementById('perf-sponsor').value.trim(),
-    account:document.getElementById('perf-account').value.trim(),
+    posterUrl:    document.getElementById('poster-url-input').value.trim(),
+    adminPhone:   document.getElementById('admin-phone').value.trim(),
+    agency:       document.getElementById('agency-name').value.trim(),
+    tel:          document.getElementById('agency-tel').value.trim(),
+    email:        document.getElementById('agency-email').value.trim(),
+    kakaopayLink: document.getElementById('kakaopay-link').value.trim(),
+    name:         document.getElementById('perf-name').value.trim(),
+    subtitle:     document.getElementById('perf-subtitle').value.trim(),
+    host:         document.getElementById('perf-host').value.trim(),
+    organizer:    document.getElementById('perf-organizer').value.trim(),
+    sponsor:      document.getElementById('perf-sponsor').value.trim(),
+    account:      document.getElementById('perf-account').value.trim(),
     accountHolder:document.getElementById('perf-account-holder').value.trim(),
-    open:document.getElementById('perf-open').value,
-    maxQty:parseInt(document.getElementById('perf-max-qty').value)||4,
+    open:         document.getElementById('perf-open').value,
+    maxQty:       parseInt(document.getElementById('perf-max-qty').value)||4,
   };
   const r=await callAPI({action:'savePerformance',data});
   if(r.success){performance=data;toast('저장됐습니다.');renderDashboard();}else toast('저장 실패');
