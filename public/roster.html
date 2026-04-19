@@ -456,7 +456,21 @@ function App() {
           const cat = activeCategories[i];
           const catId = i === 0 ? id : `${id}-${i + 1}`;
           const catAmt = cat.amount > 0 ? cat.amount : Math.round(cat.qty / qty * amount);
-          if (allIds.has(catId)) { skipped.push(name + ` (중복)`); continue; }
+          if (allIds.has(catId)) {
+            const existing = Object.values(data).flat().find(x => x.id === catId);
+            if (existing) {
+              let changed = false;
+              const updates = { ...existing };
+              if (existing.qty !== cat.qty)       { updates.qty = cat.qty;       changed = true; }
+              if (existing.amount !== catAmt)     { updates.amount = catAmt;     changed = true; }
+              if (existing.type !== cat.name)     { updates.type = cat.name;     changed = true; }
+              if (changed) { toUpsert.push(updates); updatedList.push(name + ` (수정-${cat.name})`); }
+              else         { skipped.push(name + ` (중복)`); }
+            } else {
+              skipped.push(name + ` (중복)`);
+            }
+            continue;
+          }
           const entry = { id: catId, show_id: showId, name, phone, type: cat.name, qty: cat.qty, amount: catAmt, source, cancelled: false };
           toUpsert.push(entry);
           addedByShow[showId].push(entry);
