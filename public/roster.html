@@ -1293,7 +1293,8 @@ function SalesReport({ shows, data, settings, onClose }) {
     const title = settings.showTitle || '판매 리포트';
 
     const css = `
-      body { font-family: 맑은 고딕, Arial, sans-serif; font-size: 10pt; color: #1e293b; margin: 20px 30px; }
+      @page { size: 210mm 297mm; margin: 20mm 25mm; mso-page-orientation: portrait; }
+      body { font-family: 맑은 고딕, Arial, sans-serif; font-size: 10pt; color: #1e293b; margin: 0; }
       h1 { font-size: 16pt; font-weight: bold; color: #1e293b; margin: 0 0 4px; }
       h2 { font-size: 12pt; font-weight: bold; color: #1e293b; margin: 24px 0 8px; border-bottom: 2px solid #1e293b; padding-bottom: 4px; }
       h3 { font-size: 10pt; font-weight: bold; color: #374151; margin: 16px 0 6px; }
@@ -1307,41 +1308,40 @@ function SalesReport({ shows, data, settings, onClose }) {
       td.center { text-align: center; }
       tr.total td { background: #f1f5f9; font-weight: bold; border-top: 2px solid #cbd5e1; }
       tr.odd td { background: #f9fafb; }
-      .flow { display: flex; align-items: center; gap: 0; margin-bottom: 20px; }
-      .flow-card { border: 1px solid #e5e7eb; border-radius: 8px; padding: 12px 18px; text-align: center; min-width: 100px; }
+      .flow-card { border: 1px solid #e5e7eb; padding: 10px 16px; text-align: center; vertical-align: middle; }
       .flow-card.cancel { border-top: 3px solid #e02424; }
       .flow-card.valid { border-top: 3px solid #1a56db; }
       .flow-card.checkin { border-top: 3px solid #0e9f6e; }
       .flow-card.noshow { border-top: 3px solid #e3a008; }
       .flow-card.issued { border-top: 3px solid #7e3af2; }
       .flow-card.amount { border-top: 3px solid #374151; }
-      .flow-label { font-size: 8pt; color: #9ca3af; margin-bottom: 3px; }
-      .flow-value { font-size: 14pt; font-weight: bold; }
+      .flow-label { font-size: 8pt; color: #9ca3af; }
+      .flow-value { font-size: 13pt; font-weight: bold; }
       .flow-value.purple { color: #7e3af2; }
       .flow-value.red { color: #e02424; }
       .flow-value.blue { color: #1d4ed8; }
       .flow-value.green { color: #0e9f6e; }
       .flow-value.amber { color: #d97706; }
       .flow-value.slate { color: #374151; }
-      .arrow { font-size: 16pt; color: #9ca3af; padding: 0 6px; }
-      .sep { font-size: 20pt; color: #cbd5e1; padding: 0 8px; }
+      .arrow { font-size: 14pt; color: #9ca3af; text-align: center; vertical-align: middle; padding: 0 4px; }
+      .sep { font-size: 18pt; color: #cbd5e1; text-align: center; vertical-align: middle; padding: 0 6px; }
       .section-break { page-break-before: always; }
     `;
 
     const flowBlock = (issued, cancelledQty, totalQty, checkedInQty, noShowQty, totalAmount) => `
-      <div class="flow">
-        <div class="flow-card issued"><div class="flow-label">총발권</div><div class="flow-value purple">${fn(issued)}매</div></div>
-        <div class="arrow">→</div>
-        <div class="flow-card cancel"><div class="flow-label">취소</div><div class="flow-value red">-${fn(cancelledQty)}매</div></div>
-        <div class="arrow">→</div>
-        <div class="flow-card valid"><div class="flow-label">유효예약</div><div class="flow-value blue">${fn(totalQty)}매</div></div>
-        <div class="arrow">→</div>
-        <div class="flow-card checkin"><div class="flow-label">입장완료</div><div class="flow-value green">${fn(checkedInQty)}매</div></div>
-        <div class="arrow">→</div>
-        <div class="flow-card noshow"><div class="flow-label">미입장</div><div class="flow-value amber">${fn(noShowQty)}매</div></div>
-        <div class="sep">|</div>
-        <div class="flow-card amount"><div class="flow-label">결제총액</div><div class="flow-value slate">${fn(totalAmount)}원</div></div>
-      </div>`;
+      <table style="border-collapse:collapse;margin-bottom:20px;width:100%"><tbody><tr>
+        <td class="flow-card issued"><div class="flow-label">총발권</div><div class="flow-value purple">${fn(issued)}매</div></td>
+        <td class="arrow">→</td>
+        <td class="flow-card cancel"><div class="flow-label">취소</div><div class="flow-value red">-${fn(cancelledQty)}매</div></td>
+        <td class="arrow">→</td>
+        <td class="flow-card valid"><div class="flow-label">유효예약</div><div class="flow-value blue">${fn(totalQty)}매</div></td>
+        <td class="arrow">→</td>
+        <td class="flow-card checkin"><div class="flow-label">입장완료</div><div class="flow-value green">${fn(checkedInQty)}매</div></td>
+        <td class="arrow">→</td>
+        <td class="flow-card noshow"><div class="flow-label">미입장</div><div class="flow-value amber">${fn(noShowQty)}매</div></td>
+        <td class="sep">|</td>
+        <td class="flow-card amount"><div class="flow-label">결제총액</div><div class="flow-value slate">${fn(totalAmount)}원</div></td>
+      </tr></tbody></table>`;
 
     const typeTable = (byType, totalQty, totalAmount) => {
       const rows = Object.entries(byType).sort((a,b)=>b[1].amount-a[1].amount).map(([t,v],i)=>
@@ -1390,7 +1390,9 @@ function SalesReport({ shows, data, settings, onClose }) {
 
     const html = `
       <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">
-      <head><meta charset="utf-8"><style>${css}</style></head>
+      <head><meta charset="utf-8">
+      <!--[if gte mso 9]><xml><w:WordDocument><w:View>Print</w:View><w:Zoom>100</w:Zoom><w:DoNotOptimizeForBrowser/></w:WordDocument></xml><![endif]-->
+      <style>${css}</style></head>
       <body>
         <h1>📊 ${title}</h1>
         <p class="subtitle">출력일: ${date}</p>
