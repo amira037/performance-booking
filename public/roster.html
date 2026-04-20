@@ -1286,6 +1286,142 @@ function SalesReport({ shows, data, settings, onClose }) {
 
   const [showPrintModal, setShowPrintModal] = useState(false);
 
+  const exportWord = () => {
+    const fn  = (n) => Number(n||0).toLocaleString('ko-KR');
+    const oi  = overall.totalQty + overall.cancelledQty;
+    const date = new Date().toLocaleDateString('ko-KR');
+    const title = settings.showTitle || '판매 리포트';
+
+    const css = `
+      body { font-family: 맑은 고딕, Arial, sans-serif; font-size: 10pt; color: #1e293b; margin: 20px 30px; }
+      h1 { font-size: 16pt; font-weight: bold; color: #1e293b; margin: 0 0 4px; }
+      h2 { font-size: 12pt; font-weight: bold; color: #1e293b; margin: 24px 0 8px; border-bottom: 2px solid #1e293b; padding-bottom: 4px; }
+      h3 { font-size: 10pt; font-weight: bold; color: #374151; margin: 16px 0 6px; }
+      .subtitle { font-size: 9pt; color: #6b7280; margin-bottom: 6px; }
+      table { border-collapse: collapse; margin-bottom: 14px; font-size: 9pt; }
+      table.full { width: 100%; }
+      th { background: #1e293b; color: #fff; padding: 7px 12px; text-align: center; font-weight: bold; }
+      th.left { text-align: left; }
+      td { padding: 6px 12px; border-bottom: 1px solid #e5e7eb; }
+      td.right { text-align: right; }
+      td.center { text-align: center; }
+      tr.total td { background: #f1f5f9; font-weight: bold; border-top: 2px solid #cbd5e1; }
+      tr.odd td { background: #f9fafb; }
+      .flow { display: flex; align-items: center; gap: 0; margin-bottom: 20px; }
+      .flow-card { border: 1px solid #e5e7eb; border-radius: 8px; padding: 12px 18px; text-align: center; min-width: 100px; }
+      .flow-card.cancel { border-top: 3px solid #e02424; }
+      .flow-card.valid { border-top: 3px solid #1a56db; }
+      .flow-card.checkin { border-top: 3px solid #0e9f6e; }
+      .flow-card.noshow { border-top: 3px solid #e3a008; }
+      .flow-card.issued { border-top: 3px solid #7e3af2; }
+      .flow-card.amount { border-top: 3px solid #374151; }
+      .flow-label { font-size: 8pt; color: #9ca3af; margin-bottom: 3px; }
+      .flow-value { font-size: 14pt; font-weight: bold; }
+      .flow-value.purple { color: #7e3af2; }
+      .flow-value.red { color: #e02424; }
+      .flow-value.blue { color: #1d4ed8; }
+      .flow-value.green { color: #0e9f6e; }
+      .flow-value.amber { color: #d97706; }
+      .flow-value.slate { color: #374151; }
+      .arrow { font-size: 16pt; color: #9ca3af; padding: 0 6px; }
+      .sep { font-size: 20pt; color: #cbd5e1; padding: 0 8px; }
+      .section-break { page-break-before: always; }
+    `;
+
+    const flowBlock = (issued, cancelledQty, totalQty, checkedInQty, noShowQty, totalAmount) => `
+      <div class="flow">
+        <div class="flow-card issued"><div class="flow-label">총발권</div><div class="flow-value purple">${fn(issued)}매</div></div>
+        <div class="arrow">→</div>
+        <div class="flow-card cancel"><div class="flow-label">취소</div><div class="flow-value red">-${fn(cancelledQty)}매</div></div>
+        <div class="arrow">→</div>
+        <div class="flow-card valid"><div class="flow-label">유효예약</div><div class="flow-value blue">${fn(totalQty)}매</div></div>
+        <div class="arrow">→</div>
+        <div class="flow-card checkin"><div class="flow-label">입장완료</div><div class="flow-value green">${fn(checkedInQty)}매</div></div>
+        <div class="arrow">→</div>
+        <div class="flow-card noshow"><div class="flow-label">미입장</div><div class="flow-value amber">${fn(noShowQty)}매</div></div>
+        <div class="sep">|</div>
+        <div class="flow-card amount"><div class="flow-label">결제총액</div><div class="flow-value slate">${fn(totalAmount)}원</div></div>
+      </div>`;
+
+    const typeTable = (byType, totalQty, totalAmount) => {
+      const rows = Object.entries(byType).sort((a,b)=>b[1].amount-a[1].amount).map(([t,v],i)=>
+        `<tr${i%2?' class="odd"':''}><td>${t}</td><td class="right">${fn(v.qty)}매</td><td class="right">${fn(v.amount)}원</td><td class="right" style="color:#6b7280">${totalQty>0?(v.qty/totalQty*100).toFixed(1):0}%</td></tr>`
+      ).join('');
+      return `<table class="full"><thead><tr><th class="left">권종</th><th>매수</th><th>금액</th><th>비율</th></tr></thead><tbody>${rows}<tr class="total"><td>합계</td><td class="right">${fn(totalQty)}매</td><td class="right">${fn(totalAmount)}원</td><td></td></tr></tbody></table>`;
+    };
+
+    const srcTable = (bySrc, totalQty, totalAmount) => {
+      const rows = Object.entries(bySrc).filter(([,v])=>v.qty>0).sort((a,b)=>b[1].amount-a[1].amount).map(([src,v],i)=>
+        `<tr${i%2?' class="odd"':''}><td>${src}</td><td class="right">${fn(v.qty)}매</td><td class="right">${fn(v.amount)}원</td><td class="right" style="color:#6b7280">${totalQty>0?(v.qty/totalQty*100).toFixed(1):0}%</td></tr>`
+      ).join('');
+      return `<table class="full"><thead><tr><th class="left">판매처</th><th>매수</th><th>금액</th><th>비율</th></tr></thead><tbody>${rows}<tr class="total"><td>합계</td><td class="right">${fn(totalQty)}매</td><td class="right">${fn(totalAmount)}원</td><td></td></tr></tbody></table>`;
+    };
+
+    const payTable = (byPay) => {
+      const rows = Object.entries(byPay).map(([ps,v],i)=>
+        `<tr${i%2?' class="odd"':''}><td>${ps}</td><td class="right">${fn(v.qty)}매</td><td class="right">${fn(v.amount)}원</td></tr>`
+      ).join('');
+      return `<table class="full"><thead><tr><th class="left">결제상태</th><th>매수</th><th>금액</th></tr></thead><tbody>${rows}</tbody></table>`;
+    };
+
+    // ── 회차별 비교 테이블 ──
+    const compRows = allStats.map(({show:s,stats:st},i) => {
+      const iss = st.totalQty + st.cancelledQty;
+      return `<tr${i%2?' class="odd"':''}><td>${s.label}</td><td>${s.date||''}</td><td>${s.time||''}</td><td class="right">${fn(iss)}</td><td class="right" style="color:#dc2626">${fn(st.cancelledQty)}</td><td class="right">${fn(st.totalQty)}</td><td class="right" style="color:#0e9f6e">${fn(st.checkedInQty)}</td><td class="right" style="color:#d97706">${fn(st.noShowQty)}</td><td class="right" style="font-weight:bold">${fn(st.totalAmount)}원</td></tr>`;
+    }).join('');
+    const compTotal = `<tr class="total"><td colspan="3">합계</td><td class="right">${fn(oi)}</td><td class="right" style="color:#dc2626">${fn(overall.cancelledQty)}</td><td class="right">${fn(overall.totalQty)}</td><td class="right" style="color:#0e9f6e">${fn(overall.checkedInQty)}</td><td class="right" style="color:#d97706">${fn(overall.noShowQty)}</td><td class="right">${fn(overall.totalAmount)}원</td></tr>`;
+
+    // ── 회차별 페이지 ──
+    const sessionPages = allStats.map(({show:s, stats:st}) => {
+      const iss = st.totalQty + st.cancelledQty;
+      return `
+        <div class="section-break">
+          <h2>${s.label}${s.time?' '+s.time:''}</h2>
+          <p class="subtitle">${s.date||''}</p>
+          ${flowBlock(iss, st.cancelledQty, st.totalQty, st.checkedInQty, st.noShowQty, st.totalAmount)}
+          <h3>권종별 집계</h3>
+          ${typeTable(st.byType, st.totalQty, st.totalAmount)}
+          <h3>판매처별 집계</h3>
+          ${srcTable(st.bySrc, st.totalQty, st.totalAmount)}
+          <h3>결제 상태별</h3>
+          ${payTable(st.byPay)}
+        </div>`;
+    }).join('');
+
+    const html = `
+      <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">
+      <head><meta charset="utf-8"><style>${css}</style></head>
+      <body>
+        <h1>📊 ${title}</h1>
+        <p class="subtitle">출력일: ${date}</p>
+
+        <h2>공연 총합</h2>
+        ${flowBlock(oi, overall.cancelledQty, overall.totalQty, overall.checkedInQty, overall.noShowQty, overall.totalAmount)}
+
+        <h3>회차별 비교</h3>
+        <table class="full">
+          <thead><tr><th class="left">회차</th><th class="left">날짜</th><th class="left">시간</th><th>총발권</th><th>취소</th><th>유효예약</th><th>입장완료</th><th>미입장</th><th>매출</th></tr></thead>
+          <tbody>${compRows}${compTotal}</tbody>
+        </table>
+
+        <h3>권종별 누적</h3>
+        ${typeTable(overallByType, overall.totalQty, overall.totalAmount)}
+
+        <h3>판매처별 누적</h3>
+        ${srcTable(overallBySrc, overall.totalQty, overall.totalAmount)}
+
+        ${sessionPages}
+      </body></html>`;
+
+    const blob = new Blob(['\ufeff', html], { type: 'application/msword' });
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    a.href = url;
+    a.download = `판매리포트_${new Date().toISOString().slice(0,10)}.doc`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   const exportExcel = () => {
     const wb  = XLSX.utils.book_new();
     const oi  = overall.totalQty + overall.cancelledQty;
@@ -1360,6 +1496,7 @@ function SalesReport({ shows, data, settings, onClose }) {
           <div style={{fontSize:11,color:'#94a3b8',marginTop:2}}>{settings.showTitle}</div>
         </div>
         <div style={{display:'flex',gap:8}}>
+          <button onClick={exportWord} style={{background:'#1a56db',color:'#fff',border:'none',borderRadius:8,padding:'7px 14px',fontSize:12,cursor:'pointer',fontWeight:600}}>📄 Word 저장</button>
           <button onClick={exportExcel} style={{background:'#0e9f6e',color:'#fff',border:'none',borderRadius:8,padding:'7px 14px',fontSize:12,cursor:'pointer',fontWeight:600}}>📥 엑셀 저장</button>
           <button onClick={()=>setShowPrintModal(true)} style={{background:'#334155',color:'#cbd5e1',border:'none',borderRadius:8,padding:'7px 14px',fontSize:12,cursor:'pointer'}}>🖨️ 인쇄</button>
           <button onClick={onClose} style={{background:'#334155',color:'#cbd5e1',border:'none',borderRadius:8,padding:'7px 14px',fontSize:12,cursor:'pointer'}}>✕ 닫기</button>
@@ -1844,48 +1981,197 @@ function SettlementCalculator({ data, shows, settings, onClose }) {
     reader.readAsArrayBuffer(file);
   };
 
-  const exportExcel = () => {
-    const wb = XLSX.utils.book_new();
-    const naverNet   = naverData?.netAmount || 0;
-    const nolPayout  = nolData?.summary?.payout || 0;
-    const directNet  = directData.collected;
-    const sr = [['판매처','판매금액(원)','수수료(원)','순정산금액(원)','비고']];
-    if (naverData)     sr.push(['네이버', naverData.totalAmount, Math.abs(naverData.totalFee), naverNet, '']);
-    if (nolData?.summary) sr.push(['NOL(인터파크)', nolData.summary.totalSales, nolData.summary.fee, nolPayout, '취소료환급 포함']);
-    sr.push(['직접', directData.totalAmount, 0, directNet, `미수납 ${directData.pending.toLocaleString()}원 별도`]);
-    sr.push(['합계',
-      (naverData?.totalAmount||0)+(nolData?.summary?.totalSales||0)+directData.totalAmount,
-      (naverData?Math.abs(naverData.totalFee):0)+(nolData?.summary?.fee||0),
-      naverNet+nolPayout+directNet, '']);
-    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(sr), '정산 요약');
-    // 직접 예약 시트
-    const dr = [['회차','이름','연락처','결제상태','매수','금액(원)','입장']];
-    shows.forEach(s => {
-      (directData.bySession[s.id]?.rows||[]).forEach(r => {
-        dr.push([s.label+(s.time?' '+s.time:''), r.name, r.phone, r.payStatus, r.qty, r.amount, r.checked_in?'O':'']);
+  const exportWord = () => {
+    const naverNet  = naverData?.netAmount || 0;
+    const nolPayout = nolData?.summary?.payout || 0;
+    const directNet = directData.collected;
+    const totalSalesW = (naverData?.totalAmount||0)+(nolData?.summary?.totalSales||0)+directData.totalAmount;
+    const totalFeeW   = (naverData?Math.abs(naverData.totalFee):0)+(nolData?.summary?.fee||0);
+    const totalNetW   = naverNet + nolPayout + directNet;
+    const date = new Date().toLocaleDateString('ko-KR');
+
+    const css = `
+      body { font-family: 맑은 고딕, Arial, sans-serif; font-size: 10pt; color: #1e293b; margin: 20px 30px; }
+      h1 { font-size: 16pt; font-weight: bold; color: #1e293b; margin: 0 0 4px; }
+      h2 { font-size: 12pt; font-weight: bold; color: #1e293b; margin: 24px 0 8px; border-bottom: 2px solid #1e293b; padding-bottom: 4px; }
+      h3 { font-size: 10pt; font-weight: bold; color: #374151; margin: 16px 0 6px; }
+      .subtitle { font-size: 9pt; color: #6b7280; margin-bottom: 20px; }
+      table { width: 100%; border-collapse: collapse; margin-bottom: 14px; font-size: 9pt; }
+      th { background: #1e293b; color: #fff; padding: 7px 10px; text-align: center; font-weight: bold; }
+      th.left { text-align: left; }
+      td { padding: 6px 10px; border-bottom: 1px solid #e5e7eb; vertical-align: middle; }
+      td.right { text-align: right; }
+      td.center { text-align: center; }
+      tr.total td { background: #f1f5f9; font-weight: bold; border-top: 2px solid #cbd5e1; }
+      tr.highlight td { background: #1e293b; color: #fff; font-weight: bold; font-size: 11pt; }
+      tr.highlight td.green { color: #34d399; }
+      tr.odd td { background: #f9fafb; }
+      .badge { display: inline-block; border-radius: 4px; padding: 1px 7px; font-size: 8pt; font-weight: bold; }
+      .badge-green { background: #dcfce7; color: #16a34a; }
+      .badge-yellow { background: #fef9c3; color: #a16207; }
+      .badge-blue { background: #dbeafe; color: #1d4ed8; }
+      .badge-gray { background: #f3f4f6; color: #6b7280; }
+      .badge-noshow { background: #fef9c3; color: #92400e; }
+      .summary-cards { display: flex; gap: 12px; margin-bottom: 16px; }
+      .card { border: 1px solid #e5e7eb; border-radius: 8px; padding: 12px 16px; flex: 1; }
+      .card-label { font-size: 8pt; color: #9ca3af; margin-bottom: 4px; }
+      .card-value { font-size: 14pt; font-weight: bold; }
+      .naver { border-top: 3px solid #03c75a; }
+      .nol { border-top: 3px solid #ff6b00; }
+      .direct { border-top: 3px solid #6b7280; }
+      .total-card { border-top: 3px solid #7e3af2; background: #1e293b; color: #fff; }
+      .total-card .card-label { color: #94a3b8; }
+      .total-card .card-value { color: #34d399; }
+      .section-divider { border: none; border-top: 1px solid #e5e7eb; margin: 20px 0; }
+      p { margin: 3px 0; font-size: 9pt; }
+    `;
+
+    const fn = (n) => Number(n||0).toLocaleString('ko-KR');
+    const pct = (fee, base) => base > 0 ? (fee/base*100).toFixed(2)+'%' : '-';
+
+    // ── 합산 요약 테이블 ──
+    let summaryRows = '';
+    if (naverData) summaryRows += `<tr><td><span class="badge badge-green">네이버</span></td><td class="right">${fn(naverData.totalAmount)}원</td><td class="right" style="color:#dc2626">-${fn(Math.abs(naverData.totalFee))}원</td><td class="right" style="color:#6b7280">${pct(Math.abs(naverData.totalFee),naverData.totalAmount)}</td><td class="right" style="color:#16a34a;font-weight:bold">${fn(naverNet)}원</td><td></td></tr>`;
+    if (nolData?.summary) summaryRows += `<tr class="odd"><td><span class="badge badge-yellow">NOL(인터파크)</span></td><td class="right">${fn(nolData.summary.totalSales)}원</td><td class="right" style="color:#dc2626">-${fn(nolData.summary.fee)}원</td><td class="right" style="color:#6b7280">${pct(nolData.summary.fee,nolData.summary.totalSales)}</td><td class="right" style="color:#c2410c;font-weight:bold">${fn(nolPayout)}원</td><td style="font-size:8pt;color:#0e9f6e">취소료환급 포함</td></tr>`;
+    summaryRows += `<tr><td><span class="badge badge-gray">직접</span></td><td class="right">${fn(directData.totalAmount)}원</td><td class="right" style="color:#9ca3af">-</td><td class="right" style="color:#9ca3af">-</td><td class="right" style="font-weight:bold">${fn(directNet)}원</td><td style="font-size:8pt;color:#d97706">${directData.pending>0?'미수납 '+fn(directData.pending)+'원 별도':''}</td></tr>`;
+    summaryRows += `<tr class="total"><td>합계</td><td class="right">${fn(totalSalesW)}원</td><td class="right" style="color:#dc2626">-${fn(totalFeeW)}원</td><td></td><td class="right" style="color:#16a34a">${fn(totalNetW)}원</td><td></td></tr>`;
+
+    // ── 직접 예약 상세 ──
+    let directRows = '';
+    shows.forEach((s,si) => {
+      const rows = directData.bySession[s.id]?.rows||[];
+      if (!rows.length) return;
+      directRows += `<tr><td colspan="6" style="background:#f1f5f9;font-weight:bold;color:#374151;font-size:9pt">${s.label}${s.time?' '+s.time:''}</td></tr>`;
+      rows.forEach((r,i) => {
+        const bg = r.payStatus==='미입금'?'background:#fff7ed':r.checked_in?'background:#f0fdf4':'';
+        let badge = `<span class="badge badge-gray">${r.payStatus}</span>`;
+        if (r.payStatus==='입금확인') badge = `<span class="badge badge-green">${r.payStatus}</span>`;
+        if (r.payStatus==='미입금') badge = `<span class="badge badge-yellow">${r.payStatus}</span>`;
+        directRows += `<tr style="${bg}"><td>${r.name}</td><td>${r.phone||''}</td><td class="center">${badge}</td><td class="right">${r.qty}매</td><td class="right">${fn(r.amount)}원</td><td class="center" style="color:${r.checked_in?'#16a34a':'#9ca3af'}">${r.checked_in?'✔':'-'}</td></tr>`;
       });
+      const subQty = rows.reduce((s,r)=>s+r.qty,0);
+      const subAmt = rows.reduce((s,r)=>s+r.amount,0);
+      directRows += `<tr class="total"><td colspan="3">소계</td><td class="right">${subQty}매</td><td class="right">${fn(subAmt)}원</td><td></td></tr>`;
     });
-    dr.push(['합계','','','',directData.totalQty,directData.totalAmount,'']);
-    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(dr), '직접 예약');
+
+    // ── 네이버 상세 ──
+    let naverSection = '';
     if (naverData) {
-      const nr = [['구분','구매자','정산기준일','정산금액(A)','Npay수수료(B)','매출연동(C)','무이자할부(D)','총수수료','순정산금액','비고']];
-      naverData.items.forEach(i => nr.push([i.gubun,i.name,i.date,i.amount,i.feeNpay,i.feeMaeul,i.feeMuiija,i.totalFee,i.net,i.isNoShow?'노쇼':'']));
-      nr.push(['합계','','',naverData.totalAmount,'','','',naverData.totalFee,naverData.netAmount,'']);
-      XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(nr), '네이버 상세');
+      let byDateRows = Object.entries(naverData.byDate).sort(([a],[b])=>a.localeCompare(b)).map(([date,v],i)=>
+        `<tr${i%2?' class="odd"':''}><td>${date}</td><td class="right">${v.count}건</td><td class="right">${fn(v.amount)}원</td><td class="right" style="color:#dc2626">-${fn(Math.abs(v.fee))}원</td><td class="right;font-weight:bold">${fn(v.net)}원</td><td class="center" style="color:${v.noShowCount>0?'#d97706':'#9ca3af'}">${v.noShowCount>0?v.noShowCount+'건':'-'}</td></tr>`
+      ).join('');
+      byDateRows += `<tr class="total"><td>합계</td><td class="right">${naverData.items.length}건</td><td class="right">${fn(naverData.totalAmount)}원</td><td class="right" style="color:#dc2626">-${fn(Math.abs(naverData.totalFee))}원</td><td class="right" style="color:#16a34a">${fn(naverData.netAmount)}원</td><td class="center">${naverData.items.filter(i=>i.isNoShow).length}건</td></tr>`;
+
+      let itemRows = naverData.items.map((item,i)=>{
+        const bg = item.isNoShow ? 'background:#fefce8' : '';
+        const tag = item.isNoShow
+          ? `<span class="badge badge-noshow">노쇼</span>`
+          : item.gubun==='상품주문'
+            ? `<span class="badge badge-blue">${item.gubun}</span>`
+            : `<span class="badge badge-gray">${item.gubun}</span>`;
+        return `<tr style="${bg}"><td class="center">${tag}</td><td>${item.name}</td><td>${item.date}</td><td class="right">${fn(item.amount)}원</td><td class="right" style="color:#dc2626">${fn(item.feeNpay)}원</td><td class="right" style="color:#dc2626">${fn(item.feeMaeul)}원</td><td class="right" style="color:#dc2626;font-weight:bold">${fn(item.totalFee)}원</td><td class="right;font-weight:bold">${fn(item.net)}원</td></tr>`;
+      }).join('');
+      itemRows += `<tr class="total"><td colspan="3">합계</td><td class="right">${fn(naverData.totalAmount)}원</td><td></td><td></td><td class="right" style="color:#dc2626">${fn(naverData.totalFee)}원</td><td class="right" style="color:#16a34a">${fn(naverData.netAmount)}원</td></tr>`;
+
+      naverSection = `
+        <h2>📗 네이버 정산 상세</h2>
+        <h3>일별 정산 요약</h3>
+        <table>
+          <thead><tr><th class="left">정산기준일</th><th>건수</th><th>정산금액(A)</th><th>수수료</th><th>순정산금액</th><th>노쇼</th></tr></thead>
+          <tbody>${byDateRows}</tbody>
+        </table>
+        <h3>건별 상세 (${naverData.items.length}건)</h3>
+        <table>
+          <thead><tr><th>구분</th><th class="left">구매자</th><th class="left">정산기준일</th><th>정산금액(A)</th><th>Npay수수료(B)</th><th>매출연동(C)</th><th>총수수료</th><th>순정산</th></tr></thead>
+          <tbody>${itemRows}</tbody>
+        </table>`;
     }
+
+    // ── NOL 상세 ──
+    let nolSection = '';
     if (nolData) {
       const s = nolData.summary||{};
-      const nolr = [
-        ['■ 정산 요약'],['총판매금액','수수료','공제내역','현금보유분','취소수수료(+)','지급금액'],
-        [s.totalSales,s.fee,s.deduction,s.cashHeld,s.cancelFeeRefund,s.payout],[],
-        ['■ 수수료 상세'],['결제수단','매수','판매금액','수수료율(%)','수수료합계'],
-        ...nolData.feeItems.map(f=>[f.method,f.qty,f.amount,f.rate,f.feeTotal]),[],
-        ['■ 일자별 판매'],['공연일시','가격등급','단가','매수','금액'],
-        ...nolData.dailyItems.map(d=>[d.date,d.grade,d.unitPrice,d.qty,d.amount]),
-      ];
-      XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(nolr), 'NOL(인터파크) 상세');
+      const feeRows = nolData.feeItems.map((f,i)=>
+        `<tr${i%2?' class="odd"':''}><td>${f.method}</td><td class="right">${f.qty}매</td><td class="right">${fn(f.amount)}원</td><td class="right">${f.rate}%</td><td class="right" style="color:#dc2626;font-weight:bold">${fn(f.feeTotal)}원</td></tr>`
+      ).join('');
+      const feeTotals = `<tr class="total"><td>합계</td><td class="right">${nolData.feeItems.reduce((s,f)=>s+f.qty,0)}매</td><td class="right">${fn(nolData.feeItems.reduce((s,f)=>s+f.amount,0))}원</td><td></td><td class="right" style="color:#dc2626">${fn(nolData.feeItems.reduce((s,f)=>s+f.feeTotal,0))}원</td></tr>`;
+      const dailyRows = nolData.dailyItems.map((d,i)=>
+        `<tr${i%2?' class="odd"':''}><td style="font-size:8pt;color:#6b7280">${d.date}</td><td>${d.grade}</td><td class="right">${fn(d.unitPrice)}원</td><td class="right">${d.qty}매</td><td class="right;font-weight:bold">${fn(d.amount)}원</td></tr>`
+      ).join('');
+      const dailyTotal = `<tr class="total"><td colspan="3">합계</td><td class="right">${nolData.dailyItems.reduce((s,d)=>s+d.qty,0)}매</td><td class="right">${fn(nolData.dailyItems.reduce((s,d)=>s+d.amount,0))}원</td></tr>`;
+
+      nolSection = `
+        <h2>🎫 NOL(인터파크) 정산 상세</h2>
+        <table style="width:auto">
+          <thead><tr><th>총판매금액①</th><th>수수료(-)</th><th>공제내역</th><th>현금보유분(-)</th><th>취소수수료(+)</th><th style="background:#7e3af2">지급금액</th></tr></thead>
+          <tbody><tr>
+            <td class="right" style="color:#1a56db;font-weight:bold">${fn(s.totalSales)}원</td>
+            <td class="right" style="color:#dc2626;font-weight:bold">-${fn(s.fee)}원</td>
+            <td class="right">${fn(s.deduction)}원</td>
+            <td class="right">-${fn(s.cashHeld)}원</td>
+            <td class="right" style="color:#0e9f6e">+${fn(s.cancelFeeRefund)}원</td>
+            <td class="right" style="color:#7e3af2;font-weight:bold;font-size:11pt">${fn(s.payout)}원</td>
+          </tr></tbody>
+        </table>
+        <h3>결제수단별 수수료</h3>
+        <table>
+          <thead><tr><th class="left">결제수단</th><th>매수</th><th>판매금액</th><th>수수료율</th><th>수수료합계</th></tr></thead>
+          <tbody>${feeRows}${feeTotals}</tbody>
+        </table>
+        <h3>일자별 판매 내역</h3>
+        <table>
+          <thead><tr><th class="left">공연일시</th><th class="left">가격등급</th><th>단가</th><th>매수</th><th>금액</th></tr></thead>
+          <tbody>${dailyRows}${dailyTotal}</tbody>
+        </table>`;
     }
-    XLSX.writeFile(wb, `정산계산기_${new Date().toISOString().slice(0,10)}.xlsx`);
+
+    const html = `
+      <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">
+      <head><meta charset="utf-8"><style>${css}</style></head>
+      <body>
+        <h1>🧾 정산 계산기</h1>
+        <p class="subtitle">출력일: ${date}</p>
+
+        <h2>💰 합산 정산 요약</h2>
+        <table>
+          <thead><tr><th class="left">판매처</th><th>판매금액</th><th>수수료</th><th>수수료율</th><th>순정산금액</th><th>비고</th></tr></thead>
+          <tbody>${summaryRows}</tbody>
+        </table>
+        <table style="width:auto;margin-bottom:24px">
+          <tbody>
+            <tr class="highlight">
+              <td style="padding:10px 20px;font-size:10pt;color:#94a3b8">합산 순정산금액</td>
+              <td class="right green" style="padding:10px 24px;font-size:15pt">${fn(totalNetW)}원</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h2>📋 직접 예약 정산</h2>
+        <table style="width:auto;margin-bottom:10px">
+          <thead><tr><th>총 예약</th><th>수납 완료</th><th>미수납</th><th>총 판매액</th></tr></thead>
+          <tbody><tr>
+            <td class="center" style="font-weight:bold">${directData.totalQty}매</td>
+            <td class="right" style="color:#16a34a;font-weight:bold">${fn(directData.collected)}원</td>
+            <td class="right" style="color:#d97706;font-weight:bold">${fn(directData.pending)}원</td>
+            <td class="right" style="color:#7e3af2;font-weight:bold">${fn(directData.totalAmount)}원</td>
+          </tr></tbody>
+        </table>
+        <table>
+          <thead><tr><th class="left">예매자</th><th class="left">연락처</th><th>결제상태</th><th>매수</th><th>금액</th><th>입장</th></tr></thead>
+          <tbody>${directRows}</tbody>
+        </table>
+
+        ${naverSection}
+        ${nolSection}
+      </body></html>`;
+
+    const blob = new Blob(['\ufeff', html], { type: 'application/msword' });
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    a.href = url;
+    a.download = `정산계산기_${new Date().toISOString().slice(0,10)}.doc`;
+    a.click();
+    URL.revokeObjectURL(url);
   };
 
   const naverNet   = naverData ? naverData.netAmount : 0;
@@ -1912,7 +2198,7 @@ function SettlementCalculator({ data, shows, settings, onClose }) {
           <div style={{fontSize:11,color:'#94a3b8',marginTop:2}}>플랫폼 정산서 업로드 후 수수료 자동 계산</div>
         </div>
         <div style={{display:'flex',gap:8}}>
-          <button onClick={exportExcel} style={{background:'#0e9f6e',color:'#fff',border:'none',borderRadius:8,padding:'7px 14px',fontSize:12,cursor:'pointer',fontWeight:600}}>📥 엑셀 저장</button>
+          <button onClick={exportWord} style={{background:'#1a56db',color:'#fff',border:'none',borderRadius:8,padding:'7px 14px',fontSize:12,cursor:'pointer',fontWeight:600}}>📄 Word 저장</button>
           <button onClick={()=>window.print()} style={{background:'#334155',color:'#cbd5e1',border:'none',borderRadius:8,padding:'7px 14px',fontSize:12,cursor:'pointer'}}>🖨️ 프린트</button>
           <button onClick={onClose} style={{background:'#334155',color:'#cbd5e1',border:'none',borderRadius:8,padding:'7px 14px',fontSize:12,cursor:'pointer'}}>✕ 닫기</button>
         </div>
