@@ -897,7 +897,7 @@ function App() {
       {showReport && <SalesReport shows={shows} data={data} settings={settings} onClose={()=>setShowReport(false)}/>}
 
       {/* 정산 계산기 */}
-      {showSettlement && <SettlementCalculator onClose={()=>setShowSettlement(false)}/>}
+      {showSettlement && <SettlementCalculator data={data} shows={shows} settings={settings} onClose={()=>setShowSettlement(false)}/>}
 
       {/* 설정 모달 */}
       {showSettings && <SettingsModal settings={settings} adminKey={adminKey} shows={shows}
@@ -1284,19 +1284,64 @@ function SalesReport({ shows, data, settings, onClose }) {
     });
   });
 
+  const [showPrintModal, setShowPrintModal] = useState(false);
+
   const exportExcel = () => {
-    const wb = XLSX.utils.book_new();
-    const r1 = [['회차','날짜','시간','총발권(명)','취소(명)','유효예약(명)','입장(명)','미입장(명)','매출(원)']];
-    allStats.forEach(({show:s,stats:st}) => r1.push([s.label,s.date,s.time,st.totalQty+st.cancelledQty,st.cancelledQty,st.totalQty,st.checkedInQty,st.noShowQty,st.totalAmount]));
-    const oi = overall.totalQty+overall.cancelledQty;
-    r1.push(['합계','','',oi,overall.cancelledQty,overall.totalQty,overall.checkedInQty,overall.noShowQty,overall.totalAmount]);
-    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(r1), '회차별 요약');
-    const r2 = [['권종','매수','금액(원)']];
-    Object.entries(overallByType).sort((a,b)=>b[1].amount-a[1].amount).forEach(([t,v]) => r2.push([t,v.qty,v.amount]));
-    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(r2), '권종별');
-    const r3 = [['판매처','매수','금액(원)']];
-    Object.entries(overallBySrc).filter(([,v])=>v.qty>0).sort((a,b)=>b[1].amount-a[1].amount).forEach(([src,v]) => r3.push([src,v.qty,v.amount]));
-    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(r3), '판매처별');
+    const wb  = XLSX.utils.book_new();
+    const oi  = overall.totalQty + overall.cancelledQty;
+    // ── 공연 총합 시트 ──
+    const s0 = [
+      [settings.showTitle || '판매 리포트'],
+      [settings.festivalName || ''],
+      [],
+      ['■ 공연 총합'],
+      ['총발권','취소','유효예약','입장완료','미입장','결제총액(원)'],
+      [oi, overall.cancelledQty, overall.totalQty, overall.checkedInQty, overall.noShowQty, overall.totalAmount],
+      [],
+      ['■ 회차별 비교'],
+      ['회차','날짜','시간','총발권','취소','유효예약','입장완료','미입장','매출(원)'],
+      ...allStats.map(({show:s,stats:st})=>[s.label,s.date,s.time,st.totalQty+st.cancelledQty,st.cancelledQty,st.totalQty,st.checkedInQty,st.noShowQty,st.totalAmount]),
+      ['합계','','',oi,overall.cancelledQty,overall.totalQty,overall.checkedInQty,overall.noShowQty,overall.totalAmount],
+      [],
+      ['■ 권종별 누적'],
+      ['권종','매수','금액(원)'],
+      ...Object.entries(overallByType).sort((a,b)=>b[1].amount-a[1].amount).map(([t,v])=>[t,v.qty,v.amount]),
+      ['합계',overall.totalQty,overall.totalAmount],
+      [],
+      ['■ 판매처별 누적'],
+      ['판매처','매수','금액(원)'],
+      ...Object.entries(overallBySrc).filter(([,v])=>v.qty>0).sort((a,b)=>b[1].amount-a[1].amount).map(([src,v])=>[src,v.qty,v.amount]),
+      ['합계',overall.totalQty,overall.totalAmount],
+    ];
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(s0), '공연 총합');
+    // ── 회차별 시트 ──
+    allStats.forEach(({show:s,stats:st}) => {
+      const iss = st.totalQty + st.cancelledQty;
+      const sd = [
+        [settings.showTitle || ''],
+        [s.label + (s.time ? ' ' + s.time : '')],
+        [],
+        ['■ 판매 현황'],
+        ['총발권','취소','유효예약','입장완료','미입장','결제총액(원)'],
+        [iss, st.cancelledQty, st.totalQty, st.checkedInQty, st.noShowQty, st.totalAmount],
+        [],
+        ['■ 권종별 집계'],
+        ['권종','매수','금액(원)'],
+        ...Object.entries(st.byType).sort((a,b)=>b[1].amount-a[1].amount).map(([t,v])=>[t,v.qty,v.amount]),
+        ['합계', st.totalQty, st.totalAmount],
+        [],
+        ['■ 판매처별 집계'],
+        ['판매처','매수','금액(원)'],
+        ...Object.entries(st.bySrc).filter(([,v])=>v.qty>0).sort((a,b)=>b[1].amount-a[1].amount).map(([src,v])=>[src,v.qty,v.amount]),
+        ['합계', st.totalQty, st.totalAmount],
+        [],
+        ['■ 결제 상태별'],
+        ['결제 상태','매수','금액(원)'],
+        ...Object.entries(st.byPay).map(([ps,v])=>[ps,v.qty,v.amount]),
+      ];
+      const name = s.label.replace(/[\/\\?*\[\]:]/g,'').slice(0,31);
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(sd), name);
+    });
     XLSX.writeFile(wb, `판매리포트_${new Date().toISOString().slice(0,10)}.xlsx`);
   };
 
@@ -1316,7 +1361,7 @@ function SalesReport({ shows, data, settings, onClose }) {
         </div>
         <div style={{display:'flex',gap:8}}>
           <button onClick={exportExcel} style={{background:'#0e9f6e',color:'#fff',border:'none',borderRadius:8,padding:'7px 14px',fontSize:12,cursor:'pointer',fontWeight:600}}>📥 엑셀 저장</button>
-          <button onClick={()=>window.print()} style={{background:'#334155',color:'#cbd5e1',border:'none',borderRadius:8,padding:'7px 14px',fontSize:12,cursor:'pointer'}}>🖨️ 프린트</button>
+          <button onClick={()=>setShowPrintModal(true)} style={{background:'#334155',color:'#cbd5e1',border:'none',borderRadius:8,padding:'7px 14px',fontSize:12,cursor:'pointer'}}>🖨️ 인쇄</button>
           <button onClick={onClose} style={{background:'#334155',color:'#cbd5e1',border:'none',borderRadius:8,padding:'7px 14px',fontSize:12,cursor:'pointer'}}>✕ 닫기</button>
         </div>
       </div>
@@ -1527,17 +1572,179 @@ function SalesReport({ shows, data, settings, onClose }) {
           </div>
         );})()}
       </div>
+      {showPrintModal && (
+        <PrintModal shows={shows} getStats={getStats} settings={settings} currentSessionId={selSession} onClose={()=>setShowPrintModal(false)}/>
+      )}
+    </div>
+  );
+}
+
+// ── 인쇄 모달 ───────────────────────────────────────────────
+function PrintModal({ shows, getStats, settings, currentSessionId, onClose }) {
+  const [selected, setSelected] = useState(() => new Set(currentSessionId ? [currentSessionId] : shows.map(s=>s.id)));
+
+  const toggle = (id) => setSelected(prev => { const n=new Set(prev); n.has(id)?n.delete(id):n.add(id); return n; });
+  const selectAll = () => setSelected(new Set(shows.map(s=>s.id)));
+  const clearAll  = () => setSelected(new Set());
+
+  const doPrint = () => {
+    const ids = shows.filter(s=>selected.has(s.id)).map(s=>s.id);
+    if (!ids.length) { alert('회차를 선택하세요'); return; }
+
+    const pages = ids.map(sid => {
+      const show = shows.find(s=>s.id===sid);
+      const st   = getStats(sid);
+      const iss  = st.totalQty + st.cancelledQty;
+      const typeRows = Object.entries(st.byType).sort((a,b)=>b[1].amount-a[1].amount)
+        .map(([t,v])=>`<tr><td>${t}</td><td class="r">${v.qty}매</td><td class="r">${v.amount.toLocaleString()}원</td></tr>`).join('');
+      const srcRows = Object.entries(st.bySrc).filter(([,v])=>v.qty>0).sort((a,b)=>b[1].amount-a[1].amount)
+        .map(([src,v])=>`<tr><td>${src}</td><td class="r">${v.qty}매</td><td class="r">${v.amount.toLocaleString()}원</td></tr>`).join('');
+      const payRows = Object.entries(st.byPay)
+        .map(([ps,v])=>`<tr><td>${ps}</td><td class="r">${v.qty}매</td><td class="r">${v.amount.toLocaleString()}원</td></tr>`).join('');
+      return `
+        <div class="page">
+          <div class="headline">${settings.showTitle||'판매 리포트'}</div>
+          <div class="sub">${show.label}${show.time?' '+show.time:''} ${settings.festivalName?'| '+settings.festivalName:''}</div>
+          <div class="sec">■ 판매 현황</div>
+          <div class="flow">
+            <div class="fc"><div class="fl">총 발권</div><div class="fv">${iss}명</div></div>
+            <div class="arr">→</div>
+            <div class="fc cancel"><div class="fl">취소</div><div class="fv red">-${st.cancelledQty}명</div></div>
+            <div class="arr">→</div>
+            <div class="fc"><div class="fl">유효 예약</div><div class="fv blue">${st.totalQty}명</div></div>
+            <div class="arr">→</div>
+            <div class="fc"><div class="fl">입장 완료</div><div class="fv green">${st.checkedInQty}명</div></div>
+            <div class="arr">→</div>
+            <div class="fc"><div class="fl">미입장</div><div class="fv orange">${st.noShowQty}명</div></div>
+            <div class="sep">|</div>
+            <div class="fc"><div class="fl">결제 총액</div><div class="fv purple">${st.totalAmount.toLocaleString()}원</div></div>
+          </div>
+          <div class="grid2">
+            <div>
+              <div class="sec">■ 권종별 집계</div>
+              <table><thead><tr><th>권종</th><th>매수</th><th>금액</th></tr></thead><tbody>
+                ${typeRows}
+                <tr class="tot"><td>합계</td><td class="r">${st.totalQty}매</td><td class="r">${st.totalAmount.toLocaleString()}원</td></tr>
+              </tbody></table>
+            </div>
+            <div>
+              <div class="sec">■ 판매처별 집계</div>
+              <table><thead><tr><th>판매처</th><th>매수</th><th>금액</th></tr></thead><tbody>
+                ${srcRows}
+                <tr class="tot"><td>합계</td><td class="r">${st.totalQty}매</td><td class="r">${st.totalAmount.toLocaleString()}원</td></tr>
+              </tbody></table>
+              <div class="sec" style="margin-top:10px">■ 결제 상태별</div>
+              <table><thead><tr><th>결제 상태</th><th>매수</th><th>금액</th></tr></thead><tbody>
+                ${payRows}
+              </tbody></table>
+            </div>
+          </div>
+        </div>`;
+    });
+
+    const win = window.open('','_blank','width=860,height=700');
+    win.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8">
+      <title>${settings.showTitle||''} 판매 리포트</title>
+      <style>
+        *{box-sizing:border-box;margin:0;padding:0}
+        body{font-family:Arial,sans-serif;font-size:11px;color:#1e293b}
+        .page{padding:24px;page-break-after:always}
+        .page:last-child{page-break-after:avoid}
+        .headline{font-size:17px;font-weight:700;margin-bottom:2px}
+        .sub{font-size:11px;color:#6b7280;margin-bottom:14px}
+        .sec{font-size:12px;font-weight:700;border-bottom:1.5px solid #1e293b;padding-bottom:3px;margin:12px 0 7px}
+        .flow{display:flex;align-items:center;gap:4px;margin-bottom:4px}
+        .fc{flex:1;border:1px solid #e5e7eb;border-radius:5px;padding:7px 10px;min-width:0}
+        .fc.cancel{background:#fef2f2}
+        .fl{font-size:9px;color:#9ca3af;margin-bottom:2px}
+        .fv{font-size:14px;font-weight:700;color:#374151}
+        .fv.red{color:#e02424}.fv.blue{color:#1a56db}.fv.green{color:#0e9f6e}.fv.orange{color:#e3a008}.fv.purple{color:#7e3af2}
+        .arr{color:#d1d5db;font-size:14px;flex-shrink:0}
+        .sep{color:#e5e7eb;font-size:16px;padding:0 6px;flex-shrink:0}
+        .grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:4px}
+        table{width:100%;border-collapse:collapse;font-size:11px}
+        th{background:#f9fafb;font-weight:600;padding:5px 8px;text-align:left;border:1px solid #e5e7eb}
+        td{padding:5px 8px;border:1px solid #f3f4f6}
+        td.r{text-align:right}
+        tr.tot{background:#f9fafb;font-weight:700;border-top:1.5px solid #e5e7eb}
+        @media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact}.page{padding:16px}}
+      </style></head><body>
+      ${pages.join('')}
+      <script>window.onload=function(){window.print();}<\/script>
+      </body></html>`);
+    win.document.close();
+  };
+
+  return (
+    <div style={{position:'fixed',inset:0,background:'#0009',display:'flex',alignItems:'center',justifyContent:'center',zIndex:400}}>
+      <div style={{background:'#fff',borderRadius:12,padding:24,width:460,maxWidth:'95vw',boxShadow:'0 8px 32px #0004'}}>
+        <div style={{fontWeight:700,fontSize:16,marginBottom:3}}>🖨️ 인쇄 회차 선택</div>
+        <div style={{fontSize:12,color:'#6b7280',marginBottom:14}}>인쇄할 회차를 선택하세요. 회차당 1페이지로 출력됩니다.</div>
+        <div style={{display:'flex',gap:8,marginBottom:10}}>
+          <button onClick={selectAll} style={{fontSize:12,color:'#1d4ed8',background:'#eff6ff',border:'1px solid #bfdbfe',borderRadius:6,padding:'4px 10px',cursor:'pointer'}}>전체 선택</button>
+          <button onClick={clearAll}  style={{fontSize:12,color:'#6b7280',background:'#f3f4f6',border:'1px solid #e5e7eb', borderRadius:6,padding:'4px 10px',cursor:'pointer'}}>전체 해제</button>
+        </div>
+        <div style={{border:'1px solid #e5e7eb',borderRadius:8,overflow:'hidden',marginBottom:16}}>
+          {shows.map((s,idx)=>{
+            const st  = getStats(s.id);
+            const iss = st.totalQty + st.cancelledQty;
+            return (
+              <label key={s.id} style={{display:'flex',alignItems:'center',gap:10,padding:'10px 14px',cursor:'pointer',borderTop:idx>0?'1px solid #f3f4f6':'none',background:selected.has(s.id)?'#f0f9ff':'#fff'}}>
+                <input type="checkbox" checked={selected.has(s.id)} onChange={()=>toggle(s.id)} style={{width:16,height:16}}/>
+                <div style={{flex:1}}>
+                  <div style={{fontSize:13,fontWeight:600}}>{s.label}{s.time?' '+s.time:''}</div>
+                  <div style={{fontSize:11,color:'#6b7280'}}>총발권 {iss}명 · 유효 {st.totalQty}명 · 입장 {st.checkedInQty}명</div>
+                </div>
+              </label>
+            );
+          })}
+        </div>
+        <div style={{display:'flex',gap:8}}>
+          <button onClick={doPrint} disabled={selected.size===0}
+            style={{flex:1,background:selected.size>0?'#1e293b':'#e5e7eb',color:selected.size>0?'#fff':'#9ca3af',border:'none',borderRadius:8,padding:'10px',fontWeight:700,cursor:selected.size>0?'pointer':'default',fontSize:14}}>
+            🖨️ {selected.size}개 회차 인쇄
+          </button>
+          <button onClick={onClose} style={{flex:1,background:'#f3f4f6',color:'#1e293b',border:'none',borderRadius:8,padding:'10px',cursor:'pointer',fontSize:14}}>취소</button>
+        </div>
+      </div>
     </div>
   );
 }
 
 // ── 정산 계산기 ─────────────────────────────────────────────
-function SettlementCalculator({ onClose }) {
+function SettlementCalculator({ data, shows, settings, onClose }) {
   const [naverData,   setNaverData]   = useState(null);
   const [nolData,     setNolData]     = useState(null);
   const [tab,         setTab]         = useState('combined');
   const [naverLoading,setNaverLoading]= useState(false);
   const [nolLoading,  setNolLoading]  = useState(false);
+
+  // ── 직접 예약 집계 (Redis 데이터 기반) ──
+  const directData = (() => {
+    const directSources = (settings?.sources||[]).filter(s=>s.name!=='네이버'&&s.name!=='인터파크').map(s=>s.name);
+    const allRows = Object.values(data||{}).flat().filter(r=>!r.cancelled && directSources.includes(r.source));
+    const bySession = {};
+    shows.forEach(s => { bySession[s.id] = { label:s.label, time:s.time, rows:[] }; });
+    allRows.forEach(r => { if (bySession[r.show_id]) bySession[r.show_id].rows.push(r); });
+
+    const byPay = {};
+    allRows.forEach(r => {
+      const ps = r.payStatus || '기타';
+      if (!byPay[ps]) byPay[ps] = { qty:0, amount:0 };
+      byPay[ps].qty += r.qty; byPay[ps].amount += r.amount;
+    });
+
+    const collected = allRows
+      .filter(r => r.payStatus==='입금확인' || (r.payStatus==='현장결제예정' && r.checked_in))
+      .reduce((s,r)=>s+r.amount, 0);
+    const pending = allRows
+      .filter(r => r.payStatus==='미입금' || (r.payStatus==='현장결제예정' && !r.checked_in))
+      .reduce((s,r)=>s+r.amount, 0);
+    const totalAmount = allRows.reduce((s,r)=>s+r.amount, 0);
+    const totalQty    = allRows.reduce((s,r)=>s+r.qty, 0);
+
+    return { allRows, bySession, byPay, totalAmount, totalQty, collected, pending };
+  })();
 
   const parseNaver = (file) => {
     setNaverLoading(true);
@@ -1639,14 +1846,27 @@ function SettlementCalculator({ onClose }) {
 
   const exportExcel = () => {
     const wb = XLSX.utils.book_new();
-    const naverNet  = naverData?.netAmount || 0;
-    const nolPayout = nolData?.summary?.payout || 0;
-    const sr = [['판매처','판매금액(원)','수수료(원)','순정산금액(원)']];
-    if (naverData) sr.push(['네이버', naverData.totalAmount, Math.abs(naverData.totalFee), naverNet]);
-    if (nolData?.summary) sr.push(['NOL(인터파크)', nolData.summary.totalSales, nolData.summary.fee, nolPayout]);
-    sr.push(['합계',(naverData?.totalAmount||0)+(nolData?.summary?.totalSales||0),
-      (naverData?Math.abs(naverData.totalFee):0)+(nolData?.summary?.fee||0), naverNet+nolPayout]);
+    const naverNet   = naverData?.netAmount || 0;
+    const nolPayout  = nolData?.summary?.payout || 0;
+    const directNet  = directData.collected;
+    const sr = [['판매처','판매금액(원)','수수료(원)','순정산금액(원)','비고']];
+    if (naverData)     sr.push(['네이버', naverData.totalAmount, Math.abs(naverData.totalFee), naverNet, '']);
+    if (nolData?.summary) sr.push(['NOL(인터파크)', nolData.summary.totalSales, nolData.summary.fee, nolPayout, '취소료환급 포함']);
+    sr.push(['직접', directData.totalAmount, 0, directNet, `미수납 ${directData.pending.toLocaleString()}원 별도`]);
+    sr.push(['합계',
+      (naverData?.totalAmount||0)+(nolData?.summary?.totalSales||0)+directData.totalAmount,
+      (naverData?Math.abs(naverData.totalFee):0)+(nolData?.summary?.fee||0),
+      naverNet+nolPayout+directNet, '']);
     XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(sr), '정산 요약');
+    // 직접 예약 시트
+    const dr = [['회차','이름','연락처','결제상태','매수','금액(원)','입장']];
+    shows.forEach(s => {
+      (directData.bySession[s.id]?.rows||[]).forEach(r => {
+        dr.push([s.label+(s.time?' '+s.time:''), r.name, r.phone, r.payStatus, r.qty, r.amount, r.checked_in?'O':'']);
+      });
+    });
+    dr.push(['합계','','','',directData.totalQty,directData.totalAmount,'']);
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(dr), '직접 예약');
     if (naverData) {
       const nr = [['구분','구매자','정산기준일','정산금액(A)','Npay수수료(B)','매출연동(C)','무이자할부(D)','총수수료','순정산금액','비고']];
       naverData.items.forEach(i => nr.push([i.gubun,i.name,i.date,i.amount,i.feeNpay,i.feeMaeul,i.feeMuiija,i.totalFee,i.net,i.isNoShow?'노쇼':'']));
@@ -1668,16 +1888,19 @@ function SettlementCalculator({ onClose }) {
     XLSX.writeFile(wb, `정산계산기_${new Date().toISOString().slice(0,10)}.xlsx`);
   };
 
-  const naverNet  = naverData ? naverData.netAmount : 0;
-  const nolPayout = nolData?.summary ? nolData.summary.payout : 0;
-  const totalNet  = naverNet + nolPayout;
+  const naverNet   = naverData ? naverData.netAmount : 0;
+  const nolPayout  = nolData?.summary ? nolData.summary.payout : 0;
+  const directNet  = directData.collected;
+  const totalNet   = naverNet + nolPayout + directNet;
+  const totalSales = (naverData?.totalAmount||0)+(nolData?.summary?.totalSales||0)+directData.totalAmount;
+  const totalFeeAll= (naverData?Math.abs(naverData.totalFee):0)+(nolData?.summary?.fee||0);
   const C   = {background:'#fff',borderRadius:10,padding:'14px 16px',boxShadow:'0 1px 3px #0001'};
   const TH  = {padding:'8px 12px',fontWeight:600,fontSize:11,color:'#6b7280',background:'#f9fafb',whiteSpace:'nowrap',textAlign:'right'};
   const THL = {...TH,textAlign:'left'};
   const TD  = {padding:'8px 12px',fontSize:13,whiteSpace:'nowrap',textAlign:'right'};
   const TDL = {...TD,textAlign:'left'};
 
-  const tabs = [['combined','합산 요약']];
+  const tabs = [['combined','합산 요약'], ['direct','직접 예약']];
   if (naverData) tabs.push(['naver','네이버 상세']);
   if (nolData)   tabs.push(['nol','NOL 상세']);
 
@@ -1689,10 +1912,8 @@ function SettlementCalculator({ onClose }) {
           <div style={{fontSize:11,color:'#94a3b8',marginTop:2}}>플랫폼 정산서 업로드 후 수수료 자동 계산</div>
         </div>
         <div style={{display:'flex',gap:8}}>
-          {(naverData||nolData) && <>
-            <button onClick={exportExcel} style={{background:'#0e9f6e',color:'#fff',border:'none',borderRadius:8,padding:'7px 14px',fontSize:12,cursor:'pointer',fontWeight:600}}>📥 엑셀 저장</button>
-            <button onClick={()=>window.print()} style={{background:'#334155',color:'#cbd5e1',border:'none',borderRadius:8,padding:'7px 14px',fontSize:12,cursor:'pointer'}}>🖨️ 프린트</button>
-          </>}
+          <button onClick={exportExcel} style={{background:'#0e9f6e',color:'#fff',border:'none',borderRadius:8,padding:'7px 14px',fontSize:12,cursor:'pointer',fontWeight:600}}>📥 엑셀 저장</button>
+          <button onClick={()=>window.print()} style={{background:'#334155',color:'#cbd5e1',border:'none',borderRadius:8,padding:'7px 14px',fontSize:12,cursor:'pointer'}}>🖨️ 프린트</button>
           <button onClick={onClose} style={{background:'#334155',color:'#cbd5e1',border:'none',borderRadius:8,padding:'7px 14px',fontSize:12,cursor:'pointer'}}>✕ 닫기</button>
         </div>
       </div>
@@ -1715,43 +1936,37 @@ function SettlementCalculator({ onClose }) {
             {nolLoading?'읽는 중...':nolData?`✅ ${nolData.dailyItems.length}건`:'파일 선택'}
           </span>
         </label>
+        <div style={{display:'flex',alignItems:'center',gap:8,fontSize:13}}>
+          <span style={{fontWeight:700,color:'#6b7280'}}>📋 직접 예약</span>
+          <span style={{background:'#f0fdf4',color:'#16a34a',border:'1px solid #86efac',borderRadius:6,padding:'3px 10px',fontSize:11,fontWeight:600}}>
+            ✅ {directData.totalQty}매 / {directData.totalAmount.toLocaleString()}원 (자동)
+          </span>
+        </div>
       </div>
 
       {/* 탭 */}
-      {(naverData||nolData) && (
-        <div style={{background:'#fff',borderBottom:'1px solid #e5e7eb',display:'flex',flexShrink:0}}>
-          {tabs.map(([v,label])=>(
-            <button key={v} onClick={()=>setTab(v)} style={{
-              padding:'11px 20px',border:'none',cursor:'pointer',fontFamily:'Arial',
-              borderBottom:tab===v?'3px solid #1e293b':'3px solid transparent',
-              background:'transparent',color:tab===v?'#1e293b':'#6b7280',fontWeight:tab===v?700:400,fontSize:13,
-            }}>{label}</button>
-          ))}
-        </div>
-      )}
+      <div style={{background:'#fff',borderBottom:'1px solid #e5e7eb',display:'flex',flexShrink:0}}>
+        {tabs.map(([v,label])=>(
+          <button key={v} onClick={()=>setTab(v)} style={{
+            padding:'11px 20px',border:'none',cursor:'pointer',fontFamily:'Arial',
+            borderBottom:tab===v?'3px solid #1e293b':'3px solid transparent',
+            background:'transparent',color:tab===v?'#1e293b':'#6b7280',fontWeight:tab===v?700:400,fontSize:13,
+          }}>{label}</button>
+        ))}
+      </div>
 
       <div style={{flex:1,overflowY:'auto',padding:'18px 16px',maxWidth:1080,margin:'0 auto',width:'100%',boxSizing:'border-box'}}>
-        {!naverData && !nolData && (
-          <div style={{textAlign:'center',padding:'60px 20px',color:'#9ca3af'}}>
-            <div style={{fontSize:48,marginBottom:16}}>🧾</div>
-            <div style={{fontSize:16,fontWeight:600,color:'#374151',marginBottom:8}}>정산서 파일을 업로드하세요</div>
-            <div style={{fontSize:13}}>네이버 또는 NOL(인터파크) 정산 엑셀 파일을 위에서 선택하면 수수료가 자동으로 계산됩니다.</div>
-            <div style={{fontSize:11,marginTop:10,color:'#d1d5db'}}>네이버: paySettleDailyDetail.xlsx / NOL: NOLticketReport.xlsx</div>
-          </div>
-        )}
 
         {/* ── 합산 요약 ── */}
-        {tab==='combined' && (naverData||nolData) && (
+        {tab==='combined' && (
           <div>
-            <div style={{display:'grid',gridTemplateColumns:`repeat(${[naverData,nolData].filter(Boolean).length+1},1fr)`,gap:12,marginBottom:16}}>
+            <div style={{display:'grid',gridTemplateColumns:`repeat(${[naverData,nolData,true].filter(Boolean).length+1},1fr)`,gap:12,marginBottom:16}}>
               {naverData && (
                 <div style={{...C,borderTop:'3px solid #03c75a'}}>
                   <div style={{fontSize:11,color:'#9ca3af',marginBottom:6}}>📗 네이버 정산</div>
                   <div style={{fontSize:12,color:'#6b7280',marginBottom:2}}>판매금액 <b style={{color:'#1e293b'}}>{naverData.totalAmount.toLocaleString()}원</b></div>
                   <div style={{fontSize:12,color:'#6b7280',marginBottom:2}}>수수료 <b style={{color:'#e02424'}}>{Math.abs(naverData.totalFee).toLocaleString()}원</b></div>
-                  <div style={{fontSize:14,fontWeight:700,color:'#16a34a',marginTop:6,paddingTop:6,borderTop:'1px solid #f3f4f6'}}>
-                    순정산 {naverData.netAmount.toLocaleString()}원
-                  </div>
+                  <div style={{fontSize:14,fontWeight:700,color:'#16a34a',marginTop:6,paddingTop:6,borderTop:'1px solid #f3f4f6'}}>순정산 {naverData.netAmount.toLocaleString()}원</div>
                 </div>
               )}
               {nolData?.summary && (
@@ -1759,26 +1974,29 @@ function SettlementCalculator({ onClose }) {
                   <div style={{fontSize:11,color:'#9ca3af',marginBottom:6}}>🎫 NOL(인터파크) 정산</div>
                   <div style={{fontSize:12,color:'#6b7280',marginBottom:2}}>판매금액 <b style={{color:'#1e293b'}}>{nolData.summary.totalSales.toLocaleString()}원</b></div>
                   <div style={{fontSize:12,color:'#6b7280',marginBottom:2}}>수수료 <b style={{color:'#e02424'}}>{nolData.summary.fee.toLocaleString()}원</b></div>
-                  {nolData.summary.cancelFeeRefund>0 && <div style={{fontSize:12,color:'#6b7280',marginBottom:2}}>취소료환급 <b style={{color:'#0e9f6e'}}>+{nolData.summary.cancelFeeRefund.toLocaleString()}원</b></div>}
-                  <div style={{fontSize:14,fontWeight:700,color:'#c2410c',marginTop:6,paddingTop:6,borderTop:'1px solid #f3f4f6'}}>
-                    지급금액 {nolData.summary.payout.toLocaleString()}원
-                  </div>
+                  {nolData.summary.cancelFeeRefund>0&&<div style={{fontSize:12,color:'#6b7280',marginBottom:2}}>취소료환급 <b style={{color:'#0e9f6e'}}>+{nolData.summary.cancelFeeRefund.toLocaleString()}원</b></div>}
+                  <div style={{fontSize:14,fontWeight:700,color:'#c2410c',marginTop:6,paddingTop:6,borderTop:'1px solid #f3f4f6'}}>지급금액 {nolData.summary.payout.toLocaleString()}원</div>
                 </div>
               )}
+              <div style={{...C,borderTop:'3px solid #6b7280'}}>
+                <div style={{fontSize:11,color:'#9ca3af',marginBottom:6}}>📋 직접 예약</div>
+                <div style={{fontSize:12,color:'#6b7280',marginBottom:2}}>총 판매 <b style={{color:'#1e293b'}}>{directData.totalAmount.toLocaleString()}원</b></div>
+                <div style={{fontSize:12,color:'#6b7280',marginBottom:2}}>수납 완료 <b style={{color:'#0e9f6e'}}>{directData.collected.toLocaleString()}원</b></div>
+                {directData.pending>0&&<div style={{fontSize:12,color:'#6b7280',marginBottom:2}}>미수납 <b style={{color:'#e3a008'}}>{directData.pending.toLocaleString()}원</b></div>}
+                <div style={{fontSize:14,fontWeight:700,color:'#374151',marginTop:6,paddingTop:6,borderTop:'1px solid #f3f4f6'}}>수납 {directData.collected.toLocaleString()}원</div>
+              </div>
               <div style={{...C,borderTop:'3px solid #7e3af2',background:'#1e293b',color:'#fff'}}>
                 <div style={{fontSize:11,color:'#94a3b8',marginBottom:6}}>💰 합산 순정산</div>
-                <div style={{fontSize:12,color:'#94a3b8',marginBottom:2}}>판매 {((naverData?.totalAmount||0)+(nolData?.summary?.totalSales||0)).toLocaleString()}원</div>
-                <div style={{fontSize:12,color:'#94a3b8',marginBottom:2}}>수수료 {((naverData?Math.abs(naverData.totalFee):0)+(nolData?.summary?.fee||0)).toLocaleString()}원</div>
-                <div style={{fontSize:20,fontWeight:700,color:'#34d399',marginTop:6,paddingTop:6,borderTop:'1px solid #334155'}}>
-                  {totalNet.toLocaleString()}원
-                </div>
+                <div style={{fontSize:12,color:'#94a3b8',marginBottom:2}}>총판매 {totalSales.toLocaleString()}원</div>
+                <div style={{fontSize:12,color:'#94a3b8',marginBottom:2}}>수수료 {totalFeeAll.toLocaleString()}원</div>
+                <div style={{fontSize:20,fontWeight:700,color:'#34d399',marginTop:6,paddingTop:6,borderTop:'1px solid #334155'}}>{totalNet.toLocaleString()}원</div>
               </div>
             </div>
             <div style={C}>
               <div style={{fontWeight:700,fontSize:13,marginBottom:10}}>정산 요약표</div>
               <table style={{width:'100%',borderCollapse:'collapse',fontSize:13}}>
                 <thead><tr>
-                  <th style={THL}>판매처</th><th style={TH}>판매금액</th><th style={TH}>수수료</th><th style={TH}>수수료율</th><th style={TH}>순정산금액</th>
+                  <th style={THL}>판매처</th><th style={TH}>판매금액</th><th style={TH}>수수료</th><th style={TH}>수수료율</th><th style={TH}>순정산금액</th><th style={TH}>비고</th>
                 </tr></thead>
                 <tbody>
                   {naverData && (
@@ -1788,6 +2006,7 @@ function SettlementCalculator({ onClose }) {
                       <td style={{...TD,color:'#e02424'}}>-{Math.abs(naverData.totalFee).toLocaleString()}원</td>
                       <td style={{...TD,color:'#6b7280'}}>{naverData.totalAmount>0?(Math.abs(naverData.totalFee)/naverData.totalAmount*100).toFixed(2):0}%</td>
                       <td style={{...TD,fontWeight:700,color:'#16a34a'}}>{naverData.netAmount.toLocaleString()}원</td>
+                      <td style={TD}></td>
                     </tr>
                   )}
                   {nolData?.summary && (
@@ -1795,22 +2014,95 @@ function SettlementCalculator({ onClose }) {
                       <td style={{...TDL,fontWeight:700,color:'#ff6b00'}}>NOL(인터파크)</td>
                       <td style={TD}>{nolData.summary.totalSales.toLocaleString()}원</td>
                       <td style={{...TD,color:'#e02424'}}>-{nolData.summary.fee.toLocaleString()}원</td>
-                      <td style={{...TD,color:'#6b7280'}}>
-                        {nolData.summary.totalSales>0?(nolData.summary.fee/nolData.summary.totalSales*100).toFixed(2):0}%
-                        {nolData.summary.cancelFeeRefund>0&&<span style={{fontSize:10,color:'#0e9f6e',marginLeft:4}}>(취소료환급 포함)</span>}
-                      </td>
+                      <td style={{...TD,color:'#6b7280'}}>{nolData.summary.totalSales>0?(nolData.summary.fee/nolData.summary.totalSales*100).toFixed(2):0}%{nolData.summary.cancelFeeRefund>0&&<span style={{fontSize:10,color:'#0e9f6e',marginLeft:4}}>(취소료환급)</span>}</td>
                       <td style={{...TD,fontWeight:700,color:'#c2410c'}}>{nolData.summary.payout.toLocaleString()}원</td>
+                      <td style={TD}></td>
                     </tr>
                   )}
+                  <tr style={{borderTop:'1px solid #f3f4f6'}}>
+                    <td style={{...TDL,fontWeight:700,color:'#6b7280'}}>직접</td>
+                    <td style={TD}>{directData.totalAmount.toLocaleString()}원</td>
+                    <td style={{...TD,color:'#9ca3af'}}>-</td>
+                    <td style={{...TD,color:'#9ca3af'}}>-</td>
+                    <td style={{...TD,fontWeight:700}}>{directData.collected.toLocaleString()}원</td>
+                    <td style={{...TD,fontSize:11,color:'#e3a008'}}>{directData.pending>0?`미수납 ${directData.pending.toLocaleString()}원`:''}</td>
+                  </tr>
                   <tr style={{borderTop:'2px solid #e5e7eb',fontWeight:700,background:'#f9fafb'}}>
                     <td style={TDL}>합계</td>
-                    <td style={TD}>{((naverData?.totalAmount||0)+(nolData?.summary?.totalSales||0)).toLocaleString()}원</td>
-                    <td style={{...TD,color:'#e02424'}}>-{((naverData?Math.abs(naverData.totalFee):0)+(nolData?.summary?.fee||0)).toLocaleString()}원</td>
+                    <td style={TD}>{totalSales.toLocaleString()}원</td>
+                    <td style={{...TD,color:'#e02424'}}>-{totalFeeAll.toLocaleString()}원</td>
                     <td style={TD}></td>
                     <td style={{...TD,color:'#16a34a'}}>{totalNet.toLocaleString()}원</td>
+                    <td style={TD}></td>
                   </tr>
                 </tbody>
               </table>
+            </div>
+          </div>
+        )}
+
+        {/* ── 직접 예약 상세 ── */}
+        {tab==='direct' && (
+          <div>
+            <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:10,marginBottom:14}}>
+              {[
+                {label:'총 예약',   value:directData.totalQty+'매',                     color:'#374151'},
+                {label:'수납 완료', value:directData.collected.toLocaleString()+'원',    color:'#0e9f6e'},
+                {label:'미수납',    value:directData.pending.toLocaleString()+'원',      color:'#e3a008'},
+                {label:'총 판매액', value:directData.totalAmount.toLocaleString()+'원',  color:'#7e3af2'},
+              ].map(c=>(
+                <div key={c.label} style={{...C}}>
+                  <div style={{fontSize:11,color:'#9ca3af',marginBottom:3}}>{c.label}</div>
+                  <div style={{fontSize:17,fontWeight:700,color:c.color}}>{c.value}</div>
+                </div>
+              ))}
+            </div>
+            <div style={{...C,marginBottom:14}}>
+              <div style={{fontWeight:700,fontSize:13,marginBottom:10}}>결제 상태별</div>
+              <div style={{display:'flex',gap:10,flexWrap:'wrap'}}>
+                {Object.entries(directData.byPay).map(([ps,v])=>(
+                  <div key={ps} style={{background:'#f9fafb',border:'1px solid #e5e7eb',borderRadius:8,padding:'10px 16px',minWidth:140}}>
+                    <div style={{marginBottom:4}}><PayBadge payStatus={ps}/></div>
+                    <div style={{fontSize:16,fontWeight:700,color:'#1e293b'}}>{v.qty}매</div>
+                    <div style={{fontSize:12,color:'#6b7280'}}>{v.amount.toLocaleString()}원</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div style={{...C,overflowX:'auto'}}>
+              <div style={{fontWeight:700,fontSize:13,marginBottom:10}}>회차별 직접 예약 내역</div>
+              {shows.map(s=>{
+                const rows = directData.bySession[s.id]?.rows||[];
+                if (!rows.length) return null;
+                return (
+                  <div key={s.id} style={{marginBottom:16}}>
+                    <div style={{fontSize:12,fontWeight:700,color:'#374151',marginBottom:6,paddingBottom:4,borderBottom:'1px solid #e5e7eb'}}>{s.label} {s.time}</div>
+                    <table style={{width:'100%',borderCollapse:'collapse',fontSize:12}}>
+                      <thead><tr>
+                        <th style={THL}>예매자</th><th style={THL}>연락처</th><th style={TH}>결제상태</th><th style={TH}>매수</th><th style={TH}>금액</th><th style={TH}>입장</th>
+                      </tr></thead>
+                      <tbody>
+                        {rows.map((r,idx)=>(
+                          <tr key={idx} style={{borderTop:'1px solid #f3f4f6',background:r.payStatus==='미입금'?'#fff7ed':r.checked_in?'#f0fdf4':''}}>
+                            <td style={TDL}>{r.name}</td>
+                            <td style={{...TDL,color:'#6b7280'}}>{r.phone}</td>
+                            <td style={TD}><PayBadge payStatus={r.payStatus}/></td>
+                            <td style={TD}>{r.qty}매</td>
+                            <td style={{...TD,fontWeight:600}}>{r.amount.toLocaleString()}원</td>
+                            <td style={{...TD,color:r.checked_in?'#0e9f6e':'#9ca3af'}}>{r.checked_in?'✅':'-'}</td>
+                          </tr>
+                        ))}
+                        <tr style={{borderTop:'1.5px solid #e5e7eb',fontWeight:700,background:'#f9fafb'}}>
+                          <td colSpan={3} style={TDL}>소계</td>
+                          <td style={TD}>{rows.reduce((s,r)=>s+r.qty,0)}매</td>
+                          <td style={TD}>{rows.reduce((s,r)=>s+r.amount,0).toLocaleString()}원</td>
+                          <td style={TD}></td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                );
+              })}
             </div>
           </div>
         )}
