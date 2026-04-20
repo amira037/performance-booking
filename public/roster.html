@@ -1286,9 +1286,10 @@ function SalesReport({ shows, data, settings, onClose }) {
 
   const exportExcel = () => {
     const wb = XLSX.utils.book_new();
-    const r1 = [['회차','날짜','시간','예약(명)','입장(명)','미입장(명)','취소(명)','매출(원)']];
-    allStats.forEach(({show:s,stats:st}) => r1.push([s.label,s.date,s.time,st.totalQty,st.checkedInQty,st.noShowQty,st.cancelledQty,st.totalAmount]));
-    r1.push(['합계','','',overall.totalQty,overall.checkedInQty,overall.noShowQty,overall.cancelledQty,overall.totalAmount]);
+    const r1 = [['회차','날짜','시간','총발권(명)','취소(명)','유효예약(명)','입장(명)','미입장(명)','매출(원)']];
+    allStats.forEach(({show:s,stats:st}) => r1.push([s.label,s.date,s.time,st.totalQty+st.cancelledQty,st.cancelledQty,st.totalQty,st.checkedInQty,st.noShowQty,st.totalAmount]));
+    const oi = overall.totalQty+overall.cancelledQty;
+    r1.push(['합계','','',oi,overall.cancelledQty,overall.totalQty,overall.checkedInQty,overall.noShowQty,overall.totalAmount]);
     XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(r1), '회차별 요약');
     const r2 = [['권종','매수','금액(원)']];
     Object.entries(overallByType).sort((a,b)=>b[1].amount-a[1].amount).forEach(([t,v]) => r2.push([t,v.qty,v.amount]));
@@ -1341,21 +1342,33 @@ function SalesReport({ shows, data, settings, onClose }) {
                 }}>{s.label} {s.time}</button>
               ))}
             </div>
-            {selStats && (
+            {selStats && (() => {
+              const issued = selStats.totalQty + selStats.cancelledQty;
+              const flowCards = [
+                {label:'총 발권',  value:issued+'명',                              color:'#374151'},
+                {label:'취소 (-)', value:selStats.cancelledQty+'명',              color:'#e02424', bg:'#fef2f2'},
+                {label:'유효 예약',value:selStats.totalQty+'명',                  color:'#1a56db'},
+                {label:'입장 완료',value:selStats.checkedInQty+'명',              color:'#0e9f6e'},
+                {label:'미입장',   value:selStats.noShowQty+'명',                 color:'#e3a008'},
+              ];
+              return (
               <div>
-                <div style={{display:'grid',gridTemplateColumns:'repeat(5,1fr)',gap:10,marginBottom:14}}>
-                  {[
-                    {label:'예약 인원', value:selStats.totalQty+'명',              color:'#1a56db'},
-                    {label:'입장 완료', value:selStats.checkedInQty+'명',           color:'#0e9f6e'},
-                    {label:'미입장',    value:selStats.noShowQty+'명',             color:'#e3a008'},
-                    {label:'취소',      value:selStats.cancelledQty+'명',          color:'#e02424'},
-                    {label:'결제 총액', value:selStats.totalAmount.toLocaleString()+'원', color:'#7e3af2'},
-                  ].map(c=>(
-                    <div key={c.label} style={{...C}}>
-                      <div style={{fontSize:11,color:'#9ca3af',marginBottom:3}}>{c.label}</div>
-                      <div style={{fontSize:18,fontWeight:700,color:c.color}}>{c.value}</div>
-                    </div>
+                <div style={{display:'flex',alignItems:'stretch',gap:0,marginBottom:10}}>
+                  {flowCards.map((c,i)=>(
+                    <React.Fragment key={c.label}>
+                      {i>0 && <div style={{display:'flex',alignItems:'center',padding:'0 4px',color:'#d1d5db',fontSize:16,background:'transparent',flexShrink:0}}>→</div>}
+                      <div style={{...C,flex:1,minWidth:0,background:c.bg||'#fff',borderRadius:10,padding:'12px 12px'}}>
+                        <div style={{fontSize:10,color:'#9ca3af',marginBottom:3}}>{c.label}</div>
+                        <div style={{fontSize:17,fontWeight:700,color:c.color}}>{c.value}</div>
+                        {i===0 && issued>0 && <div style={{fontSize:10,color:'#d1d5db',marginTop:2}}>= 유효+취소</div>}
+                      </div>
+                    </React.Fragment>
                   ))}
+                  <div style={{display:'flex',alignItems:'center',padding:'0 8px',color:'#e5e7eb',flexShrink:0,fontSize:18}}>|</div>
+                  <div style={{...C,minWidth:130,padding:'12px 12px'}}>
+                    <div style={{fontSize:10,color:'#9ca3af',marginBottom:3}}>결제 총액</div>
+                    <div style={{fontSize:17,fontWeight:700,color:'#7e3af2'}}>{selStats.totalAmount.toLocaleString()}원</div>
+                  </div>
                 </div>
                 <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:14,marginBottom:14}}>
                   <div style={C}>
@@ -1408,51 +1421,66 @@ function SalesReport({ shows, data, settings, onClose }) {
                   </div>
                 </div>
               </div>
-            )}
+            );})()}
           </div>
         )}
 
-        {tab==='total' && (
+        {tab==='total' && (() => {
+          const totalIssued = overall.totalQty + overall.cancelledQty;
+          const flowCards = [
+            {label:'총 발권',  value:totalIssued+'명',              color:'#374151'},
+            {label:'취소 (-)', value:overall.cancelledQty+'명',     color:'#e02424', bg:'#fef2f2'},
+            {label:'유효 예약',value:overall.totalQty+'명',         color:'#1a56db'},
+            {label:'총 입장',  value:overall.checkedInQty+'명',     color:'#0e9f6e'},
+            {label:'총 미입장',value:overall.noShowQty+'명',        color:'#e3a008'},
+          ];
+          return (
           <div>
-            <div style={{display:'grid',gridTemplateColumns:'repeat(5,1fr)',gap:10,marginBottom:14}}>
-              {[
-                {label:'총 예약',  value:overall.totalQty+'명',              color:'#1a56db'},
-                {label:'총 입장',  value:overall.checkedInQty+'명',           color:'#0e9f6e'},
-                {label:'총 미입장',value:overall.noShowQty+'명',             color:'#e3a008'},
-                {label:'총 취소',  value:overall.cancelledQty+'명',          color:'#e02424'},
-                {label:'총 매출',  value:overall.totalAmount.toLocaleString()+'원', color:'#7e3af2'},
-              ].map(c=>(
-                <div key={c.label} style={{...C}}>
-                  <div style={{fontSize:11,color:'#9ca3af',marginBottom:3}}>{c.label}</div>
-                  <div style={{fontSize:18,fontWeight:700,color:c.color}}>{c.value}</div>
-                </div>
+            <div style={{display:'flex',alignItems:'stretch',gap:0,marginBottom:10}}>
+              {flowCards.map((c,i)=>(
+                <React.Fragment key={c.label}>
+                  {i>0 && <div style={{display:'flex',alignItems:'center',padding:'0 4px',color:'#d1d5db',fontSize:16,flexShrink:0}}>→</div>}
+                  <div style={{...C,flex:1,minWidth:0,background:c.bg||'#fff',borderRadius:10,padding:'12px 12px'}}>
+                    <div style={{fontSize:10,color:'#9ca3af',marginBottom:3}}>{c.label}</div>
+                    <div style={{fontSize:17,fontWeight:700,color:c.color}}>{c.value}</div>
+                  </div>
+                </React.Fragment>
               ))}
+              <div style={{display:'flex',alignItems:'center',padding:'0 8px',color:'#e5e7eb',flexShrink:0,fontSize:18}}>|</div>
+              <div style={{...C,minWidth:130,padding:'12px 12px'}}>
+                <div style={{fontSize:10,color:'#9ca3af',marginBottom:3}}>총 매출</div>
+                <div style={{fontSize:17,fontWeight:700,color:'#7e3af2'}}>{overall.totalAmount.toLocaleString()}원</div>
+              </div>
             </div>
             <div style={{...C,marginBottom:14,overflowX:'auto'}}>
               <div style={{fontWeight:700,fontSize:13,marginBottom:10}}>회차별 비교</div>
-              <table style={{width:'100%',borderCollapse:'collapse',fontSize:13,minWidth:560}}>
+              <table style={{width:'100%',borderCollapse:'collapse',fontSize:13,minWidth:640}}>
                 <thead><tr>
-                  {['회차','예약','입장','미입장','취소','매출'].map(h=>(
+                  {['회차','총발권','취소','유효예약','입장','미입장','매출'].map(h=>(
                     <th key={h} style={h==='회차'?TH:THR}>{h}</th>
                   ))}
                 </tr></thead>
                 <tbody>
-                  {allStats.map(({show:s,stats:st})=>(
+                  {allStats.map(({show:s,stats:st})=>{
+                    const iss = st.totalQty + st.cancelledQty;
+                    return (
                     <tr key={s.id} style={{borderTop:'1px solid #f3f4f6'}}>
                       <td style={TD}>{s.label} {s.time}</td>
+                      <td style={{...TDR,fontWeight:600}}>{iss}명</td>
+                      <td style={{...TDR,color:'#e02424'}}>{st.cancelledQty}명</td>
                       <td style={{...TDR,fontWeight:600}}>{st.totalQty}명</td>
                       <td style={{...TDR,color:'#0e9f6e',fontWeight:600}}>{st.checkedInQty}명</td>
                       <td style={{...TDR,color:'#e3a008'}}>{st.noShowQty}명</td>
-                      <td style={{...TDR,color:'#e02424'}}>{st.cancelledQty}명</td>
                       <td style={{...TDR,fontWeight:600}}>{st.totalAmount.toLocaleString()}원</td>
                     </tr>
-                  ))}
+                  );})}
                   <tr style={{borderTop:'2px solid #e5e7eb',fontWeight:700,background:'#f9fafb'}}>
                     <td style={TD}>합계</td>
+                    <td style={TDR}>{totalIssued}명</td>
+                    <td style={{...TDR,color:'#e02424'}}>{overall.cancelledQty}명</td>
                     <td style={TDR}>{overall.totalQty}명</td>
                     <td style={{...TDR,color:'#0e9f6e'}}>{overall.checkedInQty}명</td>
                     <td style={{...TDR,color:'#e3a008'}}>{overall.noShowQty}명</td>
-                    <td style={{...TDR,color:'#e02424'}}>{overall.cancelledQty}명</td>
                     <td style={TDR}>{overall.totalAmount.toLocaleString()}원</td>
                   </tr>
                 </tbody>
@@ -1497,7 +1525,7 @@ function SalesReport({ shows, data, settings, onClose }) {
               </div>
             </div>
           </div>
-        )}
+        );})()}
       </div>
     </div>
   );
