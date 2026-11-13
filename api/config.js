@@ -1,18 +1,25 @@
 // api/config.js — 예매 페이지용 공개 설정 조회
-// GET /api/config
+// GET /api/config?p={공연ID}   (p 없으면 기본 공연)
 
-import { getSessions, getPresets, getPerformance, getReservations } from '../lib/db.js';
+import { perfDb, resolvePid, listPerformances } from '../lib/db.js';
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   if (req.method !== 'GET') return res.status(405).end();
 
-  const [sessions, presets, performance, reservations] = await Promise.all([
-    getSessions(),
-    getPresets(),
-    getPerformance(),
-    getReservations(),
+  const pid = await resolvePid(req);
+  if (!pid) return res.status(404).json({ error: '공연을 찾을 수 없습니다.' });
+  const db = perfDb(pid);
+
+  const [sessions, presets, performance, reservations, list] = await Promise.all([
+    db.getSessions(),
+    db.getPresets(),
+    db.getPerformance(),
+    db.getReservations(),
+    listPerformances(),
   ]);
+  // 보관된 공연은 예매 마감으로 표시
+  if (list.find(p => p.id === pid)?.archived) performance.open = 'closed';
 
   // 공연 3시간 전 자동 마감 체크
   const CUTOFF_HOURS = 3;
@@ -73,6 +80,7 @@ export default async function handler(req, res) {
   }
 
   return res.status(200).json({
+    pid,
     performance,
     sessions: sessionsWithRemain,
     presets:  presets.filter(p => p.active),

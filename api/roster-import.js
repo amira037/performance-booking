@@ -2,14 +2,14 @@
 // POST /api/roster-import  { rows: [...] }
 // rows 필드: { id, show_id, name, phone, type, qty, amount, source, cancelled }
 
-import { getReservations, saveReservations, getSessions } from '../lib/db.js';
+import { perfDb, resolvePid } from '../lib/db.js';
 
 const ADMIN_KEY = process.env.ADMIN_KEY || 'bluebline2025';
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, x-admin-key');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, x-admin-key, x-perf-id');
   if (req.method === 'OPTIONS') return res.status(200).end();
 
   const adminKey = req.headers['x-admin-key'];
@@ -23,15 +23,20 @@ export default async function handler(req, res) {
   if (!Array.isArray(rows) || rows.length === 0)
     return res.status(400).json({ error: 'rows 배열이 필요합니다' });
 
+  const pid = await resolvePid(req);
+  if (!pid) return res.status(404).json({ error: '공연을 찾을 수 없습니다.' });
+  const db = perfDb(pid);
+
   const [reservations, sessions] = await Promise.all([
-    getReservations(),
-    getSessions(),
+    db.getReservations(),
+    db.getSessions(),
   ]);
 
   // session id → label 역매핑
   const sessionLabelMap = Object.fromEntries(sessions.map(s => [s.id, s.label || '']));
 
   const list = [...reservations];
+  const changedIdx = new Set();   // 변경/추가된 항목만 저장
   let added = 0, updated = 0, cancelled = 0, skipped = 0;
 
   for (const row of rows) {
@@ -70,6 +75,7 @@ export default async function handler(req, res) {
 
       if (changed) {
         list[existingIdx] = updates;
+        changedIdx.add(existingIdx);
         if (!isCancelled) updated++;
       } else {
         skipped++;
@@ -82,6 +88,7 @@ export default async function handler(req, res) {
       const now = new Date().toISOString();
       const unitPrice = (quantity > 0) ? Math.round((total || 0) / quantity) : 0;
 
+      changedIdx.add(list.length);
       list.push({
         resNum,
         name,
@@ -106,6 +113,6 @@ export default async function handler(req, res) {
     }
   }
 
-  await saveReservations(list);
+  await db.upsertReservations([...changedIdx].map(i => list[i]));
   return res.status(200).json({ success: true, added, updated, cancelled, skipped });
 }

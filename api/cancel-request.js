@@ -1,7 +1,7 @@
 // api/cancel-request.js — 관객 취소 신청 API
 // POST /api/cancel-request
 
-import { findReservation, updateReservation, addLog, getPerformance } from '../lib/db.js';
+import { perfDb, pidForResNum } from '../lib/db.js';
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -16,8 +16,10 @@ export default async function handler(req, res) {
   if (!resNum || !phone)
     return res.status(400).json({ success: false, message: '예약번호와 연락처를 입력해 주세요.' });
 
-  // 예약 조회
-  const reservation = await findReservation(resNum.toUpperCase().trim());
+  // 예약 조회 (예약번호로 공연 판별)
+  const pid = await pidForResNum(resNum.toUpperCase().trim());
+  const db  = perfDb(pid);
+  const reservation = await db.findReservation(resNum.toUpperCase().trim());
   if (!reservation)
     return res.status(404).json({ success: false, message: '예약 정보를 찾을 수 없습니다.\n예약번호를 다시 확인해 주세요.' });
 
@@ -39,6 +41,7 @@ export default async function handler(req, res) {
   if (req.body.lookup) {
     return res.status(200).json({
       success:   true,
+      pid,
       resNum:    reservation.resNum,
       name:      reservation.name,
       session:   reservation.session,
@@ -71,8 +74,8 @@ export default async function handler(req, res) {
       changeData.refundHolder  = refundHolder;
     }
 
-    await updateReservation(resNum, { changeRequest: changeData });
-    await addLog({
+    await db.updateReservation(reservation.resNum, { changeRequest: changeData });
+    await db.addLog({
       resNum,
       name:   reservation.name,
       phone:  reservation.phone,
@@ -82,7 +85,7 @@ export default async function handler(req, res) {
     });
 
     // 관리자 알림
-    const perf3 = await getPerformance();
+    const perf3 = await db.getPerformance();
     if (perf3.tel || perf3.adminPhone) {
       try {
         const { sendCancelRequestAlimtalk } = await import('../lib/alimtalk.js');
@@ -108,10 +111,10 @@ export default async function handler(req, res) {
       return res.status(400).json({ success: false, message: '변경할 회차 정보가 없습니다.' });
 
     // 예약 상태에 변경신청 기록
-    await updateReservation(resNum, {
+    await db.updateReservation(reservation.resNum, {
       changeRequest: { type: 'change', newSessionId, newSessionLabel, requestedAt: new Date().toISOString() }
     });
-    await addLog({
+    await db.addLog({
       resNum,
       name:   reservation.name,
       phone:  reservation.phone,
@@ -121,7 +124,7 @@ export default async function handler(req, res) {
     });
 
     // 관리자 알림
-    const perf2 = await getPerformance();
+    const perf2 = await db.getPerformance();
     if (perf2.adminPhone || perf2.tel) {
       try {
         const { sendCancelRequestAlimtalk } = await import('../lib/alimtalk.js');
@@ -141,7 +144,7 @@ export default async function handler(req, res) {
   }
 
   // 예약 상태에 취소신청 기록
-  await updateReservation(resNum, {
+  await db.updateReservation(reservation.resNum, {
     changeRequest: {
       type:          'cancel',
       reason:        reason        || '',
@@ -153,7 +156,7 @@ export default async function handler(req, res) {
   });
 
   // 취소 신청 로그 저장
-  await addLog({
+  await db.addLog({
     resNum,
     name:   reservation.name,
     phone:  reservation.phone,
@@ -163,7 +166,7 @@ export default async function handler(req, res) {
   });
 
   // 관리자에게 카카오 알림톡 발송 (선택 — 관리자 번호가 있을 때)
-  const perf = await getPerformance();
+  const perf = await db.getPerformance();
   const notifyPhone = perf.adminPhone || perf.tel;
   if (notifyPhone) {
     try {

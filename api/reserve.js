@@ -1,10 +1,7 @@
 // api/reserve.js — 예약 처리 API
 // POST /api/reserve
 
-import {
-  getSessions, addReservation, incrementBooked,
-  getLocks, removeLock, getPerformance, addLog,
-} from '../lib/db.js';
+import { perfDb, resolvePid, allocateResNum } from '../lib/db.js';
 import { sendReservationAlimtalk } from '../lib/alimtalk.js';
 
 export default async function handler(req, res) {
@@ -21,8 +18,12 @@ export default async function handler(req, res) {
   if (!lockId || !name || !phone || !sessionId)
     return res.status(400).json({ success: false, message: '필수 값 누락' });
 
+  const pid = await resolvePid(req);
+  if (!pid) return res.status(404).json({ success: false, message: '공연을 찾을 수 없습니다.' });
+  const db = perfDb(pid);
+
   // 선점 유효성 확인
-  const locks = await getLocks();
+  const locks = await db.getLocks();
   const lock  = locks.find(l => l.lockId === lockId);
 
   if (!lock)
@@ -34,11 +35,10 @@ export default async function handler(req, res) {
   if (lock.sessionId !== sessionId || lock.quantity !== quantity)
     return res.status(400).json({ success: false, message: '선점 정보가 일치하지 않습니다.' });
 
-  // 예약번호 생성
-  const now      = new Date();
-  const mmdd     = String(now.getMonth() + 1).padStart(2,'0') + String(now.getDate()).padStart(2,'0');
-  const seq      = String(Date.now()).slice(-4);
-  const resNum   = `DQ-${mmdd}-${seq}`;
+  // 예약번호 생성 (공연별 접두어, 전체 공연 기준 중복 방지)
+  const now    = new Date();
+  const perf   = await db.getPerformance();
+  const resNum = await allocateResNum(pid, perf.resPrefix);
 
   // 예약 저장
   const reservation = {
@@ -53,16 +53,15 @@ export default async function handler(req, res) {
     processedAt: null,
   };
 
-  await addReservation(reservation);
+  await db.addReservation(reservation);
 
   // 선점 → 예약 완료로 전환 (선점 해제 + 좌석 확정)
-  await removeLock(lockId);
-  await incrementBooked(sessionId, quantity);
+  await db.removeLock(lockId);
+  await db.incrementBooked(sessionId, quantity);
 
   // 예약 저장 완료 → 알림톡은 실패해도 예약은 성공 처리
   let sent = false;
   try {
-    const perf = await getPerformance();
     const cancelUrl = (process.env.TICKET_BASE_URL || '').replace('/ticket.html', '') + '/cancel.html';
     sent = await sendReservationAlimtalk({
       customText:   perf.tpl01       || '',
@@ -83,8 +82,8 @@ export default async function handler(req, res) {
   }
 
   try {
-    await addLog({ resNum, name, phone, type: '예약확인', result: sent ? '성공' : '실패' });
+    await db.addLog({ resNum, name, phone, type: '예약확인', result: sent ? '성공' : '실패' });
   } catch(logErr) {}
 
-  return res.status(200).json({ success: true, resNum });
+  return res.status(200).json({ success: true, resNum, pid });
 }

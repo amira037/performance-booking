@@ -1,7 +1,7 @@
 // api/ticket-info.js — 예약번호로 티켓 정보 조회
 // GET /api/ticket-info?res=DQ-0323-0461
 
-import { findReservation, getPerformance } from '../lib/db.js';
+import { perfDb, pidForResNum } from '../lib/db.js';
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -11,9 +11,10 @@ export default async function handler(req, res) {
   if (!resNum)
     return res.status(400).json({ success: false, message: '예약번호가 없습니다.' });
 
+  const db = perfDb(await pidForResNum(resNum));
   const [reservation, perf] = await Promise.all([
-    findReservation(resNum),
-    getPerformance(),
+    db.findReservation(resNum),
+    db.getPerformance(),
   ]);
 
   if (!reservation)

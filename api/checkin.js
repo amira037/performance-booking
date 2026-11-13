@@ -1,7 +1,7 @@
 // api/checkin.js — 검표 코드로 입장 처리
 // POST /api/checkin { resNum, code }
 
-import { findReservation, updateReservation, getPerformance } from '../lib/db.js';
+import { perfDb, pidForResNum } from '../lib/db.js';
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -15,8 +15,10 @@ export default async function handler(req, res) {
   if (!resNum || !code)
     return res.status(400).json({ success: false, message: '예약번호와 코드를 입력해 주세요.' });
 
+  const db = perfDb(await pidForResNum(resNum));
+
   // 공연 설정에서 검표 코드 확인
-  const perf = await getPerformance();
+  const perf = await db.getPerformance();
   const checkinCode = perf.checkinCode || '';
 
   if (!checkinCode)
@@ -26,7 +28,7 @@ export default async function handler(req, res) {
     return res.status(400).json({ success: false, message: '코드가 올바르지 않습니다.' });
 
   // 예약 확인
-  const reservation = await findReservation(resNum);
+  const reservation = await db.findReservation(resNum);
   if (!reservation)
     return res.status(404).json({ success: false, message: '예약을 찾을 수 없습니다.' });
 
@@ -37,7 +39,7 @@ export default async function handler(req, res) {
     return res.status(400).json({ success: false, message: '이미 입장 처리된 티켓입니다.' });
 
   // 입장 처리
-  await updateReservation(resNum, {
+  await db.updateReservation(resNum, {
     checkedIn:   true,
     checkedInAt: new Date().toISOString(),
   });

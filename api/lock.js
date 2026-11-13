@@ -2,7 +2,7 @@
 // POST /api/lock  → 선점 생성
 // DELETE /api/lock → 선점 해제
 
-import { getSessions, addLock, removeLock, getRemainSeats } from '../lib/db.js';
+import { perfDb, resolvePid } from '../lib/db.js';
 
 const LOCK_DURATION_MS = 10 * 60 * 1000; // 10분
 
@@ -12,13 +12,17 @@ export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
   if (req.method === 'OPTIONS') return res.status(200).end();
 
+  const pid = await resolvePid(req);
+  if (!pid) return res.status(404).json({ success: false, message: '공연을 찾을 수 없습니다.' });
+  const db = perfDb(pid);
+
   // 선점 생성
   if (req.method === 'POST') {
     const { sessionId, quantity } = req.body;
     if (!sessionId || !quantity)
       return res.status(400).json({ success: false, message: '필수 값 누락' });
 
-    const sessions = await getSessions();
+    const sessions = await db.getSessions();
     const session  = sessions.find(s => s.id === sessionId);
     if (!session)
       return res.status(404).json({ success: false, message: '회차를 찾을 수 없습니다.' });
@@ -36,7 +40,7 @@ export default async function handler(req, res) {
       }
     }
 
-    const remain = await getRemainSeats(sessionId, session.seats);
+    const remain = await db.getRemainSeats(sessionId, session.seats);
     if (remain < quantity)
       return res.status(400).json({
         success: false,
@@ -56,7 +60,7 @@ export default async function handler(req, res) {
       expiresAt: Date.now() + LOCK_DURATION_MS,
     };
 
-    await addLock(lock);
+    await db.addLock(lock);
 
     return res.status(200).json({
       success:   true,
@@ -71,7 +75,7 @@ export default async function handler(req, res) {
     const { lockId } = req.body;
     if (!lockId)
       return res.status(400).json({ success: false, message: 'lockId 누락' });
-    await removeLock(lockId);
+    await db.removeLock(lockId);
     return res.status(200).json({ success: true });
   }
 

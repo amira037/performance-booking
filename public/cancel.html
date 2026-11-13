@@ -235,9 +235,11 @@ let selectedNewSessionId = null;
 let currentAction = 'change';
 let newQty = 1;
 
-async function init() {
+// 공연 설정 로드 (pid 없으면 ?p= 파라미터 → 서버 기본 공연)
+async function init(pid) {
+  pid = pid || new URLSearchParams(location.search).get('p') || '';
   try {
-    const res = await fetch('/api/config');
+    const res = await fetch('/api/config' + (pid ? '?p=' + encodeURIComponent(pid) : ''));
     CFG = await res.json();
     const p = CFG.performance || {};
     if (p.agency) document.getElementById('header-agency').textContent = p.agency;
@@ -324,6 +326,9 @@ async function lookup() {
       document.getElementById('err-resnum').classList.add('show');
       return;
     }
+
+    // 예약이 속한 공연 설정으로 다시 로드 (회차 목록·정책·연락처)
+    if (data.pid && data.pid !== CFG.pid) await init(data.pid);
 
     lookupData = data;
     showActionStep(data);

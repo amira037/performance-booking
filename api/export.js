@@ -1,7 +1,7 @@
 // api/export.js — 예약 데이터 CSV/Excel 내보내기
 // GET /api/export?format=csv
 
-import { getReservations } from '../lib/db.js';
+import { perfDb, resolvePid } from '../lib/db.js';
 
 export default async function handler(req, res) {
   // 관리자 인증
@@ -11,7 +11,10 @@ export default async function handler(req, res) {
 
   if (req.method !== 'GET') return res.status(405).end();
 
-  const reservations = await getReservations();
+  const pid = await resolvePid(req);
+  if (!pid) return res.status(404).json({ error: '공연을 찾을 수 없습니다.' });
+  const db = perfDb(pid);
+  const [reservations, perf] = await Promise.all([db.getReservations(), db.getPerformance()]);
 
   // CSV 생성
   const headers = [
@@ -54,7 +57,7 @@ export default async function handler(req, res) {
 
   // 파일명에 날짜 포함
   const date     = new Date().toLocaleDateString('ko-KR').replace(/\. /g,'-').replace('.','');
-  const filename = encodeURIComponent(`예약목록_${date}.csv`);
+  const filename = encodeURIComponent(`예약목록_${perf.name ? perf.name + '_' : ''}${date}.csv`);
 
   res.setHeader('Content-Type', 'text/csv; charset=utf-8');
   res.setHeader('Content-Disposition', `attachment; filename*=UTF-8''${filename}`);

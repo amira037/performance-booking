@@ -21,7 +21,19 @@
 <script type="text/babel">
 const { useState, useEffect, useRef, useCallback } = React;
 
-const SETTINGS_KEY  = "roster_settings_v1";
+// 공연 ID (?p=) — 관리자 페이지에서 공연별로 열림
+const PID = new URLSearchParams(location.search).get('p') || '';
+const PERF_HDR = PID ? { 'x-perf-id': PID } : {};
+const LEGACY_SETTINGS_KEY = "roster_settings_v1";
+const SETTINGS_KEY  = PID ? `${LEGACY_SETTINGS_KEY}:${PID}` : LEGACY_SETTINGS_KEY;
+// 공연별 설정이 아직 없으면 기존 설정(판매처 등)을 출발점으로 사용 (좌석 배정은 제외)
+const loadStoredSettings = () => {
+  const own = localStorage.getItem(SETTINGS_KEY);
+  if (own) return JSON.parse(own);
+  const legacy = JSON.parse(localStorage.getItem(LEGACY_SETTINGS_KEY) || "{}");
+  delete legacy.seatAlloc;
+  return legacy;
+};
 const ADMIN_KEY_KEY = "roster_admin_key";
 
 const DAYS = ['일','월','화','수','목','금','토'];
@@ -105,7 +117,7 @@ function App() {
   const [authenticated, setAuthenticated] = useState(() => Boolean(localStorage.getItem(ADMIN_KEY_KEY)));
 
   const [settings, setSettings] = useState(() => {
-    try { return { ...DEFAULT_SETTINGS, ...JSON.parse(localStorage.getItem(SETTINGS_KEY)||"{}") }; }
+    try { return { ...DEFAULT_SETTINGS, ...loadStoredSettings() }; }
     catch { return DEFAULT_SETTINGS; }
   });
 
@@ -132,7 +144,7 @@ function App() {
   const fetchAll = useCallback(async (key) => {
     setSyncStatus("syncing");
     try {
-      const res = await fetch('/api/admin', { headers: { 'x-admin-key': key } });
+      const res = await fetch('/api/admin', { headers: { 'x-admin-key': key, ...PERF_HDR } });
       if (res.status === 401) { setSyncStatus("error"); setLoading(false); setAuthenticated(false); return; }
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const json = await res.json();
@@ -213,7 +225,7 @@ function App() {
         try {
           await fetch('/api/admin', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'x-admin-key': key },
+            headers: { 'Content-Type': 'application/json', 'x-admin-key': key, ...PERF_HDR },
             body: JSON.stringify({ action: 'saveSeatAlloc', seatAlloc: alloc }),
           });
         } catch(e) { console.error('seatAlloc Redis 저장 오류:', e.message); }
@@ -249,7 +261,7 @@ function App() {
   const apiPost = async (body) => {
     const res = await fetch('/api/admin', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'x-admin-key': adminKey },
+      headers: { 'Content-Type': 'application/json', 'x-admin-key': adminKey, ...PERF_HDR },
       body: JSON.stringify(body),
     });
     if (!res.ok) {
@@ -532,7 +544,7 @@ function App() {
     if (result.toUpsert.length > 0) {
       const res = await fetch('/api/roster-import', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'x-admin-key': adminKey },
+        headers: { 'Content-Type': 'application/json', 'x-admin-key': adminKey, ...PERF_HDR },
         body: JSON.stringify({ rows: result.toUpsert }),
       });
       if (!res.ok) {
@@ -912,7 +924,7 @@ function App() {
           try {
             await fetch('/api/admin', {
               method: 'POST',
-              headers: { 'Content-Type': 'application/json', 'x-admin-key': keyToUse },
+              headers: { 'Content-Type': 'application/json', 'x-admin-key': keyToUse, ...PERF_HDR },
               body: JSON.stringify({ action: 'saveSeatAlloc', seatAlloc: s.seatAlloc || {} }),
             });
           } catch(e) { console.error('seatAlloc Redis 저장 오류:', e.message); }

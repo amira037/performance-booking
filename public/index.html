@@ -294,10 +294,17 @@ let selectedSession = null;
 let currentLockId   = null;
 let timerInterval   = null;
 
+// ── 공연 ID (?p=공연ID, 없으면 서버 기본 공연) ──
+const PID_PARAM = new URLSearchParams(location.search).get('p') || '';
+function apiUrl(path) {
+  const pid = (typeof CFG !== 'undefined' && CFG && CFG.pid) || PID_PARAM;
+  return pid ? path + (path.includes('?') ? '&' : '?') + 'p=' + encodeURIComponent(pid) : path;
+}
+
 // ── 초기화: API에서 모든 설정 로드 ──
 async function init() {
   try {
-    const res  = await fetch('/api/config');
+    const res  = await fetch(apiUrl('/api/config'));
     if (!res.ok) throw new Error('서버 오류');
     CFG = await res.json();
     applyConfig();
@@ -439,7 +446,7 @@ async function onQtyChange() {
 
 async function requestLock(sessionId, quantity) {
   try {
-    const res  = await fetch('/api/lock', {
+    const res  = await fetch(apiUrl('/api/lock'), {
       method:'POST', headers:{'Content-Type':'application/json'},
       body: JSON.stringify({sessionId, quantity}),
     });
@@ -460,7 +467,7 @@ async function releaseLock() {
   clearInterval(timerInterval);
   hideTimer();
   try {
-    await fetch('/api/lock', {
+    await fetch(apiUrl('/api/lock'), {
       method:'DELETE', headers:{'Content-Type':'application/json'},
       body: JSON.stringify({lockId: currentLockId}),
     });
@@ -492,7 +499,7 @@ function onLockExpired() {
   document.querySelectorAll('.session-card').forEach(el => el.classList.remove('selected'));
   showErr('선점 시간(10분)이 초과됐습니다. 회차를 다시 선택해 주세요.');
   // 잔여석 새로고침
-  fetch('/api/config').then(r=>r.json()).then(d=>{ CFG=d; renderSessions(); });
+  fetch(apiUrl('/api/config')).then(r=>r.json()).then(d=>{ CFG=d; renderSessions(); });
 }
 
 // ── 가격 계산 ──
@@ -572,7 +579,7 @@ async function submitBooking() {
   clearInterval(timerInterval);
 
   try {
-    const res = await fetch('/api/reserve', {
+    const res = await fetch(apiUrl('/api/reserve'), {
       method:'POST', headers:{'Content-Type':'application/json'},
       body: JSON.stringify({
         lockId:       currentLockId,

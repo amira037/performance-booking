@@ -32,6 +32,13 @@ body{background:var(--bg);color:var(--white);font-family:'Noto Sans KR',sans-ser
 .topbar-right{display:flex;align-items:center;gap:8px;}
 .top-btn{background:none;border:1px solid var(--border);border-radius:var(--radius);color:var(--gray);font-family:inherit;font-size:var(--fs-xs);padding:6px 10px;cursor:pointer;white-space:nowrap;}
 .top-btn:hover{border-color:var(--gold);color:var(--gold);}
+.perf-select{background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);color:var(--gold);font-family:inherit;font-size:var(--fs-sm);font-weight:500;padding:6px 8px;max-width:260px;cursor:pointer;}
+.perf-select:focus{outline:none;border-color:var(--gold);}
+.perf-row{display:flex;align-items:center;gap:8px;padding:10px 0;border-bottom:1px solid var(--border);font-size:var(--fs-sm);flex-wrap:wrap;}
+.perf-row:last-child{border-bottom:none;}
+.perf-row .perf-row-name{flex:1;min-width:140px;}
+.perf-tag{font-size:10px;border:1px solid var(--border);border-radius:999px;padding:1px 8px;color:var(--gray);}
+.perf-tag.gold{border-color:var(--gold);color:var(--gold);}
 .logout-btn{background:none;border:none;color:var(--gray2);font-family:inherit;font-size:var(--fs-xs);cursor:pointer;}
 .tabs{background:var(--surface);border-bottom:1px solid var(--border);display:flex;padding:0 4px;overflow-x:auto;scrollbar-width:none;}
 .tabs::-webkit-scrollbar{display:none;}
@@ -172,10 +179,35 @@ body{background:var(--bg);color:var(--white);font-family:'Noto Sans KR',sans-ser
   </div>
 </div>
 
-<!-- 새 공연 초기화 모달 -->
+<!-- 새 공연 추가 모달 -->
+<div class="modal-bg" id="newperf-modal-bg">
+  <div class="modal">
+    <div class="modal-title">새 공연 추가</div>
+    <div class="modal-sub">공연마다 예약·회차·할인·알림톡 설정이 따로 관리됩니다.</div>
+    <div class="form-group" style="margin-bottom:12px;">
+      <label>공연명</label>
+      <input type="text" class="form-input" id="newperf-name" placeholder="예: 2026 겨울 정기공연">
+    </div>
+    <div class="form-group" style="margin-bottom:12px;">
+      <label>예약번호 접두어 (영문 2자리)</label>
+      <input type="text" class="form-input" id="newperf-prefix" maxlength="2" placeholder="예: WN" style="text-transform:uppercase;">
+      <div class="hint">예약번호가 WN-1111-0000 형태로 만들어져요. 비우면 복사 원본(또는 DQ)과 같게 설정됩니다.</div>
+    </div>
+    <label style="display:flex;align-items:center;gap:10px;font-size:var(--fs-sm);color:var(--white);cursor:pointer;margin-bottom:16px;">
+      <input type="checkbox" id="newperf-copy" checked style="width:15px;height:15px;accent-color:var(--gold);">
+      <span>현재 공연 설정 복사 <span style="color:var(--gray);font-size:var(--fs-xs);">(기획사·계좌·할인·알림톡 · 회차/예약은 제외)</span></span>
+    </label>
+    <div class="modal-btns">
+      <button class="modal-confirm" onclick="doCreatePerformance()">추가</button>
+      <button class="modal-close" onclick="closeNewPerfModal()">취소</button>
+    </div>
+  </div>
+</div>
+
+<!-- 공연 데이터 초기화 모달 -->
 <div class="modal-bg" id="reset-modal-bg">
   <div class="modal">
-    <div class="modal-title" style="color:var(--red);">새 공연 초기화</div>
+    <div class="modal-title" style="color:var(--red);">현재 공연 데이터 초기화</div>
     <div class="modal-sub" style="line-height:2;">
       아래 항목은 <strong style="color:var(--white);">모두 삭제</strong>됩니다:<br>
       <span style="color:var(--orange);">예약 전체 · 회차 전체 · 선점(Lock) · 좌석 카운트</span>
@@ -213,9 +245,14 @@ body{background:var(--bg);color:var(--white);font-family:'Noto Sans KR',sans-ser
 
 <div class="app" id="app">
   <div class="topbar">
-    <div class="topbar-title"><span id="topbar-title">공연 관리자</span></div>
+    <div class="topbar-title" style="display:flex;align-items:center;gap:8px;">
+      <select class="perf-select" id="perf-select" onchange="switchPerformance(this.value)" title="운영할 공연 선택"></select>
+      <button class="top-btn" onclick="openNewPerfModal()">＋ 새 공연</button>
+      <span id="topbar-title" style="display:none"></span>
+    </div>
     <div class="topbar-right">
-      <button class="top-btn" onclick="window.open('/roster.html','_blank')">인원부</button>
+      <button class="top-btn" onclick="copyBookingLink()">예매 링크 복사</button>
+      <button class="top-btn" onclick="window.open('/roster.html?p='+encodeURIComponent(PID),'_blank')">인원부</button>
       <button class="top-btn" onclick="exportExcel()">엑셀 내보내기</button>
       <button class="top-btn" onclick="loadData()">새로고침</button>
       <button class="logout-btn" onclick="doLogout()">로그아웃</button>
@@ -607,6 +644,12 @@ body{background:var(--bg);color:var(--white);font-family:'Noto Sans KR',sans-ser
 
     <!-- 공연 설정 -->
     <div class="tab-content" id="tab-performance">
+      <!-- 공연 목록 -->
+      <div class="section-box">
+        <div class="section-title">공연 목록</div>
+        <div class="hint" style="margin-bottom:8px;">기본 공연은 예매 링크에 공연 ID(?p=)가 없을 때 열리는 공연입니다. 보관한 공연은 예매가 마감되고 자동 리마인드 대상에서 빠집니다.</div>
+        <div id="perf-list"></div>
+      </div>
       <!-- 검표 코드 + 포스터 -->
       <div class="section-box">
         <div class="section-title">입장 / 포스터 설정</div>
@@ -655,7 +698,10 @@ body{background:var(--bg);color:var(--white);font-family:'Noto Sans KR',sans-ser
       </div>
       <div class="section-box">
         <div class="section-title">공연 정보</div>
-        <div class="form-row"><div class="form-group full"><label>공연명</label><input type="text" class="form-input" id="perf-name" placeholder="예: 덕질의 이해"></div></div>
+        <div class="form-row">
+          <div class="form-group" style="flex:3"><label>공연명</label><input type="text" class="form-input" id="perf-name" placeholder="예: 덕질의 이해"></div>
+          <div class="form-group" style="flex:1"><label>예약번호 접두어</label><input type="text" class="form-input" id="perf-res-prefix" maxlength="2" placeholder="DQ" style="text-transform:uppercase;"></div>
+        </div>
         <div class="form-row"><div class="form-group full"><label>티켓 부제목 (영문)</label><input type="text" class="form-input" id="perf-subtitle" placeholder="예: 2025 SPECIAL PERFORMANCE"></div></div>
         <div class="form-row">
           <div class="form-group"><label>주최</label><input type="text" class="form-input" id="perf-host"></div>
@@ -822,7 +868,14 @@ body{background:var(--bg);color:var(--white);font-family:'Noto Sans KR',sans-ser
 
 <script>
 const API_BASE = '/api/admin';
+const PID_STORE_KEY = 'admin_perf_id';
 let ADMIN_PW = '';
+// 현재 선택된 공연 ID: URL ?p= → 마지막 선택 → 서버 기본 공연
+let PID = new URLSearchParams(location.search).get('p') || (() => { try { return localStorage.getItem(PID_STORE_KEY) || ''; } catch(e) { return ''; } })();
+let performances = [], defaultPid = '';
+function adminHeaders(extra) {
+  return Object.assign({ 'x-admin-key': ADMIN_PW }, PID ? { 'x-perf-id': PID } : {}, extra || {});
+}
 let reservations = [], sessions = [], presets = [], performance = {};
 let currentFilter = 'all', currentSearch = '', currentSessionFilter = '';
 let editingSessionId = null, editingPresetName = null, dragSrcIndex = null;
@@ -1024,9 +1077,19 @@ document.getElementById('pw-input').focus();
 // ── 데이터 로드 ──
 async function loadData() {
   try {
-    const res = await fetch(API_BASE, { headers: { 'x-admin-key': ADMIN_PW } });
+    let res = await fetch(API_BASE, { headers: adminHeaders() });
     if (res.status === 401) { document.getElementById('login-error').style.display='block'; doLogout(); return; }
+    if (res.status === 404 && PID) {
+      // 저장된 공연이 없어졌으면 기본 공연으로
+      PID = '';
+      res = await fetch(API_BASE, { headers: adminHeaders() });
+    }
     const data = await res.json();
+    PID          = data.pid || PID;
+    performances = data.performances || [];
+    defaultPid   = data.defaultPid   || '';
+    try { localStorage.setItem(PID_STORE_KEY, PID); } catch(e) {}
+    const u = new URL(location.href); u.searchParams.set('p', PID); history.replaceState(null, '', u);
     reservations = data.reservations || [];
     sessions     = sortSessions(data.sessions || []);
     presets      = data.presets      || [];
@@ -1041,6 +1104,89 @@ function renderAll() {
   populateSessionFilter();
   loadTplTexts();
   document.getElementById('topbar-title').textContent = performance.name || '공연 관리자';
+  renderPerfSelect();
+  renderPerfList();
+}
+
+// ── 공연 전환 / 추가 / 관리 ──
+function escHtml(v) {
+  return String(v == null ? '' : v).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+function renderPerfSelect() {
+  const sel = document.getElementById('perf-select');
+  const list = performances.filter(p => !p.archived || p.id === PID);
+  sel.innerHTML = list.map(p =>
+    '<option value="' + escHtml(p.id) + '"' + (p.id === PID ? ' selected' : '') + '>'
+    + escHtml(p.name || '(이름 없음)') + (p.archived ? ' (보관)' : '') + '</option>'
+  ).join('');
+  document.title = (performance.name || '공연') + ' · 관리자';
+}
+function renderPerfList() {
+  const el = document.getElementById('perf-list');
+  if (!el) return;
+  el.innerHTML = performances.map(p => {
+    const isDefault = p.id === defaultPid, isCur = p.id === PID;
+    return '<div class="perf-row">'
+      + '<div class="perf-row-name">' + escHtml(p.name || '(이름 없음)')
+      + ' <span style="color:var(--gray2);font-size:var(--fs-xs);">' + escHtml(p.resPrefix || 'DQ') + ' · ' + escHtml(p.id) + '</span></div>'
+      + (isCur ? '<span class="perf-tag gold">선택됨</span>' : '')
+      + (isDefault ? '<span class="perf-tag gold">기본</span>' : '')
+      + (p.archived ? '<span class="perf-tag">보관</span>' : '')
+      + (isCur ? '' : '<button class="action-btn" onclick="switchPerformance(\'' + p.id + '\')">열기</button>')
+      + (isDefault || p.archived ? '' : '<button class="action-btn" onclick="setDefaultPerformance(\'' + p.id + '\')">기본으로</button>')
+      + (isDefault ? '' : '<button class="action-btn" onclick="archivePerformance(\'' + p.id + '\',' + (!p.archived) + ')">' + (p.archived ? '보관 해제' : '보관') + '</button>')
+      + '</div>';
+  }).join('');
+}
+async function switchPerformance(pid) {
+  if (!pid || pid === PID) return;
+  PID = pid;
+  reservations = []; sessions = []; presets = []; performance = {};
+  await loadData();
+  toast((performance.name || '공연') + ' 으로 전환했습니다.');
+}
+function bookingLink(pid) {
+  return location.origin + '/?p=' + encodeURIComponent(pid || PID);
+}
+function copyBookingLink() {
+  navigator.clipboard.writeText(bookingLink()).then(() => toast('예매 링크가 복사됐습니다.'));
+}
+function openNewPerfModal() {
+  document.getElementById('newperf-name').value = '';
+  document.getElementById('newperf-prefix').value = '';
+  document.getElementById('newperf-copy').checked = true;
+  document.getElementById('newperf-modal-bg').classList.add('show');
+  document.getElementById('newperf-name').focus();
+}
+function closeNewPerfModal() {
+  document.getElementById('newperf-modal-bg').classList.remove('show');
+}
+async function doCreatePerformance() {
+  const name      = document.getElementById('newperf-name').value.trim();
+  const resPrefix = document.getElementById('newperf-prefix').value.trim().toUpperCase();
+  const copy      = document.getElementById('newperf-copy').checked;
+  if (!name) { toast('공연명을 입력해 주세요.'); return; }
+  if (resPrefix && !/^[A-Z]{2}$/.test(resPrefix)) { toast('접두어는 영문 2자리로 입력해 주세요.'); return; }
+  if (!resPrefix && !copy) { /* 서버 기본값 DQ */ }
+  const r = await callAPI({ action: 'createPerformance', name, resPrefix, copyFrom: copy ? PID : null });
+  if (!r.success) { toast(r.message || '공연 추가 실패'); return; }
+  closeNewPerfModal();
+  PID = r.pid;
+  await loadData();
+  switchTab('sessions', document.querySelectorAll('.tab')[2]);
+  toast('새 공연이 추가됐습니다. 회차를 등록해 주세요.');
+}
+async function setDefaultPerformance(pid) {
+  const p = performances.find(x => x.id === pid);
+  if (!confirm('"' + (p?.name || pid) + '"을(를) 기본 공연으로 지정할까요?\n공연 ID 없이 접속한 예매 페이지가 이 공연으로 열립니다.')) return;
+  const r = await callAPI({ action: 'setDefaultPerformance', pid });
+  if (r.success) { toast('기본 공연이 변경됐습니다.'); await loadData(); } else toast(r.message || '변경 실패');
+}
+async function archivePerformance(pid, archived) {
+  const p = performances.find(x => x.id === pid);
+  if (archived && !confirm('"' + (p?.name || pid) + '"을(를) 보관할까요?\n예매가 마감되고 자동 리마인드가 중지됩니다. (데이터는 유지)')) return;
+  const r = await callAPI({ action: 'archivePerformance', pid, archived });
+  if (r.success) { toast(archived ? '보관했습니다.' : '보관을 해제했습니다.'); await loadData(); } else toast(r.message || '처리 실패');
 }
 
 function renderReminderSessions() {
@@ -1914,6 +2060,7 @@ function syncPerfForm(){
   document.getElementById('agency-email').value        =performance.email        ||'';
   document.getElementById('kakaopay-link').value       =performance.kakaopayLink ||'';
   document.getElementById('perf-name').value           =performance.name         ||'';
+  document.getElementById('perf-res-prefix').value     =performance.resPrefix    ||'DQ';
   document.getElementById('perf-subtitle').value       =performance.subtitle     ||'';
   document.getElementById('perf-host').value           =performance.host         ||'';
   document.getElementById('perf-organizer').value      =performance.organizer    ||'';
@@ -1940,6 +2087,7 @@ async function savePerf(){
     email:        document.getElementById('agency-email').value.trim(),
     kakaopayLink: document.getElementById('kakaopay-link').value.trim(),
     name:         document.getElementById('perf-name').value.trim(),
+    resPrefix:    document.getElementById('perf-res-prefix').value.trim().toUpperCase() || 'DQ',
     subtitle:     document.getElementById('perf-subtitle').value.trim(),
     host:         document.getElementById('perf-host').value.trim(),
     organizer:    document.getElementById('perf-organizer').value.trim(),
@@ -1949,8 +2097,13 @@ async function savePerf(){
     open:         document.getElementById('perf-open').value,
     maxQty:       parseInt(document.getElementById('perf-max-qty').value)||4,
   };
+  if(!/^[A-Z]{2}$/.test(data.resPrefix)){toast('예약번호 접두어는 영문 2자리로 입력해 주세요.');return;}
   const r=await callAPI({action:'savePerformance',data});
-  if(r.success){performance=data;toast('저장됐습니다.');renderDashboard();}else toast('저장 실패');
+  if(r.success){
+    performance=data;toast('저장됐습니다.');renderDashboard();
+    const item=performances.find(p=>p.id===PID); if(item){item.name=data.name;item.resPrefix=data.resPrefix;}
+    renderPerfSelect();renderPerfList();
+  }else toast(r.message||'저장 실패');
 }
 
 // ── 입장 확인 ──
@@ -1976,11 +2129,11 @@ function doCheckIn(){
 // ── 엑셀 내보내기 ──
 async function exportExcel(){
   try{
-    const res=await fetch('/api/export',{headers:{'x-admin-key':ADMIN_PW}});
+    const res=await fetch('/api/export',{headers:adminHeaders()});
     if(!res.ok){toast('내보내기 실패');return;}
     const blob=await res.blob(),url=URL.createObjectURL(blob),a=document.createElement('a');
     const date=new Date().toLocaleDateString('ko-KR').replace(/\. /g,'-').replace('.','');
-    a.href=url;a.download='예약목록_'+date+'.csv';
+    a.href=url;a.download='예약목록_'+(performance.name?performance.name+'_':'')+date+'.csv';
     document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url);toast('다운로드됩니다.');
   }catch(e){toast('내보내기 오류');}
 }
@@ -2083,7 +2236,7 @@ function dismissAllLogs() {
 async function callAPI(payload){
   console.log('[API DEBUG] 호출:', payload.action, payload);
   try{
-    const res=await fetch(API_BASE,{method:'POST',headers:{'Content-Type':'application/json','x-admin-key':ADMIN_PW},body:JSON.stringify(payload)});
+    const res=await fetch(API_BASE,{method:'POST',headers:adminHeaders({'Content-Type':'application/json'}),body:JSON.stringify(payload)});
     const data = await res.json();
     console.log('[API DEBUG] 응답:', payload.action, data);
     return data;
