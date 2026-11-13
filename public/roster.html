@@ -122,6 +122,8 @@ function App() {
   });
 
   const [shows, setShows]             = useState([]);
+  const [performances, setPerformances] = useState([]);
+  const [currentPid, setCurrentPid]     = useState(PID);
   const [presets, setPresets]         = useState([]);
   const [data, setData]               = useState({});
   const [activeShow, setActiveShow]   = useState(null);
@@ -150,6 +152,8 @@ function App() {
       const json = await res.json();
 
       const { reservations, sessions, presets: ps, performance, seatAlloc: redisSeatAlloc } = json;
+      setPerformances(json.performances || []);
+      if (json.pid) setCurrentPid(json.pid);
       setPresets(ps || []);
 
       // admin 공연명 자동 연동
@@ -655,7 +659,18 @@ function App() {
       {/* 헤더 */}
       <div style={{background:"#1e293b",color:"#fff",padding:"14px 20px",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
         <div>
-          <div style={{fontSize:17,fontWeight:700}}>🎭 {settings.showTitle||"예약 인원부"}</div>
+          {performances.length > 1 ? (
+            <select value={currentPid}
+              onChange={e => { if (e.target.value !== currentPid) location.href = '/roster.html?p=' + encodeURIComponent(e.target.value); }}
+              title="공연 선택"
+              style={{fontSize:16,fontWeight:700,background:"#334155",color:"#fff",border:"1px solid #475569",borderRadius:8,padding:"4px 8px",cursor:"pointer",maxWidth:"60vw"}}>
+              {performances.filter(p => !p.archived || p.id === currentPid).map(p => (
+                <option key={p.id} value={p.id}>🎭 {p.name || '(이름 없음)'}{p.archived ? ' (보관)' : ''}</option>
+              ))}
+            </select>
+          ) : (
+            <div style={{fontSize:17,fontWeight:700}}>🎭 {settings.showTitle||"예약 인원부"}</div>
+          )}
           <div style={{fontSize:11,color:"#94a3b8",marginTop:2}}>
             {settings.festivalName} | 총 객석 {totalSeats}석
             <span style={{marginLeft:8}}>{syncDot} {syncStatus==="syncing"?"동기화중":syncStatus==="ok"?"연결됨":syncStatus==="error"?"연결오류":""}</span>
