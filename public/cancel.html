@@ -457,12 +457,14 @@ function renderSessList(currentSessionLabel, isToday) {
     const isCurrent  = label === currentSessionLabel || currentSessionLabel.includes(s.date);
     const isPastSess = isPast(s.date, s.time);
     const isTodaySess = isSameDay(s.date);
+    const isSoon     = s.status === 'soon';
     const isFull     = s.status === 'closed' || s.remain <= 0;
-    const disabled   = isCurrent || isPastSess || isFull || (isToday && isTodaySess);
+    const disabled   = isCurrent || isPastSess || isSoon || isFull || (isToday && isTodaySess);
 
     let infoText = s.seats + '석';
     if (isCurrent)   infoText += ' · 현재 회차';
     else if (isPastSess) infoText += ' · 지난 공연';
+    else if (isSoon) infoText += ' · 오픈 예정';
     else if (isFull) infoText += ' · 마감';
     else             infoText += ' · 잔여 ' + (s.remain||'?') + '석';
 

@@ -3,6 +3,7 @@
 
 import { perfDb, resolvePid, listPerformances } from '../lib/db.js';
 import { homepageUrlFor } from '../lib/homepage.js';
+import { perfBookingStatus } from '../lib/booking-status.js';
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -19,8 +20,8 @@ export default async function handler(req, res) {
     db.getReservations(),
     listPerformances(),
   ]);
-  // 보관된 공연은 예매 마감으로 표시
-  if (list.find(p => p.id === pid)?.archived) performance.open = 'closed';
+  // 실제 예매 상태 (보관 → 마감, 오픈 일시가 지난 '오픈 예정' → 예매 중)
+  performance.open = perfBookingStatus(performance, { archived: list.find(p => p.id === pid)?.archived });
 
   // 공연 3시간 전 자동 마감 체크
   const CUTOFF_HOURS = 3;
@@ -86,6 +87,7 @@ export default async function handler(req, res) {
   return res.status(200).json({
     pid,
     homepageUrl,
+    serverNow: Date.now(), // 오픈 카운트다운을 서버 시각 기준으로 맞추기 위함
     performance,
     sessions: sessionsWithRemain,
     presets:  presets.filter(p => p.active),

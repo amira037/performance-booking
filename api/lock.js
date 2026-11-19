@@ -2,7 +2,8 @@
 // POST /api/lock  → 선점 생성
 // DELETE /api/lock → 선점 해제
 
-import { perfDb, resolvePid } from '../lib/db.js';
+import { perfDb, resolvePid, listPerformances } from '../lib/db.js';
+import { perfBookingStatus, STATUS_MESSAGE } from '../lib/booking-status.js';
 
 const LOCK_DURATION_MS = 10 * 60 * 1000; // 10분
 
@@ -22,11 +23,20 @@ export default async function handler(req, res) {
     if (!sessionId || !quantity)
       return res.status(400).json({ success: false, message: '필수 값 누락' });
 
+    // 공연 전체 예매 상태 (오픈 전·마감·보관이면 거절)
+    {
+      const [perf, list] = await Promise.all([db.getPerformance(), listPerformances()]);
+      const st = perfBookingStatus(perf, { archived: list.find(p => p.id === pid)?.archived });
+      if (st !== 'open') return res.status(400).json({ success: false, message: STATUS_MESSAGE[st] });
+    }
+
     const sessions = await db.getSessions();
     const session  = sessions.find(s => s.id === sessionId);
     if (!session)
       return res.status(404).json({ success: false, message: '회차를 찾을 수 없습니다.' });
 
+    if (session.status === 'soon')
+      return res.status(400).json({ success: false, message: '아직 예매가 오픈되지 않은 회차입니다.' });
     if (session.status !== 'open')
       return res.status(400).json({ success: false, message: '예매가 마감된 회차입니다.' });
 

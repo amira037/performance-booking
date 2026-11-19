@@ -5,6 +5,7 @@
 // 예약자 정보 등 민감한 데이터는 포함하지 않는다.
 
 import { perfDb, listPerformances } from '../lib/db.js';
+import { perfBookingStatus } from '../lib/booking-status.js';
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -27,8 +28,9 @@ export default async function handler(req, res) {
 
       const allDates = (sessions || []).map(s => s.date).filter(Boolean).sort();
       // 예매 상태: open(예매 중) / soon(오픈 예정) / closed(마감) — 홈페이지 배지·버튼이 씀
-      const status = performance.open === 'closed' ? 'closed'
-        : performance.open === 'soon' ? 'soon'
+      // 공연 전체 상태는 lib/booking-status.js (오픈 일시 자동 오픈 반영)
+      const perfStatus = perfBookingStatus(performance);
+      const status = perfStatus !== 'open' ? perfStatus
         : upcoming.some(s => s.status === 'open') ? 'open'
         : upcoming.some(s => s.status === 'soon') ? 'soon'
         : 'closed';
@@ -41,6 +43,8 @@ export default async function handler(req, res) {
         lastDate:    allDates[allDates.length - 1],
         nextDate:    upcoming[0].date,
         status,
+        // 공연 전체가 아직 오픈 전일 때만 (회차가 '오픈 예정'이라 soon인 경우엔 지난 시각이 나가지 않도록)
+        openAt:      perfStatus === 'soon' && performance.openAt ? performance.openAt : null, // 'YYYY-MM-DDTHH:mm' (KST)
         bookingOpen: status === 'open',
         bookingUrl:  `${base}/?p=${encodeURIComponent(p.id)}`,
       };

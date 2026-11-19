@@ -106,6 +106,12 @@ body{background:var(--bg);color:var(--white);font-family:'Noto Sans KR',sans-ser
 .form-input:focus,.form-select:focus{outline:none;border-color:var(--gold);}
 .form-select option{background:#1a1a1a;}
 .full{grid-column:1/-1;}
+.audience-status{border:1px solid var(--border);border-left-width:3px;border-radius:var(--radius);padding:12px 14px;margin-bottom:16px;font-size:var(--fs-sm);line-height:1.7;background:var(--surface);}
+.audience-status:empty{display:none;}
+.audience-status.ok{border-left-color:#4caf7d;}
+.audience-status.warn{border-left-color:var(--orange);}
+.audience-status.stop{border-left-color:var(--red);}
+.audience-status small{display:block;color:var(--gray);font-size:var(--fs-xs);}
 .hint{font-size:var(--fs-xs);color:var(--gray2);margin-top:5px;}
 .save-btn{width:100%;background:var(--gold);color:#0f0f0f;border:none;border-radius:var(--radius);font-family:inherit;font-size:var(--fs-sm);font-weight:700;letter-spacing:.15em;padding:12px;cursor:pointer;margin-top:4px;}
 .session-item{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;gap:12px;cursor:pointer;transition:border-color .15s;}
@@ -272,6 +278,7 @@ body{background:var(--bg);color:var(--white);font-family:'Noto Sans KR',sans-ser
 
     <!-- 현황 -->
     <div class="tab-content active" id="tab-dashboard">
+      <div class="audience-status"></div>
       <div class="stat-grid">
         <div class="stat-card"><div class="stat-label">전체 예약</div><div class="stat-value" id="stat-total">—</div><div class="stat-sub" id="stat-total-sub">—</div></div>
         <div class="stat-card"><div class="stat-label">입금 확인</div><div class="stat-value gold" id="stat-confirmed">—</div><div class="stat-sub" id="stat-confirmed-sub">—</div></div>
@@ -351,6 +358,7 @@ body{background:var(--bg);color:var(--white);font-family:'Noto Sans KR',sans-ser
 
     <!-- 회차 관리 -->
     <div class="tab-content" id="tab-sessions">
+      <div class="audience-status"></div>
       <div class="section-box" style="margin-bottom:16px;">
         <label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-size:var(--fs-sm);">
           <input type="checkbox" id="sess-memo-enabled" onchange="toggleSessionMemo(this.checked)"
@@ -803,14 +811,18 @@ body{background:var(--bg);color:var(--white);font-family:'Noto Sans KR',sans-ser
         </div>
         <div class="form-row">
           <div class="form-group"><label>예매 상태</label>
-            <select class="form-select" id="perf-open">
+            <select class="form-select" id="perf-open" onchange="syncOpenAtField()">
               <option value="open">예매 중</option>
               <option value="closed">예매 마감</option>
               <option value="soon">오픈 예정</option>
             </select>
           </div>
+          <div class="form-group" id="perf-open-at-group" style="display:none;"><label>자동 오픈 일시 (선택)</label>
+            <input type="datetime-local" class="form-input" id="perf-open-at" style="color-scheme:dark;cursor:pointer;">
+          </div>
           <div class="form-group"><label>1인 최대 매수</label><input type="number" class="form-input" id="perf-max-qty" placeholder="4" min="1" max="10"></div>
         </div>
+        <div class="hint" style="margin-bottom:12px;">예매 상태는 회차 상태보다 우선합니다. '오픈 예정'이면 회차가 '예매 중'이어도 예매할 수 없어요. 자동 오픈 일시를 넣으면 그 시각(한국 시간)에 자동으로 예매가 열립니다. 이때 열리는 건 '예매 중'인 회차뿐이니, 같이 열 회차는 회차 관리에서 '예매 중'으로 미리 바꿔 두세요.</div>
         <button class="save-btn" onclick="savePerf()">전체 설정 저장</button>
       </div>
 
@@ -1799,6 +1811,66 @@ async function confirmSessionChange() {
 }
 
 // ── 회차 관리 ──
+// ── 관객 화면 예매 상태 안내 ──
+// 'YYYY-MM-DDTHH:mm' (한국 시간) → epoch ms
+function kstTs(dt) {
+  const m = /^(\d{4}-\d{2}-\d{2})T(\d{2}):(\d{2})$/.exec(String(dt || ''));
+  if (!m) return null;
+  const t = new Date(m[1] + 'T' + m[2] + ':' + m[3] + ':00+09:00').getTime();
+  return isNaN(t) ? null : t;
+}
+// lib/booking-status.js 의 perfBookingStatus 와 같은 규칙 (바꿀 때 함께 바꿀 것)
+function perfBookingStatus(perf, archived, now = Date.now()) {
+  if (archived || !perf || perf.open === 'closed') return 'closed';
+  if (perf.open === 'soon') { const t = kstTs(perf.openAt); return t !== null && now >= t ? 'open' : 'soon'; }
+  return 'open';
+}
+function kstLabel(dt) {
+  const t = kstTs(dt); if (t === null) return '';
+  const d = new Date(t + 9 * 3600 * 1000), W = ['일','월','화','수','목','금','토'];
+  return (d.getUTCMonth()+1) + '월 ' + d.getUTCDate() + '일 (' + W[d.getUTCDay()] + ') '
+    + String(d.getUTCHours()).padStart(2,'0') + ':' + String(d.getUTCMinutes()).padStart(2,'0');
+}
+function syncOpenAtField() {
+  document.getElementById('perf-open-at-group').style.display =
+    document.getElementById('perf-open').value === 'soon' ? '' : 'none';
+}
+function renderAudienceStatus() {
+  const archived = !!performances.find(p => p.id === PID)?.archived;
+  const st  = perfBookingStatus(performance, archived);
+  const now = Date.now();
+  const todayStr = new Date(now + 9 * 3600 * 1000).toISOString().slice(0, 10);
+  const sellable = sessions.filter(s => {   // 지금(또는 오픈 시) 예매 가능한 회차: 예매 중 + 지나지 않음 + 공연 3시간 전 이전
+    if (s.status !== 'open' || !s.date || s.date < todayStr) return false;
+    const t = kstTs(s.date + 'T' + (s.time || '00:00'));
+    return t === null || now < t - 3 * 3600 * 1000;
+  }).length;
+  const soonCnt = sessions.filter(s => s.status === 'soon' && s.date >= todayStr).length;
+  let cls, html;
+  if (st === 'closed') {
+    cls = 'stop';
+    html = '관객 화면: <strong>예매 마감</strong>'
+      + '<small>' + (archived ? '보관된 공연이라' : "예매 상태가 '예매 마감'이라") + ' 회차 상태와 관계없이 예매할 수 없어요.</small>';
+  } else if (st === 'soon') {
+    const at = kstLabel(performance.openAt);
+    cls = 'warn';
+    html = '관객 화면: <strong>예매 오픈 예정</strong>' + (at ? ' · ' + at + ' 자동 오픈' : '')
+      + '<small>' + (at ? '그전까지는' : "자동 오픈 일시가 없어서, 설정에서 직접 '예매 중'으로 바꿀 때까지") + " 회차를 '예매 중'으로 해 둬도 예매할 수 없어요.</small>"
+      + (sellable ? '' : "<small style=\"color:var(--orange);\">⚠ 오픈해도 '예매 중'인 회차가 없어요. 회차 상태를 확인해 주세요.</small>")
+      + (sellable && soonCnt ? '<small>' + (at ? '오픈 시 ' : '') + "예매 중 회차 " + sellable + "개만 열리고, '오픈 예정' 회차 " + soonCnt + "개는 닫힌 채로 남아요.</small>" : '');
+  } else if (!sellable) {
+    cls = 'warn';
+    html = '관객 화면: <strong>예매 중</strong> — 하지만 예매 가능한 회차가 없어요'
+      + '<small>' + (soonCnt ? "'오픈 예정' 회차 " + soonCnt + "개는 회차 관리에서 '예매 중'으로 바꿔야 열려요." : '회차가 모두 마감됐거나 지났어요.') + '</small>';
+  } else {
+    cls = 'ok';
+    html = '관객 화면: <strong>예매 중</strong> · 예매 가능 회차 ' + sellable + '개'
+      + (soonCnt ? " · '오픈 예정' 회차 " + soonCnt + '개' : '')
+      + (performance.open === 'soon' && performance.openAt ? '<small>' + kstLabel(performance.openAt) + '에 자동 오픈됐어요.</small>' : '');
+  }
+  document.querySelectorAll('.audience-status').forEach(el => { el.className = 'audience-status ' + cls; el.innerHTML = html; });
+}
+
 function memoEnabled() { return !!performance.sessionMemoEnabled; }
 function syncSessionMemoUI() {
   const on = memoEnabled();
@@ -1819,6 +1891,7 @@ async function toggleSessionMemo(on) {
 }
 function renderSessionList() {
   syncSessionMemoUI();
+  renderAudienceStatus();
   const el = document.getElementById('session-list');
   if (!sessions.length) { el.innerHTML = '<div class="empty-state">등록된 회차가 없습니다.</div>'; return; }
   el.innerHTML = sessions.map(s => {
@@ -2109,6 +2182,8 @@ function syncPerfForm(){
   document.getElementById('perf-account').value        =performance.account      ||'';
   document.getElementById('perf-account-holder').value =performance.accountHolder||'';
   document.getElementById('perf-open').value           =performance.open         ||'open';
+  document.getElementById('perf-open-at').value        =performance.openAt       ||'';
+  syncOpenAtField();
   document.getElementById('perf-max-qty').value        =performance.maxQty       ||4;
 }
 async function savePerf(){
@@ -2136,12 +2211,13 @@ async function savePerf(){
     account:      document.getElementById('perf-account').value.trim(),
     accountHolder:document.getElementById('perf-account-holder').value.trim(),
     open:         document.getElementById('perf-open').value,
+    openAt:       document.getElementById('perf-open').value==='soon' ? document.getElementById('perf-open-at').value : '',
     maxQty:       parseInt(document.getElementById('perf-max-qty').value)||4,
   };
   if(!/^[A-Z]{2}$/.test(data.resPrefix)){toast('예약번호 접두어는 영문 2자리로 입력해 주세요.');return;}
   const r=await callAPI({action:'savePerformance',data});
   if(r.success){
-    performance=data;toast('저장됐습니다.');renderDashboard();
+    performance=data;toast('저장됐습니다.');renderDashboard();renderAudienceStatus();
     const item=performances.find(p=>p.id===PID); if(item){item.name=data.name;item.resPrefix=data.resPrefix;}
     renderPerfSelect();renderPerfList();
   }else toast(r.message||'저장 실패');

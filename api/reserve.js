@@ -1,7 +1,8 @@
 // api/reserve.js — 예약 처리 API
 // POST /api/reserve
 
-import { perfDb, resolvePid, allocateResNum } from '../lib/db.js';
+import { perfDb, resolvePid, allocateResNum, listPerformances } from '../lib/db.js';
+import { perfBookingStatus, STATUS_MESSAGE } from '../lib/booking-status.js';
 import { sendReservationAlimtalk } from '../lib/alimtalk.js';
 
 export default async function handler(req, res) {
@@ -21,6 +22,13 @@ export default async function handler(req, res) {
   const pid = await resolvePid(req);
   if (!pid) return res.status(404).json({ success: false, message: '공연을 찾을 수 없습니다.' });
   const db = perfDb(pid);
+
+  // 공연 전체 예매 상태 (오픈 전·마감·보관이면 거절)
+  {
+    const [perf, list] = await Promise.all([db.getPerformance(), listPerformances()]);
+    const st = perfBookingStatus(perf, { archived: list.find(p => p.id === pid)?.archived });
+    if (st !== 'open') return res.status(400).json({ success: false, message: STATUS_MESSAGE[st] });
+  }
 
   // 선점 유효성 확인
   const locks = await db.getLocks();

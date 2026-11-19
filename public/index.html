@@ -381,8 +381,17 @@ function applyConfig() {
     return;
   }
   if (p.open === 'soon') {
+    const openTs = kstTs(p.openAt);
+    const od = openTs ? new Date(openTs + 9 * 3600 * 1000) : null; // KST 표기용
+    const openLabel = od
+      ? (od.getUTCMonth()+1) + '월 ' + od.getUTCDate() + '일 (' + DAYS[od.getUTCDay()] + ') '
+        + String(od.getUTCHours()).padStart(2,'0') + ':' + String(od.getUTCMinutes()).padStart(2,'0') + ' 예매 오픈'
+      : '';
     document.getElementById('booking-form').innerHTML =
-      '<div style="text-align:center;padding:40px 0;color:var(--gray);font-size:var(--fs-md);line-height:2;">예매 오픈 예정입니다.<br>' + (p.tel ? '문의: ' + p.tel : '') + '</div>';
+      '<div style="text-align:center;padding:40px 0;color:var(--gray);font-size:var(--fs-md);line-height:2;">예매 오픈 예정입니다.<br>' +
+        (openLabel ? '<strong style="color:var(--gold);">' + openLabel + '</strong><br><span id="open-countdown" style="font-size:var(--fs-sm);"></span><br>' : '') +
+        (p.tel ? '문의: ' + escHtml(p.tel) : '') + '</div>';
+    if (openTs) startOpenCountdown(openTs);
     return;
   }
 
@@ -401,6 +410,34 @@ function applyConfig() {
   updatePrice();
 }
 
+// 'YYYY-MM-DDTHH:mm' (한국 시간) → epoch ms  (lib/booking-status.js 와 같은 규칙)
+function kstTs(dt) {
+  const m = /^(\d{4}-\d{2}-\d{2})T(\d{2}):(\d{2})$/.exec(String(dt || ''));
+  if (!m) return null;
+  const t = new Date(m[1] + 'T' + m[2] + ':' + m[3] + ':00+09:00').getTime();
+  return isNaN(t) ? null : t;
+}
+
+// 오픈 카운트다운 — 서버 시각 기준. 0이 되면 새로고침해서 예매 화면으로 전환
+function startOpenCountdown(openTs) {
+  const offset = (CFG.serverNow || Date.now()) - Date.now();
+  const el = document.getElementById('open-countdown');
+  const tick = () => {
+    const left = openTs - (Date.now() + offset);
+    if (left <= 0) {
+      clearInterval(iv);
+      if (el) el.textContent = '예매가 열렸습니다. 잠시만 기다려 주세요…';
+      setTimeout(() => location.reload(), 1000 + Math.random() * 2000); // 동시 접속 분산
+      return;
+    }
+    const sec = Math.floor(left / 1000);
+    const d = Math.floor(sec / 86400), h = Math.floor(sec % 86400 / 3600), m = Math.floor(sec % 3600 / 60), ss = sec % 60;
+    if (el) el.textContent = (d ? d + '일 ' : '') + [h, m, ss].map(n => String(n).padStart(2, '0')).join(':') + ' 남음';
+  };
+  const iv = setInterval(tick, 1000);
+  tick();
+}
+
 function escHtml(v) {
   return String(v == null ? '' : v).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }
@@ -412,18 +449,20 @@ function sessionMemo(s) {
 // ── 회차 렌더 ──
 function renderSessions() {
   const grid = document.getElementById('session-grid');
-  const open = CFG.sessions.filter(s => s.status !== 'soon');
+  // '오픈 예정' 회차도 보여주되 선택은 막는다 (숨기면 관객이 회차가 없는 줄 앎)
+  const open = CFG.sessions;
   if (!open.length) {
     grid.innerHTML = '<div style="text-align:center;padding:20px;color:var(--gray);font-size:var(--fs-sm);">등록된 회차가 없습니다.</div>';
     return;
   }
   grid.innerHTML = open.map(s => {
-    const isClosed = s.status === 'closed' || s.remain === 0;
+    const isSoon   = s.status === 'soon';
+    const isClosed = isSoon || s.status === 'closed' || s.remain === 0;
     const isLow    = !isClosed && s.remain <= 3;
     const d = new Date(s.date + 'T00:00:00');
     const dateLabel = (d.getMonth()+1) + '월 ' + d.getDate() + '일 (' + DAYS[d.getDay()] + ')';
-    const remainText = isClosed ? '매진' : isLow ? '마감임박 ' + s.remain + '석' : '잔여 ' + s.remain + '석';
-    const remainClass = isClosed ? 'sold' : isLow ? 'low' : '';
+    const remainText = isSoon ? '오픈 예정' : isClosed ? '매진' : isLow ? '마감임박 ' + s.remain + '석' : '잔여 ' + s.remain + '석';
+    const remainClass = isSoon ? '' : isClosed ? 'sold' : isLow ? 'low' : '';
     const memo = sessionMemo(s);
     return '<div class="session-card' + (isClosed ? ' sold-out' : '') + '" id="sc-' + s.id + '"' +
       (isClosed ? '' : ' onclick="selectSession(\'' + s.id + '\')"') + '>' +
