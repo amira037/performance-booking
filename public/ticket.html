@@ -104,6 +104,8 @@ html,body{min-height:100vh;background:#1a1814;display:flex;align-items:center;ju
 .ticket-notice{margin-top:16px;text-align:center;}
 .home-link{display:none;max-width:380px;margin:0 auto 12px;padding:13px 18px;border:1px solid #c9a84c;border-radius:8px;color:#c9a84c;text-align:center;text-decoration:none;font-size:13px;letter-spacing:.05em;}
 .home-link.show{display:block;}
+.cancel-link{display:none;max-width:380px;margin:0 auto 12px;padding:12px 18px;border:1px solid #333;border-radius:8px;color:#bbb;text-align:center;text-decoration:none;font-size:13px;letter-spacing:.05em;}
+.cancel-link.show{display:block;}
 .notice-text{font-size:11px;color:rgba(255,255,255,.3);line-height:1.9;letter-spacing:.05em;}
 </style>
 </head>
@@ -229,6 +231,8 @@ html,body{min-height:100vh;background:#1a1814;display:flex;align-items:center;ju
   <!-- 공지사항 -->
   <!-- 극단 홈페이지 공연 상세 -->
   <a class="home-link" id="home-link" href="#" target="_blank" rel="noopener">공연 상세 정보 보기 ↗</a>
+  <!-- 예매 변경/취소 신청 (예약번호가 채워진 채로 열림) -->
+  <a class="cancel-link" id="cancel-link" href="#">예매 변경 / 취소 신청</a>
 
   <div id="notice-section" style="display:none;max-width:380px;margin:0 auto 0;padding:0 0 0;">
     <div style="background:#1a1814;border:1px solid #3a3010;border-radius:8px;padding:14px 18px;margin-bottom:12px;">
@@ -354,6 +358,13 @@ function render() {
 
   // 증빙
   if (T.needProof) document.getElementById('proof-banner').style.display = 'flex';
+
+  // 예매 변경/취소 신청: 예약번호를 넘겨서 연락처만 입력하면 되게 (입장한 티켓은 숨김)
+  if (T.resNum && !T.checkedIn) {
+    const c = document.getElementById('cancel-link');
+    c.href = '/cancel.html?res=' + encodeURIComponent(T.resNum);
+    c.classList.add('show');
+  }
 
   // 극단 홈페이지 공연 상세 링크
   if (T.homepageUrl) {

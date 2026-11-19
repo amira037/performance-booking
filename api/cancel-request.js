@@ -1,7 +1,7 @@
 // api/cancel-request.js — 관객 취소 신청 API
 // POST /api/cancel-request
 
-import { perfDb, pidForResNum } from '../lib/db.js';
+import { perfDb, pidForResNum, listPerformances } from '../lib/db.js';
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -12,6 +12,28 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
 
   const { resNum, phone, reason, refundBank, refundAccount, refundHolder } = req.body;
+
+  // 이름 + 연락처(전체)로 찾기 — 예약번호를 몰라도 됨 (조회만, 보관되지 않은 공연에서)
+  if (req.body.lookup && !resNum && req.body.name) {
+    const digits = s => String(s || '').replace(/\D/g, '');
+    const nm = s => String(s || '').replace(/\s/g, '');
+    const ph = digits(phone), name = nm(req.body.name);
+    if (ph.length < 10 || !name)
+      return res.status(400).json({ success: false, message: '예약할 때 입력한 이름과 휴대폰 번호를 모두 입력해 주세요.' });
+    const list = (await listPerformances()).filter(p => !p.archived);
+    const found = [];
+    for (const p of list) {
+      for (const r of await perfDb(p.id).getReservations()) {
+        if (digits(r.phone) !== ph || nm(r.name) !== name) continue;
+        if (String(r.payStatus || '').includes('취소')) continue;
+        found.push({ pid: p.id, perfName: p.name, resNum: r.resNum, name: r.name, session: r.session,
+                     payStatus: r.payStatus, quantity: r.quantity || 1, checkedIn: !!r.checkedIn });
+      }
+    }
+    if (!found.length)
+      return res.status(404).json({ success: false, message: '일치하는 예약을 찾지 못했어요.\n예약할 때 입력한 이름과 번호인지 확인해 주세요.' });
+    return res.status(200).json({ success: true, matches: found });
+  }
 
   if (!resNum || !phone)
     return res.status(400).json({ success: false, message: '예약번호와 연락처를 입력해 주세요.' });

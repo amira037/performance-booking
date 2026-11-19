@@ -34,7 +34,12 @@ input:focus{outline:none;border-color:var(--gold);}
 input::placeholder{color:#444;}
 input.error{border-color:var(--red);}
 .err-msg{font-size:var(--fs-xs);color:var(--red);margin-top:5px;display:none;}
-.err-msg.show{display:block;}
+.err-msg.show{display:block;white-space:pre-line;}
+.mode-link{display:block;margin:-4px 0 16px;background:none;border:0;color:var(--gold);font-family:inherit;font-size:var(--fs-xs);cursor:pointer;padding:0;text-decoration:underline;text-underline-offset:3px;}
+.match-item{display:block;width:100%;text-align:left;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:12px 14px;margin-bottom:8px;cursor:pointer;color:var(--white);font-family:inherit;}
+.match-item:hover{border-color:var(--gold);}
+.match-item .m-sess{font-size:var(--fs-md);}
+.match-item .m-sub{font-size:var(--fs-xs);color:var(--gray);margin-top:3px;}
 /* 액션 탭 */
 .action-tabs{display:flex;gap:8px;margin-bottom:20px;}
 .action-tab{flex:1;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:12px;text-align:center;cursor:pointer;font-size:var(--fs-sm);color:var(--gray);transition:all .15s;}
@@ -102,17 +107,29 @@ input.error{border-color:var(--red);}
     <div id="policy-notice" class="notice-box"
          style="display:none;background:#1a0f1a;border-color:#3a1a3a;color:#c9a0c9;">
     </div>
-    <div class="form-group">
-      <label>예약번호</label>
-      <input type="text" id="res-num" placeholder="DQ-0320-" maxlength="12" oninput="fmtResNum(this)" style="text-transform:uppercase;letter-spacing:.1em">
-      <div class="err-msg" id="err-resnum">예약번호를 입력해 주세요.</div>
+    <div class="form-group" id="name-group">
+      <label>이름 (예약할 때 입력한 이름)</label>
+      <input type="text" id="res-name" placeholder="홍길동" maxlength="20" autocomplete="name">
     </div>
+    <div class="form-group" id="resnum-group" style="display:none">
+      <label>예약번호</label>
+      <input type="text" id="res-num" placeholder="예: AR-1216-1234" maxlength="12" oninput="fmtResNum(this)" style="text-transform:uppercase;letter-spacing:.1em">
+    </div>
+    <div class="err-msg" id="err-resnum" style="margin:-8px 0 14px">이름을 입력해 주세요.</div>
+    <button type="button" class="mode-link" id="mode-link" onclick="setLookupMode(LOOKUP_MODE === 'name' ? 'resnum' : 'name')">예약번호로 찾기</button>
     <div class="form-group">
       <label>연락처 (예약 시 입력한 번호)</label>
       <input type="tel" id="phone" placeholder="010-0000-0000" oninput="fmtPhone(this)">
       <div class="err-msg" id="err-phone">연락처를 입력해 주세요.</div>
     </div>
     <button class="primary-btn" onclick="lookup()">예약 조회</button>
+  </div>
+
+  <!-- 1-2단계: 예약이 여러 건일 때 고르기 -->
+  <div id="step-pick" style="display:none">
+    <div class="notice-box">예약이 여러 건 있어요. 변경하거나 취소할 예약을 골라 주세요.</div>
+    <div id="pick-list"></div>
+    <button type="button" class="mode-link" onclick="backToLookup()" style="margin-top:12px">← 다시 조회하기</button>
   </div>
 
   <!-- 2단계: 취소 / 날짜 변경 선택 -->
@@ -249,6 +266,8 @@ async function init(pid) {
       if (ogTitle) ogTitle.setAttribute('content', p.name + ' 예약 취소/변경 신청');
     }
     if (p.tel)    document.getElementById('notice-tel').textContent = p.tel;
+    // 예약번호 예시를 이 공연의 접두어로 (예: AR-1216-1234)
+    if (p.resPrefix) document.getElementById('res-num').placeholder = '예: ' + p.resPrefix + '-1216-1234';
     // 정책 안내 문구 표시
     if (p.cancelPolicyText) {
       const policyEl = document.getElementById('policy-notice');
@@ -299,15 +318,35 @@ function isPast(sessionDate, sessionTime) {
   return now > perf;
 }
 
+// 조회 방법: 'name'(이름+연락처, 기본) / 'resnum'(예약번호+연락처)
+let LOOKUP_MODE = 'name';
+function setLookupMode(m) {
+  LOOKUP_MODE = m;
+  document.getElementById('name-group').style.display   = m === 'name' ? '' : 'none';
+  document.getElementById('resnum-group').style.display = m === 'resnum' ? '' : 'none';
+  document.getElementById('mode-link').textContent = m === 'name' ? '예약번호로 찾기' : '이름으로 찾기';
+  document.getElementById('err-resnum').classList.remove('show');
+}
+
+function lookupError(msg) {
+  document.getElementById('loading').classList.remove('show');
+  document.getElementById('step-lookup').style.display = 'block';
+  document.getElementById('err-resnum').textContent = msg;
+  document.getElementById('err-resnum').classList.add('show');
+}
+
 async function lookup() {
-  const resNum = document.getElementById('res-num').value.trim().toUpperCase();
+  const byName = LOOKUP_MODE === 'name';
+  const resNum = byName ? '' : document.getElementById('res-num').value.trim().toUpperCase();
+  const name   = byName ? document.getElementById('res-name').value.trim() : '';
   const phone  = document.getElementById('phone').value.trim();
-  let valid = true;
-  if (!resNum) { document.getElementById('err-resnum').classList.add('show'); valid=false; }
-  else document.getElementById('err-resnum').classList.remove('show');
-  if (!phone)  { document.getElementById('err-phone').classList.add('show'); valid=false; }
+  const errEl  = document.getElementById('err-resnum');
+  if (byName && !name)  { errEl.textContent = '이름을 입력해 주세요.'; errEl.classList.add('show'); }
+  else if (!byName && !resNum) { errEl.textContent = '예약번호를 입력해 주세요.'; errEl.classList.add('show'); }
+  else errEl.classList.remove('show');
+  if (!phone)  document.getElementById('err-phone').classList.add('show');
   else document.getElementById('err-phone').classList.remove('show');
-  if (!valid) return;
+  if ((byName ? !name : !resNum) || !phone) return;
 
   document.getElementById('step-lookup').style.display = 'none';
   document.getElementById('loading').classList.add('show');
@@ -315,29 +354,45 @@ async function lookup() {
   try {
     const res  = await fetch('/api/cancel-request', {
       method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({resNum, phone, lookup:true}),
+      body: JSON.stringify(byName ? {name, phone, lookup:true} : {resNum, phone, lookup:true}),
     });
     const data = await res.json();
-    document.getElementById('loading').classList.remove('show');
+    if (!data.success) return lookupError(data.message || '예약을 찾지 못했어요.');
 
-    if (!data.success) {
-      document.getElementById('step-lookup').style.display = 'block';
-      document.getElementById('err-resnum').textContent = data.message;
-      document.getElementById('err-resnum').classList.add('show');
+    if (data.matches) {
+      document.getElementById('loading').classList.remove('show');
+      if (data.matches.length === 1) return pickMatch(data.matches[0]);
+      window._matches = data.matches;
+      document.getElementById('pick-list').innerHTML = data.matches.map((m, i) =>
+        '<button type="button" class="match-item" onclick="pickMatch(window._matches[' + i + '])">'
+        + '<div class="m-sess">' + escHtml(m.session || '') + '</div>'
+        + '<div class="m-sub">' + escHtml(m.perfName || '') + ' · ' + escHtml(m.resNum) + ' · ' + (m.quantity || 1) + '매 · ' + escHtml(m.payStatus || '') + '</div>'
+        + '</button>').join('');
+      document.getElementById('step-pick').style.display = 'block';
       return;
     }
 
     // 예약이 속한 공연 설정으로 다시 로드 (회차 목록·정책·연락처)
     if (data.pid && data.pid !== CFG.pid) await init(data.pid);
-
+    document.getElementById('loading').classList.remove('show');
     lookupData = data;
     showActionStep(data);
   } catch(e) {
-    document.getElementById('loading').classList.remove('show');
-    document.getElementById('step-lookup').style.display = 'block';
-    alert('네트워크 오류가 발생했습니다.');
+    lookupError('네트워크 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.');
   }
 }
+
+async function pickMatch(m) {
+  document.getElementById('step-pick').style.display = 'none';
+  if (m.pid && m.pid !== (CFG && CFG.pid)) await init(m.pid);
+  lookupData = m;
+  showActionStep(m);
+}
+function backToLookup() {
+  document.getElementById('step-pick').style.display = 'none';
+  document.getElementById('step-lookup').style.display = 'block';
+}
+function escHtml(s) { return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 
 function showActionStep(data) {
   document.getElementById('c-resnum').textContent  = data.resNum;
@@ -650,11 +705,21 @@ function resetForm() {
   document.getElementById('result-screen').classList.remove('show');
   document.getElementById('step-lookup').style.display  = 'block';
   document.getElementById('res-num').value = '';
+  document.getElementById('res-name').value = '';
   document.getElementById('phone').value   = '';
+  document.getElementById('step-pick').style.display = 'none';
   setActionTab('change');
 }
 
 init();
+// 모바일 티켓에서 들어오면 (?res=예약번호) 예약번호를 채워 두고 연락처만 받는다
+(function () {
+  const r = new URLSearchParams(location.search).get('res');
+  if (!r) return;
+  setLookupMode('resnum');
+  const el = document.getElementById('res-num'); el.value = r.toUpperCase().slice(0, 12);
+  setTimeout(() => document.getElementById('phone').focus(), 300);
+})();
 </script>
 </body>
 </html>
