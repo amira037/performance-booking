@@ -26,6 +26,12 @@ export default async function handler(req, res) {
       if (!upcoming.length) return null;
 
       const allDates = (sessions || []).map(s => s.date).filter(Boolean).sort();
+      // 예매 상태: open(예매 중) / soon(오픈 예정) / closed(마감) — 홈페이지 배지·버튼이 씀
+      const status = performance.open === 'closed' ? 'closed'
+        : performance.open === 'soon' ? 'soon'
+        : upcoming.some(s => s.status === 'open') ? 'open'
+        : upcoming.some(s => s.status === 'soon') ? 'soon'
+        : 'closed';
       return {
         id:          p.id,
         name:        performance.name || p.name,
@@ -34,7 +40,8 @@ export default async function handler(req, res) {
         firstDate:   allDates[0],
         lastDate:    allDates[allDates.length - 1],
         nextDate:    upcoming[0].date,
-        bookingOpen: performance.open !== 'closed' && upcoming.some(s => s.status !== 'closed'),
+        status,
+        bookingOpen: status === 'open',
         bookingUrl:  `${base}/?p=${encodeURIComponent(p.id)}`,
       };
     }));
