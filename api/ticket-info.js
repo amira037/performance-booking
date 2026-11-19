@@ -2,6 +2,7 @@
 // GET /api/ticket-info?res=DQ-0323-0461
 
 import { perfDb, pidForResNum } from '../lib/db.js';
+import { homepageUrlFor } from '../lib/homepage.js';
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -11,10 +12,12 @@ export default async function handler(req, res) {
   if (!resNum)
     return res.status(400).json({ success: false, message: '예약번호가 없습니다.' });
 
-  const db = perfDb(await pidForResNum(resNum));
-  const [reservation, perf] = await Promise.all([
+  const pid = await pidForResNum(resNum);
+  const db = perfDb(pid);
+  const [reservation, perf, sessions] = await Promise.all([
     db.findReservation(resNum),
     db.getPerformance(),
+    db.getSessions(),
   ]);
 
   if (!reservation)
@@ -29,6 +32,10 @@ export default async function handler(req, res) {
     resNum:     reservation.resNum,
     name:       reservation.name,
     session:    reservation.session,
+    // 회차별 메모 ('회차별 메모 사용'이 켜진 경우에만, 예약의 회차 문구와는 별도)
+    sessionMemo: perf.sessionMemoEnabled
+      ? (sessions.find(s => s.id === reservation.sessionId)?.memo || '')
+      : '',
     seatType:   reservation.ticketType,
     quantity:   reservation.quantity,
     needProof:  reservation.needProof,
@@ -43,5 +50,7 @@ export default async function handler(req, res) {
     sponsor:    perf.sponsor    || '',
     poster:     perf.posterUrl  || '',
     notice:     perf.notice     || '',
+    // 극단 홈페이지의 공연 상세 페이지 (같은 공연이 있을 때만)
+    homepageUrl: await homepageUrlFor(pid, perf.name, sessions),
   });
 }

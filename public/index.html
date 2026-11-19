@@ -27,6 +27,8 @@ header{text-align:center;padding:52px 24px 36px;border-bottom:1px solid #222;}
 .header-agency{font-size:10px;letter-spacing:.35em;color:var(--gold);text-transform:uppercase;margin-bottom:16px;}
 .header-title{font-family:'Noto Serif KR',serif;font-size:clamp(28px,6vw,48px);font-weight:700;letter-spacing:-.02em;line-height:1.1;margin-bottom:12px;}
 .header-dates{font-size:var(--fs-xs);color:var(--gray);letter-spacing:.1em;margin-top:4px;}
+.header-home{display:inline-block;margin-top:14px;padding:7px 16px;border:1px solid var(--gold);border-radius:999px;color:var(--gold);font-size:var(--fs-xs);text-decoration:none;letter-spacing:.05em;}
+.header-home:hover{background:var(--gold);color:#111;}
 .gold-line{width:36px;height:1px;background:var(--gold);margin:20px auto;}
 /* 타이머 */
 #timer-banner{display:none;background:#1a1a0f;border-bottom:1px solid var(--gold);color:var(--gold);font-size:var(--fs-xs);letter-spacing:.1em;padding:11px;text-align:center;position:sticky;top:0;z-index:99;}
@@ -50,7 +52,8 @@ header{text-align:center;padding:52px 24px 36px;border-bottom:1px solid #222;}
 .session-card.sold-out{opacity:.4;cursor:not-allowed;}
 .sess-date{font-size:var(--fs-xs);color:var(--gray);margin-bottom:3px;}
 .sess-time{font-size:17px;font-weight:500;letter-spacing:.04em;}
-.sess-right{text-align:right;}
+.sess-right{text-align:right;flex-shrink:0;padding-left:12px;}
+.sess-memo{font-size:var(--fs-xs);color:var(--gold);line-height:1.6;margin-top:6px;white-space:pre-line;word-break:keep-all;}
 .sess-remain{font-size:var(--fs-xs);color:var(--gray);}
 .sess-remain.low{color:var(--orange);}
 .sess-remain.sold{color:var(--red);}
@@ -131,6 +134,7 @@ input.error{border-color:var(--red);}
   <div class="header-title" id="header-title">—</div>
   <div class="gold-line"></div>
   <div class="header-dates" id="header-dates">—</div>
+  <a class="header-home" id="header-home" href="#" target="_blank" rel="noopener" hidden>공연 상세 정보 보기 ↗</a>
 </header>
 
 <div class="container">
@@ -270,6 +274,11 @@ input.error{border-color:var(--red);}
     <div style="font-size:var(--fs-xs);letter-spacing:.2em;color:var(--gray);text-transform:uppercase;">예매 완료</div>
     <div class="success-resnum" id="s-resnum">—</div>
     <div class="success-desc">카카오톡으로 예약 확인 메시지가 발송됩니다.<br>24시간 이내 입금 후 모바일 티켓이 발송됩니다.</div>
+    <div id="s-session-wrap" class="success-box" style="display:none;">
+      <div class="success-box-label">관람 회차</div>
+      <div id="s-session-label" style="font-size:var(--fs-sm);font-weight:500;"></div>
+      <div id="s-session-memo" class="sess-memo"></div>
+    </div>
     <div class="success-box">
       <div class="success-box-label">입금 정보</div>
       <div class="success-row"><span>은행</span><span id="s-bank">—</span></div>
@@ -325,6 +334,10 @@ function applyConfig() {
   // 헤더
   document.getElementById('header-agency').textContent = p.agency || '';
   document.getElementById('header-title').textContent  = p.name   || '공연 예매';
+
+  // 극단 홈페이지에 같은 공연이 있으면 상세 페이지 링크
+  const home = document.getElementById('header-home');
+  if (CFG.homepageUrl) { home.href = CFG.homepageUrl; home.hidden = false; }
 
   // 날짜 범위 계산
   const dates = CFG.sessions
@@ -388,6 +401,14 @@ function applyConfig() {
   updatePrice();
 }
 
+function escHtml(v) {
+  return String(v == null ? '' : v).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+// 회차별 메모 (관리자가 '회차별 메모 사용'을 켠 경우에만)
+function sessionMemo(s) {
+  return (CFG.performance && CFG.performance.sessionMemoEnabled && s && s.memo) ? String(s.memo) : '';
+}
+
 // ── 회차 렌더 ──
 function renderSessions() {
   const grid = document.getElementById('session-grid');
@@ -403,9 +424,12 @@ function renderSessions() {
     const dateLabel = (d.getMonth()+1) + '월 ' + d.getDate() + '일 (' + DAYS[d.getDay()] + ')';
     const remainText = isClosed ? '매진' : isLow ? '마감임박 ' + s.remain + '석' : '잔여 ' + s.remain + '석';
     const remainClass = isClosed ? 'sold' : isLow ? 'low' : '';
+    const memo = sessionMemo(s);
     return '<div class="session-card' + (isClosed ? ' sold-out' : '') + '" id="sc-' + s.id + '"' +
       (isClosed ? '' : ' onclick="selectSession(\'' + s.id + '\')"') + '>' +
-      '<div><div class="sess-date">' + dateLabel + '</div><div class="sess-time">' + s.time + '</div></div>' +
+      '<div><div class="sess-date">' + dateLabel + '</div><div class="sess-time">' + s.time + '</div>' +
+        (memo ? '<div class="sess-memo">' + escHtml(memo) + '</div>' : '') +
+      '</div>' +
       '<div class="sess-right">' +
         '<div class="sess-remain ' + remainClass + '">' + remainText + '</div>' +
         '<div class="check-circle"><svg width="9" height="9" viewBox="0 0 9 9" fill="none"><path d="M1.5 4.5l2 2 4-3.5" stroke="#0d0d0d" stroke-width="1.5" stroke-linecap="round"/></svg></div>' +
@@ -600,7 +624,7 @@ async function submitBooking() {
     if (result.success) {
       currentLockId = null;
       hideTimer();
-      showSuccess(result.resNum, total, sessionLabel);
+      showSuccess(result.resNum, total, sessionLabel, sessionMemo(session));
     } else {
       document.getElementById('booking-form').style.display = 'block';
       showErr(result.message || '예매 중 오류가 발생했습니다.');
@@ -613,11 +637,16 @@ async function submitBooking() {
   }
 }
 
-function showSuccess(resNum, total, sessionLabel) {
+function showSuccess(resNum, total, sessionLabel, memo) {
   const deadline = new Date(Date.now() + 24*3600*1000);
   const dlStr = deadline.toLocaleDateString('ko-KR',{month:'long',day:'numeric',hour:'2-digit',minute:'2-digit'}) + ' 까지';
   document.getElementById('dot3').classList.add('on');
   document.getElementById('s-resnum').textContent  = resNum;
+  if (memo) {
+    document.getElementById('s-session-label').textContent = sessionLabel;
+    document.getElementById('s-session-memo').textContent  = memo;
+    document.getElementById('s-session-wrap').style.display = 'block';
+  }
   document.getElementById('s-amount').textContent  = total===0?'무료':total.toLocaleString()+'원';
   document.getElementById('s-deadline').textContent = dlStr;
   // 취소/변경 정책 안내

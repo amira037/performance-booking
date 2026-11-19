@@ -351,6 +351,14 @@ body{background:var(--bg);color:var(--white);font-family:'Noto Sans KR',sans-ser
 
     <!-- 회차 관리 -->
     <div class="tab-content" id="tab-sessions">
+      <div class="section-box" style="margin-bottom:16px;">
+        <label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-size:var(--fs-sm);">
+          <input type="checkbox" id="sess-memo-enabled" onchange="toggleSessionMemo(this.checked)"
+                 style="width:15px;height:15px;accent-color:var(--gold);">
+          <span>회차별 메모 사용</span>
+        </label>
+        <div class="hint" style="margin-top:8px;">페스티벌처럼 회차마다 작품이 다를 때 켜세요. 예매 페이지의 회차 선택 카드에 메모가 함께 표시됩니다.</div>
+      </div>
       <div id="session-list" style="margin-bottom:16px;"></div>
       <div class="section-box">
         <div class="mode-label" id="session-mode-label">— 수정 모드 —</div>
@@ -390,6 +398,14 @@ body{background:var(--bg);color:var(--white);font-family:'Noto Sans KR',sans-ser
               <option value="closed">마감</option>
               <option value="soon">오픈 예정</option>
             </select>
+          </div>
+        </div>
+        <div class="form-row" id="sess-memo-row" style="display:none;">
+          <div class="form-group full">
+            <label>회차 메모 (예매 페이지에 표시)</label>
+            <textarea class="form-input" id="sess-memo" rows="2" maxlength="200"
+                      placeholder="예: 〈명랑시골로맨스 동백꽃〉&#10;각색·연출 김동순"
+                      style="resize:vertical;line-height:1.7;"></textarea>
           </div>
         </div>
         <div style="display:flex;gap:8px;margin-top:4px;">
@@ -1783,13 +1799,34 @@ async function confirmSessionChange() {
 }
 
 // ── 회차 관리 ──
+function memoEnabled() { return !!performance.sessionMemoEnabled; }
+function syncSessionMemoUI() {
+  const on = memoEnabled();
+  document.getElementById('sess-memo-enabled').checked = on;
+  document.getElementById('sess-memo-row').style.display = on ? '' : 'none';
+}
+async function toggleSessionMemo(on) {
+  const data = { ...performance, sessionMemoEnabled: on };
+  const r = await callAPI({action:'savePerformance', data});
+  if (r.success) {
+    performance = data;
+    renderSessionList();
+    toast(on ? '회차별 메모가 켜졌습니다.' : '회차별 메모가 꺼졌습니다. (입력한 메모는 보존됩니다)');
+  } else {
+    document.getElementById('sess-memo-enabled').checked = !on;
+    toast(r.message || '저장 실패');
+  }
+}
 function renderSessionList() {
+  syncSessionMemoUI();
   const el = document.getElementById('session-list');
   if (!sessions.length) { el.innerHTML = '<div class="empty-state">등록된 회차가 없습니다.</div>'; return; }
   el.innerHTML = sessions.map(s => {
     const st = s.status==='open'?'예매중':s.status==='closed'?'마감':'오픈예정';
     return '<div class="session-item' + (editingSessionId===s.id?' selected':'') + '" onclick="selectSession(\'' + s.id + '\')">'
-      + '<div><div class="session-item-date">' + sessLabel(s) + '</div><div class="session-item-info">' + s.seats + '석 · ' + st + '</div></div>'
+      + '<div><div class="session-item-date">' + sessLabel(s) + '</div><div class="session-item-info">' + s.seats + '석 · ' + st + '</div>'
+      + (memoEnabled() && s.memo ? '<div class="session-item-info" style="color:var(--gold);white-space:pre-line;margin-top:4px;">' + escHtml(s.memo) + '</div>' : '')
+      + '</div>'
       + '<div class="item-btns"><button class="icon-btn danger" onclick="event.stopPropagation();deleteSession(\'' + s.id + '\')">삭제</button></div>'
       + '</div>';
   }).join('');
@@ -1808,6 +1845,7 @@ function selectSession(id) {
   timeEl.value = s.time;
   document.getElementById('sess-seats').value=s.seats;
   document.getElementById('sess-status').value=s.status;
+  document.getElementById('sess-memo').value=s.memo||'';
   document.getElementById('session-form-title').textContent='회차 수정 / 복사 추가';
   document.getElementById('session-mode-label').classList.add('show');
   document.getElementById('sess-add-btn').style.display='flex';
@@ -1821,6 +1859,7 @@ function resetSessionForm() {
   document.getElementById('sess-time').value='';
   document.getElementById('sess-seats').value='';
   document.getElementById('sess-status').value='open';
+  document.getElementById('sess-memo').value='';
   document.getElementById('session-form-title').textContent='회차 추가';
   document.getElementById('session-mode-label').classList.remove('show');
   document.getElementById('sess-add-btn').style.display='flex';
@@ -1833,7 +1872,8 @@ async function addSession() {
   const seats=parseInt(document.getElementById('sess-seats').value), status=document.getElementById('sess-status').value;
   if (!date||!time||!seats) { toast('날짜, 시간, 좌석 수를 모두 입력해 주세요.'); return; }
   if (sessions.some(s=>s.date===date&&s.time===time)) { toast('같은 날짜·시간의 회차가 이미 존재합니다.'); return; }
-  const session={id:'S'+Date.now(), date, time, seats, booked:0, status};
+  const memo=document.getElementById('sess-memo').value.trim();
+  const session={id:'S'+Date.now(), date, time, seats, booked:0, status, memo};
   const r=await callAPI({action:'addSession', session});
   if(r.success){sessions.push(session);sessions=sortSessions(sessions);resetSessionForm();renderDashboard();toast('회차가 추가됐습니다.');}
   else{toast('회차 저장 실패: '+(r.message||'서버 오류'));}
@@ -1843,7 +1883,8 @@ async function updateSession() {
   const date=document.getElementById('sess-date').value, time=document.getElementById('sess-time').value;
   const seats=parseInt(document.getElementById('sess-seats').value), status=document.getElementById('sess-status').value;
   if (!date||!time||!seats) { toast('날짜, 시간, 좌석 수를 모두 입력해 주세요.'); return; }
-  const session={id:editingSessionId, date, time, seats, status};
+  const memo=document.getElementById('sess-memo').value.trim();
+  const session={id:editingSessionId, date, time, seats, status, memo};
   const r=await callAPI({action:'updateSession', session});
   if(r.success){const idx=sessions.findIndex(s=>s.id===editingSessionId);if(idx!==-1)sessions[idx]={...sessions[idx],...session};sessions=sortSessions(sessions);resetSessionForm();renderDashboard();toast('수정됐습니다.');}
   else{toast('수정 실패: '+(r.message||'서버 오류'));}

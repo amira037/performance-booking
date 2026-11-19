@@ -2,6 +2,7 @@
 // GET /api/config?p={공연ID}   (p 없으면 기본 공연)
 
 import { perfDb, resolvePid, listPerformances } from '../lib/db.js';
+import { homepageUrlFor } from '../lib/homepage.js';
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -79,8 +80,12 @@ export default async function handler(req, res) {
     return deadline.getTime();
   }
 
+  // 극단 홈페이지에 같은 공연(제목·기간)이 있으면 상세 페이지 링크
+  const homepageUrl = await homepageUrlFor(pid, performance.name, sessions);
+
   return res.status(200).json({
     pid,
+    homepageUrl,
     performance,
     sessions: sessionsWithRemain,
     presets:  presets.filter(p => p.active),
