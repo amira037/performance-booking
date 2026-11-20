@@ -97,6 +97,15 @@ input.error{border-color:var(--red);}
 .kakao-text{font-size:var(--fs-xs);color:var(--gold-light);flex:1;}
 .kakao-link{font-size:var(--fs-xs);color:var(--gold);text-decoration:none;border:1px solid #3a3010;border-radius:var(--radius);padding:5px 10px;white-space:nowrap;}
 .kakao-link:hover{border-color:var(--gold);}
+/* 송금 후 예매신청 안내 모달 */
+.pay-remind{position:fixed;inset:0;background:rgba(0,0,0,.75);display:none;align-items:center;justify-content:center;z-index:1000;padding:16px;}
+.pay-remind.show{display:flex;}
+.pay-remind-box{background:#141414;border:1px solid var(--gold);border-radius:var(--radius);padding:24px 20px;max-width:360px;width:100%;text-align:center;}
+.pay-remind-title{font-size:var(--fs-md);font-weight:700;color:var(--gold);margin-bottom:12px;}
+.pay-remind-desc{font-size:var(--fs-sm);color:var(--white);line-height:1.8;margin-bottom:18px;}
+.pay-remind-later{background:none;border:none;color:var(--gray);font-size:var(--fs-xs);margin-top:10px;cursor:pointer;font-family:inherit;text-decoration:underline;}
+@keyframes btnPulse{0%,100%{box-shadow:0 0 0 0 rgba(201,168,76,.7)}50%{box-shadow:0 0 0 8px rgba(201,168,76,0)}}
+.submit-btn.pulse{animation:btnPulse 1.2s ease-out 4;}
 /* 제출 버튼 */
 .submit-btn{width:100%;background:var(--gold);color:var(--black);border:none;border-radius:var(--radius);font-family:'Noto Sans KR',sans-serif;font-size:var(--fs-md);font-weight:700;letter-spacing:.15em;padding:17px;cursor:pointer;transition:background .2s;margin-top:8px;}
 .submit-btn:hover:not(:disabled){background:var(--gold-light);}
@@ -229,8 +238,8 @@ input.error{border-color:var(--red);}
         <div id="kakao-pay-row" style="display:none">
           <div class="kakao-row">
             <div class="kakao-icon">K</div>
-            <div class="kakao-text">카카오페이 송금도 가능합니다<br><span style="font-size:var(--fs-xs);color:var(--gray)">금액: <span id="kakao-amount">—</span>원 입력</span></div>
-            <a id="kakao-link" href="#" class="kakao-link" target="_blank">송금하기</a>
+            <div class="kakao-text">카카오페이 송금도 가능합니다<br><span style="font-size:var(--fs-xs);color:var(--gray)">금액: <span id="kakao-amount">—</span>원 입력</span><br><span style="font-size:var(--fs-xs);color:var(--orange)">송금 후 꼭 아래 <strong>[예매 신청하기]</strong>를 눌러주세요</span></div>
+            <a id="kakao-link" href="#" class="kakao-link" target="_blank" onclick="onKakaoPayClick()">송금하기</a>
           </div>
         </div>
       </div>
@@ -255,7 +264,7 @@ input.error{border-color:var(--red);}
     </div>
     <div class="err-msg" id="err-privacy" style="margin-bottom:8px;">개인정보 수집 및 이용에 동의해 주세요.</div>
 
-    <button class="submit-btn" onclick="submitBooking()">예매 신청하기</button>
+    <button class="submit-btn" id="submit-btn" onclick="submitBooking()">예매 신청하기</button>
   </div>
 
   <!-- 로딩 -->
@@ -293,6 +302,16 @@ input.error{border-color:var(--red);}
   </div>
   <div id="s-policy" style="display:none;margin-bottom:14px;background:#141414;border:1px solid #2a2a2a;border-radius:4px;padding:12px 14px;font-size:var(--fs-xs);color:var(--gray);line-height:1.8;text-align:left;"></div>
   <div style="font-size:var(--fs-xs);color:var(--gray)">문의: <span id="s-tel" style="color:var(--white)">—</span></div>
+  </div>
+</div>
+
+<!-- 송금 후 예매신청 안내 -->
+<div class="pay-remind" id="pay-remind">
+  <div class="pay-remind-box">
+    <div class="pay-remind-title">⚠️ 아직 예매가 완료되지 않았어요</div>
+    <div class="pay-remind-desc">송금만으로는 예매가 되지 않습니다.<br><strong style="color:var(--gold)">[예매 신청하기]</strong> 버튼을 눌러야<br>예매가 완료됩니다.</div>
+    <button class="submit-btn" style="margin-top:0" onclick="goToSubmit()">예매 신청하러 가기</button>
+    <button class="pay-remind-later" onclick="closePayRemind()">닫기</button>
   </div>
 </div>
 
@@ -531,7 +550,7 @@ async function releaseLock() {
   hideTimer();
   try {
     await fetch(apiUrl('/api/lock'), {
-      method:'DELETE', headers:{'Content-Type':'application/json'},
+      method:'DELETE', keepalive:true, headers:{'Content-Type':'application/json'},
       body: JSON.stringify({lockId: currentLockId}),
     });
   } catch(e) {}
@@ -661,6 +680,7 @@ async function submitBooking() {
     const result = await res.json();
     document.getElementById('loading').classList.remove('show');
     if (result.success) {
+      bookingDone = true;
       currentLockId = null;
       hideTimer();
       showSuccess(result.resNum, total, sessionLabel, sessionMemo(session));
@@ -711,7 +731,28 @@ function showErr(msg) {
   setTimeout(() => el.classList.remove('show'), 5000);
 }
 
-window.addEventListener('beforeunload', () => { if (currentLockId) releaseLock(); });
+// ── 송금하기만 누르고 예매 신청을 안 한 경우 막기 ──
+let kakaoPayClicked = false;
+let bookingDone = false;
+function needsPayRemind() { return kakaoPayClicked && !bookingDone; }
+function onKakaoPayClick() { kakaoPayClicked = true; }
+function showPayRemind() { if (needsPayRemind()) document.getElementById('pay-remind').classList.add('show'); }
+function closePayRemind() { document.getElementById('pay-remind').classList.remove('show'); }
+function goToSubmit() {
+  closePayRemind();
+  const btn = document.getElementById('submit-btn');
+  btn.scrollIntoView({behavior:'smooth', block:'center'});
+  btn.classList.remove('pulse'); void btn.offsetWidth; btn.classList.add('pulse');
+}
+// 송금하고 이 화면으로 돌아오면 안내 띄우기
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') showPayRemind(); });
+window.addEventListener('focus', showPayRemind);
+// 창을 닫으려 하면 확인창 (브라우저 기본 문구로 표시됨)
+window.addEventListener('beforeunload', (e) => {
+  if (needsPayRemind()) { showPayRemind(); e.preventDefault(); e.returnValue = ''; return ''; }
+});
+// 실제로 페이지를 떠날 때만 선점 해제 (확인창에서 '머무르기' 누르면 선점 유지)
+window.addEventListener('pagehide', () => { if (currentLockId) releaseLock(); });
 
 init();
 </script>
